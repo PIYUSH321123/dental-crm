@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import {
+    Activity,
     BookOpen,
     Bot,
     Box,
     Calendar,
     Command,
+    Contact,
     Frame,
     LifeBuoy,
     Map,
@@ -61,7 +63,7 @@ const data = {
         {
             title: "Lead Management",
             url: "#",
-            icon: Users,
+            icon: Contact,
             items: [
                 {
                     title: "Leads",
@@ -78,24 +80,50 @@ const data = {
             ],
         },
         {
+            title: "Patient Management",
+            url: "#",
+            icon: Users,
+            items: [
+                {
+                    title: "Patients",
+                    url: "#",
+                },
+            ],
+        },
+        {
+            title: "Activity Management",
+            url: "#",
+            icon: Activity,
+            items: [
+                {
+                    title: "Clinical Assesments",
+                    url: "#",
+                },
+                {
+                    title: "Treatment Plans",
+                    url: "#",
+                },
+                {
+                    title: "Exercise Prescriptions",
+                    url: "#",
+                },
+            ],
+        },
+        {
             title: "Appoinments",
             url: "#",
             icon: Calendar,
             items: [
                 {
-                    title: "Scheduled",
+                    title: "Timeline",
                     url: "#",
                 },
                 {
-                    title: "Completed",
+                    title: "Schedule",
                     url: "#",
                 },
                 {
-                    title: "Missed",
-                    url: "#",
-                },
-                {
-                    title: "Cancelled",
+                    title: "Session Management",
                     url: "#",
                 },
             ],
@@ -188,8 +216,34 @@ const data = {
     ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+    crmVisible = true,
+    erpVisible = true,
+    hiddenCrmModules = [],
+    hiddenErpModules = [],
+    hiddenSecondaryModules = [],
+    ...props
+}: React.ComponentProps<typeof Sidebar> & {
+    crmVisible?: boolean
+    erpVisible?: boolean
+    hiddenCrmModules?: string[]
+    hiddenErpModules?: string[]
+    hiddenSecondaryModules?: string[]
+}) {
     const { company } = useParams()
+
+    const filteredNavMain = React.useMemo(() => {
+        return data.navMain.filter((item) => !hiddenCrmModules.includes(item.title))
+    }, [hiddenCrmModules])
+
+    const filteredProjects = React.useMemo(() => {
+        return data.projects.filter((item) => !hiddenErpModules.includes(item.name))
+    }, [hiddenErpModules])
+
+    const filteredSecondary = React.useMemo(() => {
+        return data.navSecondary.filter((item) => !hiddenSecondaryModules.includes(item.title))
+    }, [hiddenSecondaryModules])
+
     return (
         <Sidebar variant="inset" {...props}>
             <SidebarHeader>
@@ -210,9 +264,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <NavMain items={data.navMain} />
-                <NavProjects projects={data.projects} />
-                <NavSecondary items={data.navSecondary} className="mt-auto" />
+                {crmVisible && <NavMain items={filteredNavMain} />}
+                {erpVisible && <NavProjects projects={filteredProjects} />}
+                <NavSecondary items={filteredSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={data.user} />
