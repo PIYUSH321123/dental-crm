@@ -1,7 +1,7 @@
 import * as React from "react"
-import { ChartAreaInteractive } from "@/app/dashboard/chart-area-interactive"
-import { DataTable } from "@/app/dashboard/data-table"
-import { SectionCards } from "@/app/dashboard/section-cards"
+import { ChartAreaInteractive } from "@/app/(admin)/admin/dashboard/chart-area-interactive"
+import { DataTable } from "@/app/(admin)/admin/dashboard/data-table"
+import { SectionCards } from "@/app/(admin)/admin/dashboard/section-cards"
 
 // Local Data
 import data from "./data.json"

@@ -30,10 +30,10 @@ import {
 } from "@/components/ui/sidebar"
 
 // App Components
-import { NavDocuments } from "@/app/_navigation/nav-documents"
-import { NavMain } from "@/app/_navigation/nav-main"
-import { NavSecondary } from "@/app/_navigation/nav-secondary"
-import { NavUser } from "@/app/_navigation/nav-user"
+import { NavDocuments } from "@/app/(admin)/admin/_navigation/nav-documents"
+import { NavMain } from "@/app/(admin)/admin/_navigation/nav-main"
+import { NavSecondary } from "@/app/(admin)/admin/_navigation/nav-secondary"
+import { NavUser } from "@/app/(admin)/admin/_navigation/nav-user"
 
 const data = {
   user: {
@@ -206,7 +206,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <CommandIcon className="size-5!" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">Sales Guru</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
