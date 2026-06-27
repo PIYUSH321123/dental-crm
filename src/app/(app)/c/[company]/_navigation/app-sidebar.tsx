@@ -4,14 +4,20 @@ import * as React from "react"
 import {
     BookOpen,
     Bot,
+    Box,
+    Calendar,
     Command,
     Frame,
     LifeBuoy,
     Map,
+    MegaphoneIcon,
     PieChart,
     Send,
     Settings2,
     SquareTerminal,
+    Store,
+    Users,
+    Workflow,
 } from "lucide-react"
 
 import { NavMain } from "@/app/(app)/c/[company]/_navigation/nav-main"
@@ -37,63 +43,82 @@ const data = {
     },
     navMain: [
         {
-            title: "Playground",
+            title: "Marketing",
             url: "#",
-            icon: SquareTerminal,
+            icon: MegaphoneIcon,
             isActive: true,
             items: [
                 {
-                    title: "History",
+                    title: "Campaigns",
                     url: "#",
                 },
                 {
-                    title: "Starred",
+                    title: "Active Campaigns",
+                    url: "#",
+                }
+            ],
+        },
+        {
+            title: "Lead Management",
+            url: "#",
+            icon: Users,
+            items: [
+                {
+                    title: "Leads",
                     url: "#",
                 },
                 {
-                    title: "Settings",
+                    title: "Follow Ups",
+                    url: "#",
+                },
+                {
+                    title: "Tasks",
                     url: "#",
                 },
             ],
         },
         {
-            title: "Models",
+            title: "Appoinments",
             url: "#",
-            icon: Bot,
+            icon: Calendar,
             items: [
                 {
-                    title: "Genesis",
+                    title: "Scheduled",
                     url: "#",
                 },
                 {
-                    title: "Explorer",
+                    title: "Completed",
                     url: "#",
                 },
                 {
-                    title: "Quantum",
+                    title: "Missed",
+                    url: "#",
+                },
+                {
+                    title: "Cancelled",
                     url: "#",
                 },
             ],
         },
         {
-            title: "Documentation",
+            title: "Product & Services",
             url: "#",
-            icon: BookOpen,
+            icon: Store,
             items: [
                 {
-                    title: "Introduction",
+                    title: "Products",
                     url: "#",
                 },
                 {
-                    title: "Get Started",
+                    title: "Services",
                     url: "#",
                 },
                 {
-                    title: "Tutorials",
+                    title: "Packages",
                     url: "#",
                 },
                 {
-                    title: "Changelog",
+                    title: "Reports",
                     url: "#",
                 },
             ],
@@ -136,17 +161,27 @@ const data = {
     ],
     projects: [
         {
-            name: "Design Engineering",
-            url: "#",
-            icon: Frame,
-        },
-        {
-            name: "Sales & Marketing",
+            name: "Analytics",
             url: "#",
             icon: PieChart,
         },
         {
-            name: "Travel",
+            name: "Inventory",
+            url: "#",
+            icon: Box,
+        },
+        {
+            name: "Workflows",
+            url: "#",
+            icon: Workflow,
+        },
+        {
+            name: "Staff",
+            url: "#",
+            icon: Users,
+        },
+        {
+            name: "Reports",
             url: "#",
             icon: Map,
         },
