@@ -52,11 +52,11 @@ const data = {
             items: [
                 {
                     title: "Campaigns",
-                    url: "#",
+                    url: "/c/[company]/marketing/campaign",
                 },
                 {
                     title: "Active Campaigns",
-                    url: "#",
+                    url: "/c/[company]/marketing/campaign?status=Active",
                 }
             ],
         },
@@ -233,8 +233,18 @@ export function AppSidebar({
     const { company } = useParams()
 
     const filteredNavMain = React.useMemo(() => {
-        return data.navMain.filter((item) => !hiddenCrmModules.includes(item.title))
-    }, [hiddenCrmModules])
+        const companyStr = (Array.isArray(company) ? company[0] : company) || ""
+        return data.navMain
+            .filter((item) => !hiddenCrmModules.includes(item.title))
+            .map((item) => ({
+                ...item,
+                url: item.url.replace("[company]", companyStr),
+                items: item.items?.map((subItem) => ({
+                    ...subItem,
+                    url: subItem.url.replace("[company]", companyStr),
+                })),
+            }))
+    }, [hiddenCrmModules, company])
 
     const filteredProjects = React.useMemo(() => {
         return data.projects.filter((item) => !hiddenErpModules.includes(item.name))

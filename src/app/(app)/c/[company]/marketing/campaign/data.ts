@@ -1,0 +1,135 @@
+export interface Campaign {
+    id: string
+    name: string
+    source: "Facebook" | "Google Ads" | "Instagram" | "LinkedIn" | "YouTube" | "Twitter/X"
+    budget: number
+    leads: number
+    converted: number
+    revenue: number
+    status: "Active" | "Paused" | "Completed" | "Draft"
+    start_date: string
+    end_date: string
+}
+
+export const mockCampaigns: Campaign[] = [
+    {
+        id: "camp-1",
+        name: "Summer Physio Special",
+        source: "Facebook",
+        budget: 45000,
+        leads: 320,
+        converted: 48,
+        revenue: 144000,
+        status: "Active",
+        start_date: "2026-05-01",
+        end_date: "2026-08-31",
+    },
+    {
+        id: "camp-2",
+        name: "Google Search - Clinic Near Me",
+        source: "Google Ads",
+        budget: 80000,
+        leads: 450,
+        converted: 90,
+        revenue: 315000,
+        status: "Active",
+        start_date: "2026-01-10",
+        end_date: "2026-12-31",
+    },
+    {
+        id: "camp-3",
+        name: "Corporate Health Workshops",
+        source: "LinkedIn",
+        budget: 60000,
+        leads: 120,
+        converted: 15,
+        revenue: 180000,
+        status: "Active",
+        start_date: "2026-04-15",
+        end_date: "2026-07-15",
+    },
+    {
+        id: "camp-4",
+        name: "Back Pain Recovery Reels",
+        source: "Instagram",
+        budget: 25000,
+        leads: 210,
+        converted: 32,
+        revenue: 85000,
+        status: "Active",
+        start_date: "2026-06-01",
+        end_date: "2026-07-31",
+    },
+    {
+        id: "camp-5",
+        name: "Posture Correction Exercises",
+        source: "YouTube",
+        budget: 35000,
+        leads: 180,
+        converted: 22,
+        revenue: 54000,
+        status: "Paused",
+        start_date: "2026-03-01",
+        end_date: "2026-05-31",
+    },
+    {
+        id: "camp-6",
+        name: "Q2 Health Checkup Drive",
+        source: "Facebook",
+        budget: 50000,
+        leads: 280,
+        converted: 42,
+        revenue: 110000,
+        status: "Completed",
+        start_date: "2026-04-01",
+        end_date: "2026-06-30",
+    },
+    {
+        id: "camp-7",
+        name: "Spine Alignment Webinar",
+        source: "LinkedIn",
+        budget: 30000,
+        leads: 85,
+        converted: 12,
+        revenue: 45000,
+        status: "Completed",
+        start_date: "2026-05-10",
+        end_date: "2026-06-10",
+    },
+    {
+        id: "camp-8",
+        name: "Monsoon Fitness Challenge",
+        source: "Instagram",
+        budget: 15000,
+        leads: 95,
+        converted: 14,
+        revenue: 28000,
+        status: "Draft",
+        start_date: "2026-07-15",
+        end_date: "2026-08-15",
+    },
+    {
+        id: "camp-9",
+        name: "Sports Injury Rehab Guide",
+        source: "Twitter/X",
+        budget: 12000,
+        leads: 65,
+        converted: 8,
+        revenue: 16000,
+        status: "Paused",
+        start_date: "2026-02-15",
+        end_date: "2026-04-15",
+    },
+    {
+        id: "camp-10",
+        name: "Local SEO Hyper-local Ads",
+        source: "Google Ads",
+        budget: 100000,
+        leads: 620,
+        converted: 115,
+        revenue: 420000,
+        status: "Active",
+        start_date: "2026-02-01",
+        end_date: "2026-11-30",
+    }
+]
