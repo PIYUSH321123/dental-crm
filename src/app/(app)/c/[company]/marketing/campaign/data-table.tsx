@@ -80,13 +80,13 @@ export function DataTable<TData, TValue>({
     })
 
     const defaultFilters: SearchFilterOption[] = searchFilters ?? [
-        { field: "name", label: "Campaign Name" },
+        { field: "campaign_name", label: "Campaign Name" },
         { field: "source", label: "Source" },
         { field: "status", label: "Status" },
     ]
 
     const [searchField, setSearchField] = useState(
-        defaultSearchField ?? defaultFilters[0]?.field ?? "name"
+        defaultSearchField ?? defaultFilters[0]?.field ?? "campaign_name"
     )
     const [searchValue, setSearchValue] = useState("")
 
@@ -165,7 +165,7 @@ export function DataTable<TData, TValue>({
                             <DropdownMenuItem onClick={() => handleSourceFilter("")} className={!selectedSource ? "bg-accent font-medium" : ""}>
                                 All Sources
                             </DropdownMenuItem>
-                            {["Facebook", "Google Ads", "Instagram", "LinkedIn", "YouTube", "Twitter/X"].map((src) => (
+                            {["Facebook", "Google", "Instagram", "YouTube", "WhatsApp", "Doctor Referral", "Walk-in", "Health Camp", "Corporate", "Newspaper", "QR Code"].map((src) => (
                                 <DropdownMenuItem
                                     key={src}
                                     onClick={() => handleSourceFilter(src)}

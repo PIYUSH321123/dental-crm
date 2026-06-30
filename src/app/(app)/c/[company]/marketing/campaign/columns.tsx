@@ -39,11 +39,11 @@ export const columns: ColumnDef<Campaign>[] = [
         size: 10,
     },
     {
-        accessorKey: "name",
+        accessorKey: "campaign_name",
         header: "Campaign Name",
         cell: ({ row }) => {
-            const name = row.getValue("name") as string
-            return <div className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">{name}</div>
+            const campaign_name = row.getValue("campaign_name") as string
+            return <div className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">{campaign_name}</div>
         }
     },
     {
@@ -55,18 +55,30 @@ export const columns: ColumnDef<Campaign>[] = [
             
             if (source === "Facebook") {
                 badgeClass = "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50"
-            } else if (source === "Google Ads") {
+            } else if (source === "Google") {
                 badgeClass = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50"
             } else if (source === "Instagram") {
                 badgeClass = "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-900/50"
-            } else if (source === "LinkedIn") {
-                badgeClass = "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50"
             } else if (source === "YouTube") {
                 badgeClass = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50"
+            } else if (source === "WhatsApp") {
+                badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50"
+            } else if (source === "Doctor Referral") {
+                badgeClass = "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-400 dark:border-violet-900/50"
+            } else if (source === "Walk-in") {
+                badgeClass = "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-900/50"
+            } else if (source === "Health Camp") {
+                badgeClass = "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/50"
+            } else if (source === "Corporate") {
+                badgeClass = "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50"
+            } else if (source === "Newspaper") {
+                badgeClass = "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700/50"
+            } else if (source === "QR Code") {
+                badgeClass = "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50"
             }
 
             return (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${badgeClass}`}>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap ${badgeClass}`}>
                     {source}
                 </span>
             )
