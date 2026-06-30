@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     Select,
     SelectContent,
@@ -35,7 +36,7 @@ export function CreateCampaignDialog({
     onCampaignCreated,
 }: CreateCampaignDialogProps) {
     const [open, setOpen] = useState(false)
-    
+
     // Dropdown options loaded from dummy APIs
     const [users, setUsers] = useState<User[]>([])
     const [branches, setBranches] = useState<Branch[]>([])
@@ -47,6 +48,7 @@ export function CreateCampaignDialog({
     const [budget, setBudget] = useState("")
     const [startDate, setStartDate] = useState("")
     const [endDate, setEndDate] = useState("")
+    const [isOngoing, setIsOngoing] = useState(false)
     const [targetCondition, setTargetCondition] = useState("")
     const [landingPageUrl, setLandingPageUrl] = useState("")
     const [assignedStaffId, setAssignedStaffId] = useState<string>("")
@@ -89,6 +91,7 @@ export function CreateCampaignDialog({
         setBudget("")
         setStartDate("")
         setEndDate("")
+        setIsOngoing(false)
         setTargetCondition("")
         setLandingPageUrl("")
         setAssignedStaffId("")
@@ -134,7 +137,7 @@ export function CreateCampaignDialog({
             tempErrors.startDate = "Start date is required"
         }
 
-        if (startDate && endDate) {
+        if (startDate && endDate && !isOngoing) {
             if (new Date(endDate) < new Date(startDate)) {
                 tempErrors.endDate = "End date cannot be earlier than start date"
             }
@@ -263,13 +266,13 @@ export function CreateCampaignDialog({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Campaign Name */}
-                            <div className="space-y-2">
+                            <div className="space-y-2 col-span-2">
                                 <Label htmlFor="campaignName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Campaign Name <span className="text-rose-500">*</span>
                                 </Label>
                                 <Input
                                     id="campaignName"
-                                    placeholder="e.g. Knee Pain Camp 2026"
+                                    placeholder="e.g. Back Pain Awareness Month"
                                     value={campaignName}
                                     onChange={(e) => setCampaignName(e.target.value)}
                                     className={`h-10 ${errors.campaignName ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
@@ -362,6 +365,20 @@ export function CreateCampaignDialog({
                                 )}
                             </div>
 
+                            {/* Target Condition */}
+                            <div className="space-y-2">
+                                <Label htmlFor="targetCondition" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Target Condition
+                                </Label>
+                                <Input
+                                    id="targetCondition"
+                                    placeholder="e.g. Knee pain, Lower back pain"
+                                    value={targetCondition}
+                                    onChange={(e) => setTargetCondition(e.target.value)}
+                                    className="h-10"
+                                />
+                            </div>
+
                             {/* Start Date */}
                             <div className="space-y-2">
                                 <Label htmlFor="startDate" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -385,19 +402,43 @@ export function CreateCampaignDialog({
                             {/* End Date */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="endDate" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <Label htmlFor="endDate" className={`text-xs font-semibold uppercase tracking-wider ${isOngoing ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
                                         End Date
                                     </Label>
-                                    <span className="text-[10px] text-muted-foreground font-medium italic">Leave empty for ongoing</span>
+                                    <div className="ml-3 flex items-center gap-2">
+                                        <Checkbox
+                                            id="isOngoing"
+                                            checked={isOngoing}
+                                            onCheckedChange={(checked) => {
+                                                setIsOngoing(!!checked)
+                                                if (checked) {
+                                                    setEndDate("")
+                                                    if (errors.endDate) {
+                                                        setErrors((prev) => {
+                                                            const { endDate: _, ...rest } = prev
+                                                            return rest
+                                                        })
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor="isOngoing"
+                                            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none"
+                                        >
+                                            Ongoing
+                                        </Label>
+                                    </div>
                                 </div>
                                 <Input
                                     id="endDate"
                                     type="date"
                                     value={endDate}
+                                    disabled={isOngoing}
                                     onChange={(e) => setEndDate(e.target.value)}
                                     className={`h-10 text-sm ${errors.endDate ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                                 />
-                                {errors.endDate && (
+                                {errors.endDate && !isOngoing && (
                                     <span className="flex items-center gap-1 text-xs font-medium text-destructive">
                                         <AlertCircle className="h-3 w-3" />
                                         {errors.endDate}
@@ -405,22 +446,10 @@ export function CreateCampaignDialog({
                                 )}
                             </div>
 
-                            {/* Target Condition */}
-                            <div className="space-y-2">
-                                <Label htmlFor="targetCondition" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                    Target Condition
-                                </Label>
-                                <Input
-                                    id="targetCondition"
-                                    placeholder="e.g. Knee pain, Lower back pain"
-                                    value={targetCondition}
-                                    onChange={(e) => setTargetCondition(e.target.value)}
-                                    className="h-10"
-                                />
-                            </div>
+
 
                             {/* Landing Page URL */}
-                            <div className="space-y-2">
+                            <div className="space-y-2 col-span-2">
                                 <Label htmlFor="landingPageUrl" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Landing Page URL
                                 </Label>

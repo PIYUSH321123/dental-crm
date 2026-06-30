@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   CameraIcon,
   ChartBarIcon,
@@ -44,7 +45,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/admin/dashboard",
       icon: (
         <LayoutDashboardIcon
         />
@@ -68,7 +69,7 @@ const data = {
     },
     {
       title: "Projects",
-      url: "/projects",
+      url: "/admin/projects",
       icon: (
         <FolderIcon
         />
@@ -204,10 +205,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="#">
+              <Link href="/admin/dashboard">
                 <CommandIcon className="size-5!" />
                 <span className="text-base font-semibold">Sales Guru</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
