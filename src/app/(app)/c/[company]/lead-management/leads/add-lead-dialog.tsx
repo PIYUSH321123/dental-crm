@@ -142,7 +142,11 @@ export function AddLeadDialog({
                 if (!newOpen) resetForm()
             }}
         >
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent 
+                className="max-w-4xl max-h-[90vh] overflow-y-auto"
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+            >
                 <DialogHeader>
                     <DialogTitle>Add New Lead</DialogTitle>
                     <DialogDescription>

@@ -67,7 +67,7 @@ const data = {
             items: [
                 {
                     title: "Leads",
-                    url: "/c/[company]/lead-management",
+                    url: "/c/[company]/lead-management/leads",
                 },
                 {
                     title: "Follow Ups",
@@ -75,7 +75,7 @@ const data = {
                 },
                 {
                     title: "Tasks",
-                    url: "/c/[company]/lead-management#tasks",
+                    url: "/c/[company]/lead-management/leads#tasks",
                 },
             ],
         },

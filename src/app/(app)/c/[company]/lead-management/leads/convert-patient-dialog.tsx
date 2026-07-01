@@ -28,7 +28,11 @@ export function ConvertPatientDialog({
 }: ConvertPatientDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
+            <DialogContent 
+                className="max-w-md"
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+            >
                 <DialogHeader>
                     <DialogTitle>Convert to Patient</DialogTitle>
                     <DialogDescription>
