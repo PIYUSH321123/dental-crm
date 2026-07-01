@@ -67,15 +67,15 @@ const data = {
             items: [
                 {
                     title: "Leads",
-                    url: "#",
+                    url: "/c/[company]/lead-management",
                 },
                 {
                     title: "Follow Ups",
-                    url: "#",
+                    url: "/c/[company]/lead-management/follow-up",
                 },
                 {
                     title: "Tasks",
-                    url: "#",
+                    url: "/c/[company]/lead-management#tasks",
                 },
             ],
         },
