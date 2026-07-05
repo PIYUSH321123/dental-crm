@@ -246,7 +246,7 @@ export function CreateCampaignDialog({
                 </Button>
             </DialogTrigger>
             <DialogContent
-                className="max-w-2xl w-full p-6 sm:p-8 rounded-2xl border bg-card text-foreground shadow-lg overflow-y-auto max-h-[90vh]"
+                className="max-w-2xl lg:max-w-[70vw] w-full p-6 sm:p-8 rounded-2xl border bg-card text-foreground shadow-lg overflow-y-auto max-h-[90vh]"
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onInteractOutside={(e) => e.preventDefault()}
             >
@@ -264,9 +264,9 @@ export function CreateCampaignDialog({
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Campaign Name */}
-                            <div className="space-y-2 col-span-2">
+                            <div className="space-y-2 col-span-2 lg:col-span-3">
                                 <Label htmlFor="campaignName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Campaign Name <span className="text-rose-500">*</span>
                                 </Label>
@@ -449,7 +449,7 @@ export function CreateCampaignDialog({
 
 
                             {/* Landing Page URL */}
-                            <div className="space-y-2 col-span-2">
+                            <div className="space-y-2 col-span-2 lg:col-span-3">
                                 <Label htmlFor="landingPageUrl" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Landing Page URL
                                 </Label>

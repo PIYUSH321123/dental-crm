@@ -86,7 +86,7 @@ const data = {
             items: [
                 {
                     title: "Patients",
-                    url: "#",
+                    url: "/c/[company]/patient-management/patients",
                 },
             ],
         },
@@ -97,15 +97,15 @@ const data = {
             items: [
                 {
                     title: "Clinical Assesments",
-                    url: "#",
+                    url: "/c/[company]/activity-management/assessments",
                 },
                 {
                     title: "Treatment Plans",
-                    url: "#",
+                    url: "/c/[company]/activity-management/treatment-plans",
                 },
                 {
                     title: "Exercise Prescriptions",
-                    url: "#",
+                    url: "/c/[company]/activity-management/exercises",
                 },
             ],
         },
@@ -116,7 +116,7 @@ const data = {
             items: [
                 {
                     title: "Timeline",
-                    url: "#",
+                    url: "/c/[company]/appointments/timeline-calendar",
                 },
                 {
                     title: "Schedule",
@@ -124,7 +124,7 @@ const data = {
                 },
                 {
                     title: "Session Management",
-                    url: "#",
+                    url: "/c/[company]/appointments/sessions",
                 },
             ],
         },
