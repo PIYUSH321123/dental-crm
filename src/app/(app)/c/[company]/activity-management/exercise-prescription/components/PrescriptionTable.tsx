@@ -49,14 +49,39 @@ const INITIAL_PRESCRIPTIONS: Prescription[] = [
   }
 ]
 
+import { getPatientClinicalData } from "../../clinical-data-helper"
+
 export default function PrescriptionTable({
   patientName = "Ravi Kumar",
   patientId = "P-0142",
   lastViewedDate = "Jun 12, 2025 at 8:30 AM",
   onAddExercise,
 }: PrescriptionTableProps) {
+  const [selectedPatientId, setSelectedPatientId] = React.useState(patientId)
+
+  React.useEffect(() => {
+    setSelectedPatientId(patientId)
+  }, [patientId])
+
+  const activePatientName = React.useMemo(() => {
+    if (selectedPatientId === "P-0142") return "Ravi Kumar"
+    if (selectedPatientId === "P-0141") return "Meera Shah"
+    if (selectedPatientId === "P-0139") return "Arjun Singh"
+    return patientName
+  }, [selectedPatientId, patientName])
+
+  // Derived default exercises from selectedPatientId
+  const defaultExercises = React.useMemo(() => {
+    const data = getPatientClinicalData(selectedPatientId)
+    return data.exercises
+  }, [selectedPatientId])
+
   // Prescription List state to enable interactive additions and removals (CRUD)
-  const [prescriptions, setPrescriptions] = React.useState<Prescription[]>(INITIAL_PRESCRIPTIONS)
+  const [prescriptions, setPrescriptions] = React.useState<Prescription[]>(defaultExercises)
+
+  React.useEffect(() => {
+    setPrescriptions(defaultExercises)
+  }, [defaultExercises])
   
   // Row inline-editing state
   const [editingId, setEditingId] = React.useState<number | null>(null)
@@ -140,8 +165,17 @@ export default function PrescriptionTable({
     <div className="space-y-3">
       {/* Inline Action Controls Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-        <div className="text-sm font-semibold text-foreground">
-          🏃 Active Prescription — {patientName} ({patientId})
+        <div className="text-sm font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+          <span>🏃 Active Prescription</span>
+          <select 
+            className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 rounded-[5px] text-[11px] bg-background text-foreground focus:outline-none font-semibold h-7 cursor-pointer"
+            value={selectedPatientId}
+            onChange={(e) => setSelectedPatientId(e.target.value)}
+          >
+            <option value="P-0142">Ravi Kumar (P-0142)</option>
+            <option value="P-0141">Meera Shah (P-0141)</option>
+            <option value="P-0139">Arjun Singh (P-0139)</option>
+          </select>
         </div>
         <div className="flex gap-1.5">
           <Button variant="outline" size="sm" className="text-xs border-[#27ae60] text-[#27ae60] hover:bg-[#e8f5e9]">

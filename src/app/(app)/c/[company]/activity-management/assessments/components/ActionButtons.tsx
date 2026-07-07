@@ -7,19 +7,19 @@ export default function ActionButtons() {
         <div className="flex gap-2 mt-3 flex-wrap font-sans">
             <button 
                 type="button"
-                className={`${btnBase} bg-[#1a6eb5] hover:bg-[#155a96] dark:bg-sky-600 dark:hover:bg-sky-500 text-white`}
+                className={`${btnBase} bg-[#1a6eb5] hover:bg-[#155a96] text-white`}
             >
                 💾 Save Assessment
             </button>
             <button 
                 type="button"
-                className={`${btnBase} bg-[#27ae60] hover:bg-[#1e7e46] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white`}
+                className={`${btnBase} bg-[#27ae60] hover:bg-[#1e7e46] text-white`}
             >
                 💾 Save & Create Treatment Plan
             </button>
             <button 
                 type="button"
-                className={`${btnBase} bg-transparent border border-[#1a6eb5] dark:border-sky-500 text-[#1a6eb5] dark:text-sky-400 hover:bg-slate-50 dark:hover:bg-slate-800`}
+                className={`${btnBase} bg-transparent border border-[#1a6eb5] text-[#1a6eb5] hover:bg-slate-50`}
             >
                 🖨 Print Assessment
             </button>

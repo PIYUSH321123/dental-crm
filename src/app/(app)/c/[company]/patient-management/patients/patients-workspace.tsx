@@ -34,6 +34,19 @@ import { PatientDataTable } from "./_patient-table/patient-data-table"
 import { AddPatientDialog } from "./add-patient-dialog"
 import { CollectPaymentDialog } from "./collect-payment-dialog"
 
+import ChiefComplaint from "../../activity-management/assessments/components/ChiefComplaint"
+import DiagnosisArea from "../../activity-management/assessments/components/DiagnosisArea"
+import PhysicalTesting from "../../activity-management/assessments/components/PhysicalTesting"
+import DocumentUpload from "../../activity-management/assessments/components/DocumentUpload"
+import ActionButtons from "../../activity-management/assessments/components/ActionButtons"
+
+import { ClipboardList } from "lucide-react"
+import PlanDetails from "../../activity-management/treatment-plans/components/PlanDetails"
+import TherapyAndPhases from "../../activity-management/treatment-plans/components/TheapyAndPhases"
+import PlanActionBtns from "../../activity-management/treatment-plans/components/PlanActionBtns"
+
+import { getPatientClinicalData } from "../../activity-management/clinical-data-helper"
+
 export default function PatientsWorkspace() {
     const params = useParams()
     const company = params.company as string
@@ -45,6 +58,9 @@ export default function PatientsWorkspace() {
     // View & Dialog control
     const [viewMode, setViewMode] = useState<"list" | "profile">("list")
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+    const [activeTab, setActiveTab] = useState("profile")
+
+    const clinicalData = selectedPatient ? getPatientClinicalData(selectedPatient.id) : undefined
 
     // Modal states
     const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -491,6 +507,7 @@ export default function PatientsWorkspace() {
                             onClick={() => {
                                 setViewMode("list")
                                 setSelectedPatient(null)
+                                setActiveTab("profile")
                             }}
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -588,23 +605,12 @@ export default function PatientsWorkspace() {
 
                         {/* Right column tabs panel */}
                         <div className="lg:col-span-9">
-                            <Tabs defaultValue="profile" className="w-full space-y-4">
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
                                 <TabsList className="bg-muted p-1 rounded-lg w-full flex overflow-x-auto justify-start border border-border h-11 shrink-0 scrollbar-none">
                                     <TabsTrigger value="profile" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">👤 Profile</TabsTrigger>
+                                    <TabsTrigger value="assessments" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">🩺 Assessment</TabsTrigger>
 
-                                    {/* Redirect Trigger Tabs */}
-                                    <button
-                                        onClick={() => handleRedirect("Assessments", "/activity-management/assessments")}
-                                        className="inline-flex items-center justify-center whitespace-nowrap px-3.5 py-1 text-xs font-semibold ring-offset-background transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:text-foreground h-8.5 rounded-md cursor-pointer shrink-0"
-                                    >
-                                        🩺 Assessment
-                                    </button>
-                                    <button
-                                        onClick={() => handleRedirect("Treatment Plans", "/activity-management/treatment-plans")}
-                                        className="inline-flex items-center justify-center whitespace-nowrap px-3.5 py-1 text-xs font-semibold ring-offset-background transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:text-foreground h-8.5 rounded-md cursor-pointer shrink-0"
-                                    >
-                                        📋 Treatment Plan
-                                    </button>
+                                    <TabsTrigger value="treatment-plans" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">📋 Treatment Plan</TabsTrigger>
                                     <button
                                         onClick={() => handleRedirect("Sessions", "/appointments/sessions")}
                                         className="inline-flex items-center justify-center whitespace-nowrap px-3.5 py-1 text-xs font-semibold ring-offset-background transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:text-foreground h-8.5 rounded-md cursor-pointer shrink-0"
@@ -628,6 +634,99 @@ export default function PatientsWorkspace() {
                                     <Card className="bg-card border-border p-5">
                                         <ProfileEditForm patient={selectedPatient} onSave={handleSaveProfileChanges} />
                                     </Card>
+                                </TabsContent>
+
+                                {/* Tabs Content - Assessments */}
+                                <TabsContent value="assessments" className="space-y-4 focus-visible:ring-0">
+                                    <div className="border-2 border-slate-300 bg-slate-50 rounded-[10px] overflow-hidden w-full shadow-sm transition-all duration-300">
+                                        {/* wf-titlebar */}
+                                        <div className="bg-[#37474f] px-3.5 py-2 flex items-center gap-1.5">
+                                            <span className="text-[#cfd8dc] text-[11px] font-bold tracking-[0.5px] uppercase ml-2">
+                                                ASSESSMENT FORM
+                                            </span>
+                                        </div>
+
+                                        {/* wf-content */}
+                                        <div className="p-4">
+                                            {/* Header */}
+                                            <div className="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-1.5 flex-wrap">
+                                                <span>🩺 Initial Assessment</span>
+                                                <select 
+                                                    className="px-2 py-0.5 border border-slate-300 rounded-[5px] text-[11px] bg-white text-slate-600 focus:outline-none font-semibold h-7 cursor-pointer"
+                                                    value={selectedPatient.id}
+                                                    onChange={(e) => {
+                                                        const p = patients.find(pat => pat.id === e.target.value)
+                                                        if (p) setSelectedPatient(p)
+                                                    }}
+                                                >
+                                                    <option value="P-0142">Ravi Kumar (P-0142)</option>
+                                                    <option value="P-0141">Meera Shah (P-0141)</option>
+                                                    <option value="P-0139">Arjun Singh (P-0139)</option>
+                                                </select>
+                                            </div>
+
+                                            {/* 3-Column Grid Layout for Form Cards */}
+                                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 items-stretch">
+                                                <ChiefComplaint clinicalData={clinicalData} />
+                                                <DiagnosisArea clinicalData={clinicalData} />
+                                                <PhysicalTesting clinicalData={clinicalData} />
+                                            </div>
+
+                                            {/* Document Upload Area */}
+                                            <DocumentUpload />
+
+                                            {/* Action Buttons Row */}
+                                            <ActionButtons />
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
+                                {/* Tabs Content - Treatment Plans */}
+                                <TabsContent value="treatment-plans" className="space-y-4 focus-visible:ring-0">
+                                    <div className="max-w-7xl mx-auto border border-slate-300 bg-slate-50 rounded-[10px] shadow-sm overflow-hidden w-full">
+                                        <div className="flex flex-row items-center justify-between border-b border-slate-200 bg-white p-4 pb-4">
+                                            <div className="flex items-center gap-3.5">
+                                                <div className="h-10 w-10 bg-[#e3f2fd] text-[#1a6eb5] flex items-center justify-center rounded-md shrink-0">
+                                                    <ClipboardList className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-lg font-semibold text-slate-800">Treatment Plan Management</div>
+                                                    <div className="text-xs text-slate-500">Goal setting, therapy types, session planning, expected recovery timeline</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" className="text-xs border-slate-300 text-slate-600 hover:bg-slate-50 bg-white">View Previous Plans</Button>
+                                                <Button size="sm" className="text-xs bg-[#27ae60] text-white hover:bg-[#219653]">+ New Plan</Button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-6 space-y-4">
+                                            <div className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5 flex-wrap">
+                                                <span>📋 Treatment Plan</span>
+                                                <select 
+                                                    className="px-2 py-0.5 border border-slate-300 rounded-[5px] text-[11px] bg-white text-slate-600 focus:outline-none font-semibold h-7 cursor-pointer"
+                                                    value={selectedPatient.id}
+                                                    onChange={(e) => {
+                                                        const p = patients.find(pat => pat.id === e.target.value)
+                                                        if (p) setSelectedPatient(p)
+                                                    }}
+                                                >
+                                                    <option value="P-0142">Ravi Kumar (P-0142)</option>
+                                                    <option value="P-0141">Meera Shah (P-0141)</option>
+                                                    <option value="P-0139">Arjun Singh (P-0139)</option>
+                                                </select>
+                                            </div>
+
+                                            {/* Master 2-Column Side-by-Side Configuration layout */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                                                <PlanDetails clinicalData={clinicalData} />
+                                                <TherapyAndPhases clinicalData={clinicalData} />
+                                            </div>
+
+                                            {/* Footer Operations Row Component */}
+                                            <PlanActionBtns />
+                                        </div>
+                                    </div>
                                 </TabsContent>
 
                                 {/* Tabs Content - Billing */}
