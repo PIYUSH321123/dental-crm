@@ -462,7 +462,7 @@ export default function PatientsWorkspace() {
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start text-xs text-muted-foreground hover:text-foreground h-8 cursor-pointer"
-                                onClick={() => handleRedirect("Exercises", "/activity-management/exercises")}
+                                onClick={() => handleRedirect("Exercises", "/activity-management/exercise-prescription")}
                             >
                                 Exercises
                             </Button>
@@ -612,7 +612,7 @@ export default function PatientsWorkspace() {
                                         📆 Sessions ({selectedPatient.sessions_attended})
                                     </button>
                                     <button
-                                        onClick={() => handleRedirect("Exercises", "/activity-management/exercises")}
+                                        onClick={() => handleRedirect("Exercises", "/activity-management/exercise-prescription")}
                                         className="inline-flex items-center justify-center whitespace-nowrap px-3.5 py-1 text-xs font-semibold ring-offset-background transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-muted-foreground hover:text-foreground h-8.5 rounded-md cursor-pointer shrink-0"
                                     >
                                         🏃 Exercises

@@ -105,7 +105,7 @@ const data = {
                 },
                 {
                     title: "Exercise Prescriptions",
-                    url: "/c/[company]/activity-management/exercises",
+                    url: "/c/[company]/activity-management/exercise-prescription",
                 },
             ],
         },
