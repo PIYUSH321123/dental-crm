@@ -16,6 +16,7 @@ import {
     PieChart,
     Send,
     Settings2,
+    Sparkles,
     SquareTerminal,
     Store,
     Users,
@@ -125,6 +126,25 @@ const data = {
                 {
                     title: "Session Management",
                     url: "/c/[company]/appointments/sessions",
+                },
+            ],
+        },
+        {
+            title: "Yoga Studio",
+            url: "#",
+            icon: Sparkles,
+            items: [
+                {
+                    title: "Classes & Batches",
+                    url: "/c/[company]/yoga",
+                },
+                {
+                    title: "Asana Library",
+                    url: "/c/[company]/yoga/asana-library",
+                },
+                {
+                    title: "Courses & Workshops",
+                    url: "/c/[company]/yoga/courses-workshops",
                 },
             ],
         },

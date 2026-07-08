@@ -98,7 +98,7 @@ export default function CompanyLayout({
                                     <span>CRM Modules</span>
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent className="w-56 rounded-xl p-2">
-                                    {["Marketing", "Lead Management", "Patient Management", "Activity Management", "Appoinments", "Product & Services", "Settings"].map((module) => {
+                                    {["Marketing", "Lead Management", "Patient Management", "Activity Management", "Appoinments", "Yoga Studio", "Product & Services", "Settings"].map((module) => {
                                         const isHidden = hiddenCrmModules.includes(module);
                                         return (
                                             <DropdownMenuCheckboxItem
