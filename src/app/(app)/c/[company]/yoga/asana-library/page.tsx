@@ -24,7 +24,7 @@ export default function AsanaLibraryPage() {
                 </Button>
             </div>
             
-            <Card className="max-w-7xl mx-auto border border-border bg-card shadow-sm">
+            <Card className="w-full border border-border bg-card shadow-sm">
                 <CardHeader className="flex flex-row items-center border-b pb-4 gap-3">
                     <div className="h-10 w-10 bg-[#8e44ad]/10 text-[#8e44ad] flex items-center justify-center rounded-md shrink-0 text-lg shadow-2xs">
                         🧘

@@ -253,7 +253,7 @@ export default function AsanaLibraryTable() {
 
             {/* Content Tables */}
             {activeSubTab === "asanas" && (
-                <div className="overflow-hidden border border-[#eceff1] rounded-md bg-card shadow-xs">
+                <div className="overflow-x-auto w-full border border-[#eceff1] rounded-md bg-card shadow-xs">
                     <table className="w-full text-left border-collapse text-[11px]">
                         <thead>
                             <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider">
@@ -305,7 +305,7 @@ export default function AsanaLibraryTable() {
             )}
 
             {activeSubTab === "pranayama" && (
-                <div className="overflow-hidden border border-[#eceff1] rounded-md bg-card shadow-xs">
+                <div className="overflow-x-auto w-full border border-[#eceff1] rounded-md bg-card shadow-xs">
                     <table className="w-full text-left border-collapse text-[11px]">
                         <thead>
                             <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider">
@@ -348,7 +348,7 @@ export default function AsanaLibraryTable() {
             )}
 
             {activeSubTab === "meditation" && (
-                <div className="overflow-hidden border border-[#eceff1] rounded-md bg-card shadow-xs">
+                <div className="overflow-x-auto w-full border border-[#eceff1] rounded-md bg-card shadow-xs">
                     <table className="w-full text-left border-collapse text-[11px]">
                         <thead>
                             <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider">
@@ -389,7 +389,7 @@ export default function AsanaLibraryTable() {
             )}
 
             {activeSubTab === "sequences" && (
-                <div className="overflow-hidden border border-[#eceff1] rounded-md bg-card shadow-xs">
+                <div className="overflow-x-auto w-full border border-[#eceff1] rounded-md bg-card shadow-xs">
                     <table className="w-full text-left border-collapse text-[11px]">
                         <thead>
                             <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider">
