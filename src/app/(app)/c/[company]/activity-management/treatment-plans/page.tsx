@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ClipboardList, ArrowLeft } from "lucide-react"
+import { PatientSearchSelect } from "@/components/ui/patient-search-select"
+import { ArrowLeft, Plus, History } from "lucide-react"
 
 // Import custom folder layout blocks
 import PlanDetails from "./components/PlanDetails"
@@ -12,6 +12,12 @@ import TherapyAndPhases from "./components/TheapyAndPhases"
 import PlanActionBtns from "./components/PlanActionBtns"
 
 import { getPatientClinicalData } from "../clinical-data-helper"
+
+const PATIENT_OPTIONS = [
+    { value: "Ravi Kumar (P-0142)", label: "Ravi Kumar (P-0142)" },
+    { value: "Meera Shah (P-0141)", label: "Meera Shah (P-0141)" },
+    { value: "Arjun Singh (P-0139)", label: "Arjun Singh (P-0139)" },
+]
 
 export default function TreatmentPlansPage() {
     const params = useParams()
@@ -24,57 +30,60 @@ export default function TreatmentPlansPage() {
     }, [activePatient])
 
     return (
-        <div className="flex-1 p-6 space-y-6">
-            <div>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 text-xs gap-1 pl-1 cursor-pointer hover:bg-accent/40" 
-                    onClick={() => router.push(`/c/${company}/patient-management/patients`)}
-                >
-                    <ArrowLeft className="h-4 w-4" /> Back to Patients
-                </Button>
-            </div>
-            
-            <div className="max-w-7xl mx-auto border border-slate-300 bg-slate-50 rounded-[10px] shadow-sm overflow-hidden">
-                <div className="flex flex-row items-center justify-between border-b border-slate-200 bg-white p-4 pb-4">
-                    <div className="flex items-center gap-3.5">
-                        <div className="h-10 w-10 bg-[#e3f2fd] text-[#1a6eb5] flex items-center justify-center rounded-md shrink-0">
-                            <ClipboardList className="h-5 w-5" />
+        <div className="flex flex-1 flex-col">
+            <div className="@container/main flex flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+
+                    {/* Page Header — matches lead-management pattern */}
+                    <div className="px-4 lg:px-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 pl-1 cursor-pointer hover:bg-accent/40"
+                                    onClick={() => router.push(`/c/${company}/patient-management/patients`)}
+                                >
+                                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Patients
+                                </Button>
+                            </div>
+                            <h1 className="text-2xl font-bold tracking-tight">Treatment Plan Management</h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Goal setting, therapy types, session planning, and expected recovery timeline.
+                            </p>
+                            {/* Patient Selector — below heading */}
+                            <div className="flex items-center gap-2 mt-3">
+                                <span className="text-xs font-semibold text-muted-foreground">Patient:</span>
+                                <PatientSearchSelect
+                                    options={PATIENT_OPTIONS}
+                                    value={activePatient}
+                                    onValueChange={setActivePatient}
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-lg font-semibold text-slate-800">Treatment Plan Management</div>
-                            <div className="text-xs text-slate-500">Goal setting, therapy types, session planning, expected recovery timeline</div>
+
+                        {/* Action buttons — top-right */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                                <History className="h-3.5 w-3.5" /> Previous Plans
+                            </Button>
+                            <Button size="sm" className="h-8 text-xs gap-1.5">
+                                <Plus className="h-3.5 w-3.5" /> New Plan
+                            </Button>
                         </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="text-xs border-slate-300 text-slate-600 hover:bg-slate-50 bg-white">View Previous Plans</Button>
-                        <Button size="sm" className="text-xs bg-[#27ae60] text-white hover:bg-[#219653]">+ New Plan</Button>
-                    </div>
-                </div>
-                
-                <div className="p-6 space-y-4">
-                    <div className="text-sm font-semibold text-slate-700 mb-1 flex items-center gap-1.5 flex-wrap">
-                        <span>📋 Treatment Plan</span>
-                        <select 
-                            className="px-2 py-0.5 border border-slate-300 rounded-[5px] text-[11px] bg-white text-slate-600 focus:outline-none font-semibold h-7 cursor-pointer"
-                            value={activePatient}
-                            onChange={(e) => setActivePatient(e.target.value)}
-                        >
-                            <option value="Ravi Kumar (P-0142)">Ravi Kumar (P-0142)</option>
-                            <option value="Meera Shah (P-0141)">Meera Shah (P-0141)</option>
-                            <option value="Arjun Singh (P-0139)">Arjun Singh (P-0139)</option>
-                        </select>
                     </div>
 
-                    {/* Master 2-Column Side-by-Side Configuration layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                        <PlanDetails clinicalData={clinicalData} />
-                        <TherapyAndPhases clinicalData={clinicalData} />
-                    </div>
+                    {/* Main Content */}
+                    <div className="px-4 lg:px-6 flex flex-col gap-4">
+                        {/* Master 2-Column Side-by-Side Configuration layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                            <PlanDetails clinicalData={clinicalData} />
+                            <TherapyAndPhases clinicalData={clinicalData} />
+                        </div>
 
-                    {/* Footer Operations Row Component */}
-                    <PlanActionBtns />
+                        {/* Footer Operations Row Component */}
+                        <PlanActionBtns />
+                    </div>
                 </div>
             </div>
         </div>

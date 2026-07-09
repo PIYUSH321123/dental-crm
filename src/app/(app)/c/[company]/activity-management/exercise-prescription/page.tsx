@@ -1,9 +1,9 @@
 "use client"
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ClipboardList, ArrowLeft } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { ArrowLeft } from "lucide-react"
 
 // Import custom dynamic catalog parts
 import ExerciseLibrary from "./components/ExerciseLibrary"
@@ -13,67 +13,47 @@ export default function ExercisePrescriptionPage() {
     const params = useParams()
     const company = params.company as string
     const router = useRouter()
-    
-    // Manage explicit navigation tabs state
-    const [activeTab, setActiveTab] = React.useState<"library" | "prescription">("library")
 
     return (
-        <div className="flex-1 p-6 space-y-6">
-            <div>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 text-xs gap-1 pl-1 cursor-pointer hover:bg-accent/40" 
-                    onClick={() => router.push(`/c/${company}/patient-management/patients`)}
-                >
-                    <ArrowLeft className="h-4 w-4" /> Back to Patients
-                </Button>
-            </div>
-            
-            <Card className="max-w-7xl mx-auto border border-border bg-card shadow-sm">
-                <CardHeader className="flex flex-row items-center gap-3.5 border-b pb-4">
-                    <div className="h-10 w-10 bg-primary/10 text-primary flex items-center justify-center rounded-md shrink-0">
-                        <ClipboardList className="h-5 w-5" />
-                    </div>
-                    <div>
-                        <CardTitle className="text-lg">Exercise Prescription Module</CardTitle>
-                        <CardDescription>Exercise library, patient-specific prescription, WhatsApp delivery, video guidance</CardDescription>
-                    </div>
-                </CardHeader>
-                
-                <CardContent className="pt-4 space-y-4">
-                    {/* JSX tab toggle switch navigation header */}
-                    <div className="flex border-b border-border text-xs font-medium">
-                        <button 
-                            type="button" 
-                            onClick={() => setActiveTab("library")}
-                            className={`px-4 py-2 border-b-2 font-semibold -mb-[2px] transition-colors ${
-                                activeTab === "library" 
-                                ? "border-primary text-primary" 
-                                : "border-transparent text-muted-foreground hover:text-foreground"
-                            }`}
-                        >
-                            Exercise Library
-                        </button>
-                        <button 
-                            type="button" 
-                            onClick={() => setActiveTab("prescription")}
-                            className={`px-4 py-2 border-b-2 font-semibold -mb-[2px] transition-colors ${
-                                activeTab === "prescription" 
-                                ? "border-primary text-primary" 
-                                : "border-transparent text-muted-foreground hover:text-foreground"
-                            }`}
-                        >
-                            Patient Prescriptions
-                        </button>
+        <div className="flex flex-1 flex-col">
+            <div className="@container/main flex flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+
+                    {/* Page Header — matches lead-management pattern */}
+                    <div className="px-4 lg:px-6 flex flex-col gap-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs gap-1 pl-1 cursor-pointer hover:bg-accent/40"
+                                onClick={() => router.push(`/c/${company}/patient-management/patients`)}
+                            >
+                                <ArrowLeft className="h-3.5 w-3.5" /> Back to Patients
+                            </Button>
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight">Exercise Prescription</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Exercise library, patient-specific prescription, WhatsApp delivery, and video guidance.
+                        </p>
                     </div>
 
-                    {/* Conditional rendering depending on tab selections */}
-                    <div className="pt-2">
-                        {activeTab === "library" ? <ExerciseLibrary /> : <PrescriptionTable />}
+                    {/* Main Content with Tabs */}
+                    <div className="px-4 lg:px-6">
+                        <Tabs defaultValue="library" className="w-full">
+                            <TabsList className="h-9 mb-4">
+                                <TabsTrigger value="library" className="text-xs font-semibold">Exercise Library</TabsTrigger>
+                                <TabsTrigger value="prescription" className="text-xs font-semibold">Patient Prescriptions</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="library">
+                                <ExerciseLibrary />
+                            </TabsContent>
+                            <TabsContent value="prescription">
+                                <PrescriptionTable />
+                            </TabsContent>
+                        </Tabs>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     )
 }
