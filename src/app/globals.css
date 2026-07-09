@@ -5,6 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-brand-primary: var(--brand-primary, #f97316);
+  --color-brand-primary-hover: var(--brand-primary-hover, #ea580c);
+  --color-brand-bg-light: var(--brand-bg-light, #ffedd5);
+  --color-brand-bg-light-hover: var(--brand-bg-light-hover, #fed7aa);
+  --color-brand-gradient-start: var(--brand-gradient-start, #f97316);
+  --color-brand-gradient-end: var(--brand-gradient-end, #dc2626);
+  --color-brand-text-accent: var(--brand-text-accent, #ea580c);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -49,6 +56,13 @@
 }
 
 :root {
+  --brand-primary: #f97316;
+  --brand-primary-hover: #ea580c;
+  --brand-bg-light: #ffedd5;
+  --brand-bg-light-hover: #fed7aa;
+  --brand-gradient-start: #f97316;
+  --brand-gradient-end: #dc2626;
+  --brand-text-accent: #ea580c;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.147 0.004 49.3);
   --popover: oklch(1 0 0);

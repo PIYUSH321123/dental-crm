@@ -79,7 +79,7 @@ export default function PlanActionBtns({
         size="sm"
         onClick={onPrint}
         disabled={isPending}
-        className="h-8 text-xs font-semibold border-[#1a6eb5]/30 text-[#1a6eb5] hover:bg-[#f0f5ff] hover:text-[#0f4a7d] transition-all duration-200 active:scale-95 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+        className="h-8 text-xs font-semibold border border-[#1a6eb5]/30 text-[#1a6eb5] bg-white hover:bg-[#f0f5ff] hover:text-[#0f4a7d] dark:border-[#1a6eb5]/30 dark:bg-white dark:text-[#1a6eb5] dark:hover:bg-[#f0f5ff] dark:hover:text-[#0f4a7d] transition-all duration-200 active:scale-95 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
       >
         {isPrinting ? (
           <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -95,7 +95,7 @@ export default function PlanActionBtns({
         size="sm"
         onClick={onCancel}
         disabled={isPending}
-        className="h-8 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all duration-200 active:scale-95 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+        className="h-8 text-xs font-semibold border border-slate-300 bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:border-slate-300 dark:bg-white dark:text-slate-500 dark:hover:bg-slate-100 dark:hover:text-slate-750 transition-all duration-200 active:scale-95 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
       >
         Cancel
       </Button>

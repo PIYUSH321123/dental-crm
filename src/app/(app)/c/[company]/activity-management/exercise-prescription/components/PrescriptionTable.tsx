@@ -85,7 +85,8 @@ export default function PrescriptionTable({
   
   // Row inline-editing state
   const [editingId, setEditingId] = React.useState<number | null>(null)
-  const [editFormData, setEditFormData] = React.useState<Omit<Prescription, "id" | "exerciseName" | "videoUrl">>({
+  const [editFormData, setEditFormData] = React.useState<Omit<Prescription, "id" | "videoUrl">>({
+    exerciseName: "",
     sets: 3,
     repsOrDuration: "",
     frequency: "",
@@ -96,6 +97,7 @@ export default function PrescriptionTable({
   const startEditing = React.useCallback((item: Prescription) => {
     setEditingId(item.id)
     setEditFormData({
+      exerciseName: item.exerciseName,
       sets: item.sets,
       repsOrDuration: item.repsOrDuration,
       frequency: item.frequency,
@@ -115,6 +117,7 @@ export default function PrescriptionTable({
         item.id === id
           ? {
               ...item,
+              exerciseName: editFormData.exerciseName,
               sets: Number(editFormData.sets),
               repsOrDuration: editFormData.repsOrDuration,
               frequency: editFormData.frequency,
@@ -198,7 +201,7 @@ export default function PrescriptionTable({
       <div className="overflow-hidden border border-[#eceff1] rounded-md">
         <table className="w-full text-left border-collapse text-[11px]">
           <thead>
-            <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider">
+            <tr className="bg-[#37474f] text-white text-[10px] uppercase tracking-wider hover:bg-[#37474f] hover:text-white">
               <th className="p-2 pl-3">#</th>
               <th className="p-2">Exercise</th>
               <th className="p-2">Sets</th>
@@ -213,7 +216,18 @@ export default function PrescriptionTable({
             {prescriptions.map((item, index) => (
               <tr key={item.id} className="hover:bg-muted/30">
                 <td className="p-2 pl-3 text-foreground font-medium">{index + 1}</td>
-                <td className="p-2 text-foreground font-bold">{item.exerciseName}</td>
+                <td className="p-2 text-foreground font-bold">
+                  {editingId === item.id ? (
+                    <input
+                      type="text"
+                      className={tableInputStyles}
+                      value={editFormData.exerciseName}
+                      onChange={(e) => setEditFormData({ ...editFormData, exerciseName: e.target.value })}
+                    />
+                  ) : (
+                    item.exerciseName
+                  )}
+                </td>
                 
                 {/* Sets Column */}
                 <td className="p-2">

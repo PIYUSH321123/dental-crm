@@ -1,36 +1,38 @@
 "use client"
 import * as React from "react"
 
-export interface ClinicalData {
-    painScore?: number
-    painScoreAfter?: number
+export interface PatientSession {
+    id: string
+    patientId: string
+    sessionNumber: number
+    date: string
+    therapist: string
+    duration: string
+    painBefore: number
+    painAfter: number
+    selectedModalities: string[]
+    iftParams: string
+    manualNotes: string
+    exercises: {
+        id: number
+        exerciseName: string
+        sets: number
+        repsOrDuration: string
+        checked: boolean
+    }[]
+    notes: string
 }
 
 interface SessionInfoProps {
-    clinicalData?: ClinicalData
+    session: PatientSession
+    onChange: (fields: Partial<PatientSession>) => void
 }
 
-export default function SessionInfo({ clinicalData }: SessionInfoProps) {
+export default function SessionInfo({ session, onChange }: SessionInfoProps) {
     const inputStyles = "w-full p-1.5 border border-slate-300 rounded-[5px] text-[11px] bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-all duration-200"
 
-    // Default pain scores based on clinicalData
-    const defaultBefore = clinicalData?.painScore ?? 7
-    const defaultAfter = clinicalData?.painScoreAfter ?? 4
-
-    const [beforeScore, setBeforeScore] = React.useState(defaultBefore)
-    const [afterScore, setAfterScore] = React.useState(defaultAfter)
-
-    React.useEffect(() => {
-        if (clinicalData?.painScore !== undefined) {
-            setBeforeScore(clinicalData.painScore)
-        }
-        if (clinicalData?.painScoreAfter !== undefined) {
-            setAfterScore(clinicalData.painScoreAfter)
-        } else {
-            // Estimate after score based on before score (e.g. before - 3)
-            setAfterScore(Math.max(0, (clinicalData?.painScore ?? 7) - 3))
-        }
-    }, [clinicalData])
+    const beforeScore = session?.painBefore ?? 7
+    const afterScore = session?.painAfter ?? 4
 
     return (
         <div className="bg-white border border-slate-200 rounded-[8px] p-3 space-y-2 shadow-sm font-sans text-slate-800 h-full">
@@ -44,7 +46,8 @@ export default function SessionInfo({ clinicalData }: SessionInfoProps) {
                 <input 
                     type="datetime-local" 
                     className={inputStyles} 
-                    defaultValue="2025-06-14T10:30" 
+                    value={session?.date || ""} 
+                    onChange={(e) => onChange({ date: e.target.value })}
                     style={{ colorScheme: "light" }} 
                 />
             </div>
@@ -52,7 +55,11 @@ export default function SessionInfo({ clinicalData }: SessionInfoProps) {
             {/* Therapist */}
             <div className="space-y-0.5">
                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Therapist</label>
-                <select className={inputStyles} defaultValue="Dr. Ankita Kumar">
+                <select 
+                    className={inputStyles} 
+                    value={session?.therapist || "Dr. Ankita Kumar"}
+                    onChange={(e) => onChange({ therapist: e.target.value })}
+                >
                     <option value="Dr. Ankita Kumar">Dr. Ankita Kumar</option>
                     <option value="Dr. Kavita Rao">Dr. Kavita Rao</option>
                     <option value="Dr. Rahul Sharma">Dr. Rahul Sharma</option>
@@ -62,7 +69,12 @@ export default function SessionInfo({ clinicalData }: SessionInfoProps) {
             {/* Duration */}
             <div className="space-y-0.5">
                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Duration (mins)</label>
-                <input type="text" className={inputStyles} defaultValue="45" />
+                <input 
+                    type="text" 
+                    className={inputStyles} 
+                    value={session?.duration || "45"} 
+                    onChange={(e) => onChange({ duration: e.target.value })}
+                />
             </div>
 
             {/* Pain Score BEFORE */}
@@ -74,7 +86,7 @@ export default function SessionInfo({ clinicalData }: SessionInfoProps) {
                         return (
                             <div
                                 key={score}
-                                onClick={() => setBeforeScore(score)}
+                                onClick={() => onChange({ painBefore: score })}
                                 className={`w-[22px] h-[22px] rounded-full text-[9px] flex items-center justify-center cursor-pointer transition-all duration-150 ${
                                     isSelected 
                                     ? "bg-[#e67e22] text-white font-bold shadow-sm shadow-orange-500/20" 
@@ -97,11 +109,11 @@ export default function SessionInfo({ clinicalData }: SessionInfoProps) {
                         return (
                             <div
                                 key={score}
-                                onClick={() => setAfterScore(score)}
+                                onClick={() => onChange({ painAfter: score })}
                                 className={`w-[22px] h-[22px] rounded-full text-[9px] flex items-center justify-center cursor-pointer transition-all duration-150 ${
                                     isSelected 
                                     ? "bg-[#27ae60] text-white font-bold shadow-sm shadow-green-500/20" 
-                                    : "bg-[#eceff1] text-slate-600 font-semibold hover:bg-slate-200"
+                                    : "bg-[#eceff1] text-[#27ae60] font-semibold hover:bg-slate-200"
                                 }`}
                             >
                                 {score}

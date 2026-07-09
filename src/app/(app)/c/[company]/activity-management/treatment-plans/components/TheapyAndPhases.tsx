@@ -191,7 +191,7 @@ export default function TherapyAndPhases({
         <div className="overflow-hidden border border-slate-100 rounded-md shadow-inner bg-slate-50/50">
           <table className="w-full text-left border-collapse text-[11px]">
             <thead>
-              <tr className="bg-[#37474f] text-white text-[9px] uppercase tracking-wider">
+              <tr className="bg-[#37474f] text-white text-[9px] uppercase tracking-wider hover:bg-[#37474f] hover:text-white">
                 <th className="p-2 pl-3 w-1/4">Phase</th>
                 <th className="p-2 w-1/4">Sessions</th>
                 <th className="p-2 w-5/12">Focus</th>

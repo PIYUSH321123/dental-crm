@@ -9,6 +9,7 @@ import {
     Calendar,
     Command,
     Contact,
+    CreditCard,
     Frame,
     LifeBuoy,
     Map,
@@ -148,6 +149,21 @@ const data = {
                 {
                     title: "Reports",
                     url: "#",
+                },
+            ],
+        },
+        {
+            title: "Billing",
+            url: "#",
+            icon: CreditCard,
+            items: [
+                {
+                    title: "Invoices",
+                    url: "/c/[company]/billing/invoices",
+                },
+                {
+                    title: "Payments",
+                    url: "/c/[company]/billing/payments",
                 },
             ],
         },

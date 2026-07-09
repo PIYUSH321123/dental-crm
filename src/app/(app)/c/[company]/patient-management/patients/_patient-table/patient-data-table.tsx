@@ -11,7 +11,7 @@ import {
     getFilteredRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { Filter, ListChecksIcon, ChevronLeft, ChevronRight, X, Info, Download, Plus } from "lucide-react"
+import { ListChecksIcon, ChevronLeft, ChevronRight, X, Info, Download, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +30,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Patient, mockTherapists } from "./patient-data"
 
 interface PatientDataTableProps {
@@ -126,7 +125,7 @@ export function PatientDataTable({
     }
 
     return (
-        <div className="space-y-4 flex-1">
+        <div className="space-y-4 flex-1 font-sans text-slate-700 bg-white">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-2 flex-1 max-w-4xl">
                     {/* Search Field */}
@@ -135,27 +134,27 @@ export function PatientDataTable({
                             placeholder="🔍 Search name, mobile, ID, condition..."
                             value={globalFilter}
                             onChange={(event) => setGlobalFilter(event.target.value)}
-                            className="h-9 bg-background border-input"
+                            className="h-9 bg-white border border-slate-300 text-slate-800 rounded-[5px] focus:border-[#1a6eb5] focus:outline-none"
                         />
                     </div>
 
                     {/* Status Filter Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer">
-                                <span className="text-xs text-muted-foreground">Status:</span>
-                                <span className="text-xs font-semibold">{selectedStatus || "All"}</span>
+                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]">
+                                <span className="text-xs text-slate-400">Status:</span>
+                                <span className="text-xs font-semibold text-slate-700">{selectedStatus || "All"}</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                            <DropdownMenuItem onClick={() => handleStatusFilter("")} className={!selectedStatus ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}>
+                        <DropdownMenuContent align="start" className="bg-white border border-slate-200 shadow-sm rounded-md">
+                            <DropdownMenuItem onClick={() => handleStatusFilter("")} className={!selectedStatus ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}>
                                 All Status
                             </DropdownMenuItem>
                             {["Active", "Completed", "On Hold"].map((status) => (
                                 <DropdownMenuItem
                                     key={status}
                                     onClick={() => handleStatusFilter(status)}
-                                    className={selectedStatus === status ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}
+                                    className={selectedStatus === status ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}
                                 >
                                     {status}
                                 </DropdownMenuItem>
@@ -166,22 +165,22 @@ export function PatientDataTable({
                     {/* Therapist Filter Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer">
-                                <span className="text-xs text-muted-foreground">Therapist:</span>
-                                <span className="text-xs font-semibold font-sans">
+                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]">
+                                <span className="text-xs text-slate-400">Therapist:</span>
+                                <span className="text-xs font-semibold text-slate-700 font-sans">
                                     {selectedTherapist ? (mockTherapists.find(t => t.id === selectedTherapist)?.name || "Selected") : "All"}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
-                            <DropdownMenuItem onClick={() => handleTherapistFilter("")} className={!selectedTherapist ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}>
+                        <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto bg-white border border-slate-200 shadow-sm rounded-md">
+                            <DropdownMenuItem onClick={() => handleTherapistFilter("")} className={!selectedTherapist ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}>
                                 All Therapists
                             </DropdownMenuItem>
                             {mockTherapists.map((therapist) => (
                                 <DropdownMenuItem
                                     key={therapist.id}
                                     onClick={() => handleTherapistFilter(therapist.id)}
-                                    className={selectedTherapist === therapist.id ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}
+                                    className={selectedTherapist === therapist.id ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}
                                 >
                                     {therapist.name}
                                 </DropdownMenuItem>
@@ -192,20 +191,20 @@ export function PatientDataTable({
                     {/* Condition Filter Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer">
-                                <span className="text-xs text-muted-foreground">Condition:</span>
-                                <span className="text-xs font-semibold">{selectedCondition || "All"}</span>
+                            <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]">
+                                <span className="text-xs text-slate-400">Condition:</span>
+                                <span className="text-xs font-semibold text-slate-700">{selectedCondition || "All"}</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
-                            <DropdownMenuItem onClick={() => handleConditionFilter("")} className={!selectedCondition ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}>
+                        <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto bg-white border border-slate-200 shadow-sm rounded-md">
+                            <DropdownMenuItem onClick={() => handleConditionFilter("")} className={!selectedCondition ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}>
                                 All Conditions
                             </DropdownMenuItem>
                             {uniqueConditions.map((condition) => (
                                 <DropdownMenuItem
                                     key={condition}
                                     onClick={() => handleConditionFilter(condition)}
-                                    className={selectedCondition === condition ? "bg-accent font-medium text-xs" : "cursor-pointer text-xs"}
+                                    className={selectedCondition === condition ? "bg-slate-100 font-medium text-xs text-slate-800" : "cursor-pointer text-xs text-slate-700 hover:bg-slate-50"}
                                 >
                                     {condition}
                                 </DropdownMenuItem>
@@ -219,7 +218,7 @@ export function PatientDataTable({
                             variant="ghost"
                             onClick={resetFilters}
                             size="sm"
-                            className="h-9 px-2 gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                            className="h-9 px-2 gap-1 text-slate-400 hover:text-slate-600 cursor-pointer"
                         >
                             <X className="h-4 w-4" />
                             <span className="text-xs">Reset</span>
@@ -228,29 +227,29 @@ export function PatientDataTable({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-9 gap-1.5 cursor-pointer" onClick={onExport}>
-                        <Download className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]" onClick={onExport}>
+                        <Download className="h-4 w-4 text-slate-500" />
                         <span className="text-xs font-semibold">Export</span>
                     </Button>
-                    <Button size="sm" className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer" onClick={onAddPatient}>
+                    <Button size="sm" className="h-9 gap-1.5 bg-[#27ae60] text-white hover:bg-[#219653] cursor-pointer rounded-[5px] font-semibold" onClick={onAddPatient}>
                         <Plus className="h-4 w-4" />
-                        <span className="text-xs font-semibold">Add Patient</span>
+                        <span className="text-xs">Add Patient</span>
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-9 gap-1 cursor-pointer">
-                                <ListChecksIcon className="h-4 w-4" />
+                            <Button variant="outline" size="sm" className="h-9 gap-1 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]">
+                                <ListChecksIcon className="h-4 w-4 text-slate-500" />
                                 <span className="text-xs hidden sm:inline">Columns</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-white border border-slate-200 shadow-sm rounded-md">
                             {table
                                 .getAllColumns()
                                 .filter((column) => column.getCanHide())
                                 .map((column) => (
                                     <DropdownMenuCheckboxItem
                                         key={column.id}
-                                        className="capitalize cursor-pointer text-xs"
+                                        className="capitalize cursor-pointer text-xs text-slate-700 hover:bg-slate-50"
                                         checked={column.getIsVisible()}
                                         onCheckedChange={(value) =>
                                             column.toggleVisibility(!!value)
@@ -265,13 +264,13 @@ export function PatientDataTable({
             </div>
 
             {/* Table */}
-            <div className="overflow-hidden rounded-md border border-border bg-card">
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs">
                 <Table>
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader className="bg-slate-50 border-b border-slate-200">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="border-border">
+                            <TableRow key={headerGroup.id} className="border-slate-200 hover:bg-transparent">
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id} className="font-semibold text-foreground h-11 text-xs">
+                                    <TableHead key={header.id} className="font-bold text-slate-700 h-11 text-xs">
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
@@ -286,11 +285,11 @@ export function PatientDataTable({
                     <TableBody>
                         {table.getRowModel().rows?.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground text-sm">
+                                <TableCell colSpan={columns.length} className="h-32 text-center text-slate-500 text-sm">
                                     <div className="flex flex-col items-center justify-center space-y-2 py-4">
-                                        <Info className="h-6 w-6 text-muted-foreground/60" />
-                                        <p className="font-medium text-muted-foreground">No patients found</p>
-                                        <p className="text-xs text-muted-foreground/60">Try adjusting your filters or search terms.</p>
+                                        <Info className="h-6 w-6 text-slate-400" />
+                                        <p className="font-semibold text-slate-600">No patients found</p>
+                                        <p className="text-xs text-slate-400">Try adjusting your filters or search terms.</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -298,7 +297,7 @@ export function PatientDataTable({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow 
                                     key={row.id} 
-                                    className="hover:bg-muted/30 border-border transition-colors text-xs"
+                                    className="hover:bg-slate-50 border-b border-slate-200 transition-colors text-xs text-slate-700"
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id} className="py-2.5">
@@ -314,27 +313,27 @@ export function PatientDataTable({
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-end space-x-2 py-2">
-                <div className="flex-1 text-xs text-muted-foreground">
+                <div className="flex-1 text-xs text-slate-500 font-semibold">
                     Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} patients
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 cursor-pointer"
+                        className="h-8 w-8 p-0 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <span className="text-xs text-muted-foreground font-medium">
+                    <span className="text-xs text-slate-500 font-bold">
                         Page {table.getState().pagination.pageIndex + 1} of{" "}
                         {table.getPageCount() || 1}
                     </span>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 cursor-pointer"
+                        className="h-8 w-8 p-0 cursor-pointer border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-300 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900 rounded-[5px]"
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
