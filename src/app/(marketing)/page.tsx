@@ -1,15 +1,18 @@
-import Hero from "@/components/marketing/Hero";
-import Services from "@/components/marketing/Services";
-import BlogPreview from "@/components/marketing/BlogPreview";
-import Testimonials from "@/components/marketing/Testimonials";
+import Hero from "./_components/Hero"
+import HowWeHelp from "./_components/HowWeHelp"
+import PathToRecovery from "./_components/PathToRecovery"
+import Testimonials from "./_components/Testimonials"
+import CtaBanner from "./_components/CtaBanner"
 
 export default function LandingPage() {
   return (
-    <>
+    <div className="bg-white text-zinc-950">
       <Hero />
-      <Services />
-      <BlogPreview />
+      <HowWeHelp />
+      <PathToRecovery />
       <Testimonials />
-    </>
-  );
+      <CtaBanner />
+    </div>
+  )
 }
+

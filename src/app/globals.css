@@ -56,13 +56,14 @@
 }
 
 :root {
-  --brand-primary: #f97316;
-  --brand-primary-hover: #ea580c;
-  --brand-bg-light: #ffedd5;
-  --brand-bg-light-hover: #fed7aa;
-  --brand-gradient-start: #f97316;
-  --brand-gradient-end: #dc2626;
-  --brand-text-accent: #ea580c;
+  --brand-primary: #00c950;
+  --brand-primary-hover: #00b048;
+  --brand-bg-light: #f0fdf4;
+  --brand-bg-light-hover: #dcfce7;
+  --brand-gradient-start: #00c950;
+  --brand-gradient-end: #059669;
+  --brand-text-accent: #00b048;
+
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.147 0.004 49.3);
   --popover: oklch(1 0 0);

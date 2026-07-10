@@ -1,5 +1,5 @@
-import Navbar from "@/components/marketing/Navbar";
-import Footer from "@/components/marketing/Footer";
+import Navbar from "./_components/Navbar";
+import Footer from "./_components/Footer";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,3 +10,4 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
+

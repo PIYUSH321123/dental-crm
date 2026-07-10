@@ -31,14 +31,15 @@ export const COMPANIES: Record<string, CompanyConfig> = {
         email: "info@yogaplus.com",
         address: "12, Wellness St, New Delhi, India",
         colors: {
-            primary: "#f97316",
-            primaryHover: "#ea580c",
-            bgLight: "#ffedd5",
-            bgLightHover: "#fed7aa",
-            gradientStart: "#f97316",
-            gradientEnd: "#dc2626",
-            textAccent: "#ea580c",
+            primary: "#00c950",
+            primaryHover: "#00b048",
+            bgLight: "#f0fdf4",
+            bgLightHover: "#dcfce7",
+            gradientStart: "#00c950",
+            gradientEnd: "#059669",
+            textAccent: "#00b048",
         }
+
     },
     stark: {
         slug: "stark",

@@ -43,7 +43,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-8">
                 <Link
                     href="/blogs"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-[#f97316] transition-colors mb-6"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-[#00c950] transition-colors mb-6"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to Articles
                 </Link>
@@ -58,7 +58,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                         />
                     </div>
                     <div className="p-8 sm:p-10">
-                        <div className="inline-block rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-[#f97316] uppercase tracking-wider mb-4">
+                        <div className="inline-block rounded-full bg-[#f0fdf4] px-3 py-1 text-xs font-bold text-[#00c950] uppercase tracking-wider mb-4">
                             {blog.category}
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6">
@@ -101,8 +101,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <Link
-                            href="/onboarding"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold bg-[#f97316] text-white rounded-full hover:bg-[#ea580c] transition-all hover:scale-105 active:scale-95 duration-200"
+                            href="/Booking"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold bg-[#00c950] text-white rounded-full hover:bg-[#00b048] transition-all hover:scale-105 active:scale-95 duration-200"
                         >
                             Schedule Consultation
                             <ChevronRight className="h-4 w-4" />
