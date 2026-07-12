@@ -1,20 +1,20 @@
 interface MarketingProvider {
 
-    connect()
+    connect(): any
 
-    disconnect()
+    disconnect(): any
 
-    createCampaign()
+    createCampaign(): any
 
-    updateCampaign()
+    updateCampaign(): any
 
-    pauseCampaign()
+    pauseCampaign(): any
 
-    deleteCampaign()
+    deleteCampaign(): any
 
-    getCampaign()
+    getCampaign(): any
 
-    getInsights()
+    getInsights(): any
 
-    uploadCreative()
+    uploadCreative(): any
 }
