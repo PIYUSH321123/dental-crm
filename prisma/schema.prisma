@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model PlatformUser {
+  id            String @id @default(cuid())
+
+  name          String
+  email         String @unique
+  password      String
+
+  roleId        String
+  role          PlatformRole @relation(fields: [roleId], references: [id])
+
+  isActive      Boolean @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PlatformRole {
+  id          String @id @default(cuid())
+
+  name        String
+  description String?
+
+  users       PlatformUser[]
+
+  permissions PlatformRolePermission[]
+}
+
+model PlatformPermission {
+  id          String @id @default(cuid())
+
+  module      String
+  action      String
+
+  roles       PlatformRolePermission[]
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  price       Float
+  description String?
+
+  companies   Company[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PlatformRolePermission {
+  roleId       String
+  role         PlatformRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   PlatformPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Company {
+  id                      String            @id @default(cuid())
+  name                    String
+  slug                    String            @unique
+  email                   String?
+  phone                   String?
+  subscriptionPlanId      String?
+  subscriptionPlan        SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id], onDelete: Cascade)
+  subscriptionRenewalDate DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users          User[]
+  integrations   Integration[]
+  patients       Patient[]
+  sessions       Session[]
+  treatmentPlans TreatmentPlan[]
+  campaigns      Campaign[]
+  leads          Lead[]
+  exercises      Exercise[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  name        String
+  email       String   @unique
+  password    String
+
+  role        UserRole
+
+  assignedCampaigns Campaign[] @relation("AssignedStaff")
+  createdCampaigns  Campaign[] @relation("CampaignCreator")
+  assignedLeads     Lead[]     @relation("AssignedTherapist")
+  assignedPatients  Patient[]  @relation("PatientTherapist")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Integration {
+  id          String   @id @default(cuid())
+
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id])
+
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  provider    IntegrationProvider
+
+  name        String
+
+  isEnabled   Boolean @default(false)
+
+  config      Json
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum IntegrationProvider {
+  META
+  GOOGLE_ADS
+  GOOGLE_ANALYTICS
+  YOUTUBE
+  WHATSAPP
+  LINKEDIN
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  name         String
+  integrations Integration[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Patient {
+  id                  String   @id @default(cuid())
+
+  companyId           String
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  name                String
+  dob                 DateTime
+  gender              String   @default("Male")
+  bloodGroup          String?
+  mobile              String
+  altMobile           String?
+  email               String?
+  occupation          String?
+  address             String?
+  height              Float    @default(0)
+  weight              Float    @default(0)
+  bmi                 String?
+  bp                  String?
+  condition           String?
+  
+  assignedTherapistId String?
+  assignedTherapist   User?    @relation("PatientTherapist", fields: [assignedTherapistId], references: [id], onDelete: SetNull)
+
+  sessionsAttended    Int      @default(0)
+  sessionsTotal       Int      @default(0)
+  lastVisit           DateTime?
+  balance             Float    @default(0)
+  status              String   @default("Active") // Active, Completed, On Hold
+
+  medicalHistory      Json?
+  emergencyContact    Json?
+  documents           Json?
+  timeline            Json?
+  invoices            Json?
+
+  sessions            Session[]
+  treatmentPlans      TreatmentPlan[]
+  leads               Lead[]
+  prescriptions       ExercisePrescription[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([companyId, mobile])
+}
+
+model Session {
+  id          String @id @default(cuid())
+
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id])
+
+  patientId   String
+  patient     Patient @relation(fields: [patientId], references: [id])
+
+  notes       String?
+
+  createdAt   DateTime @default(now())
+}
+
+model TreatmentPlan {
+  id          String @id @default(cuid())
+
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id])
+
+  patientId   String
+  patient     Patient @relation(fields: [patientId], references: [id])
+
+  title       String
+  price       Float
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  STAFF
+}
+
+model Campaign {
+  id              String    @id @default(cuid())
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  campaignName    String
+  source          String    // Facebook, Google, etc.
+  budget          Float
+  
+  leadsCount      Int       @default(0)
+  convertedCount  Int       @default(0)
+  revenue         Float     @default(0)
+  
+  status          String    // Draft, Active, Paused, Completed
+  startDate       DateTime
+  endDate         DateTime?
+  isOngoing       Boolean   @default(false)
+  targetCondition String?
+  landingPageUrl  String?
+  
+  assignedStaffId String?
+  assignedStaff   User?     @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  
+  branchId        String
+  notes           String?
+  
+  createdByUserId String?
+  createdByUser   User?     @relation("CampaignCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  
+  leads           Lead[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Lead {
+  id                  String         @id @default(cuid())
+  companyId           String
+  company             Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  name                String
+  mobile              String
+  email               String?
+  age                 Int?
+  gender              String?
+  city                String?
+  occupation          String?
+  painArea            String?
+  condition           String?
+  source              String
+  
+  campaignId          String?
+  campaign            Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  
+  assignedTherapistId String?
+  assignedTherapist   User?          @relation("AssignedTherapist", fields: [assignedTherapistId], references: [id], onDelete: SetNull)
+  
+  status              String
+  lostReason          String?
+  notes               String?
+  branchId            String
+  
+  convertedAt         DateTime?
+  patientId           String?
+  patient             Patient?       @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  
+  activities          LeadActivity[]
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@unique([companyId, mobile])
+}
+
+model LeadActivity {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  type        String
+  title       String
+  description String
+  operator    String?
+  
+  createdAt   DateTime @default(now())
+}
+
+model Exercise {
+  id                String                 @id @default(cuid())
+  companyId         String
+  company           Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  name              String
+  category          String
+  level             String                 @default("Beginner")
+  sets              Int?
+  reps              Int?
+  duration          String?
+  instructions      String?
+  videoUrl          String?
+  imageUrl          String?
+  contraindications String?
+
+  prescriptions     ExercisePrescription[]
+
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+}
+
+model ExercisePrescription {
+  id          String    @id @default(cuid())
+  
+  patientId   String
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  exerciseId  String
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  sets        Int?
+  reps        Int?
+  frequency   String?
+  notes       String?
+  shareToken  String?   @unique
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
