@@ -4,38 +4,38 @@ import * as React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { 
-    User, 
-    Mail, 
-    Lock, 
-    Eye, 
-    EyeOff, 
-    CheckCircle2, 
-    ArrowRight, 
-    ShieldCheck, 
-    Sparkles 
+import {
+    User,
+    Mail,
+    Lock,
+    Eye,
+    EyeOff,
+    CheckCircle2,
+    ArrowRight,
+    ShieldCheck,
+    Sparkles
 } from "lucide-react"
-import { useCompany, CompanyProvider } from "@/components/marketing/CompanyContext"
+import { useCompany } from "@/components/marketing/CompanyContext"
 
-function SignInPageContent() {
+export default function SignInPage() {
     const { company, getLinkWithCompany } = useCompany()
     const router = useRouter()
-    
+
     const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin")
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    
+
     // Sign In form state
     const [signInEmail, setSignInEmail] = useState("")
     const [signInPassword, setSignInPassword] = useState("")
-    
+
     // Sign Up form state
     const [signUpName, setSignUpName] = useState("")
     const [signUpEmail, setSignUpEmail] = useState("")
     const [signUpPassword, setSignUpPassword] = useState("")
     const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("")
     const [agreeToTerms, setAgreeToTerms] = useState(false)
-    
+
     const [error, setError] = useState("")
     const [isLoading, setIsLoading] = useState(false)
 
@@ -56,7 +56,7 @@ function SignInPageContent() {
             console.log("Signing in...", { email: signInEmail, password: signInPassword })
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000))
-            
+
             // Save mock user session in localStorage
             localStorage.setItem("sg-user", JSON.stringify({ email: signInEmail }))
 
@@ -79,12 +79,12 @@ function SignInPageContent() {
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
-        
+
         if (signUpPassword !== signUpConfirmPassword) {
             setError("Passwords do not match.")
             return
         }
-        
+
         if (!agreeToTerms) {
             setError("You must agree to the Terms of Service.")
             return
@@ -93,14 +93,14 @@ function SignInPageContent() {
         setIsLoading(true)
 
         try {
-            console.log("Signing up...", { 
-                name: signUpName, 
-                email: signUpEmail, 
-                password: signUpPassword 
+            console.log("Signing up...", {
+                name: signUpName,
+                email: signUpEmail,
+                password: signUpPassword
             })
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1200))
-            
+
             // Save mock user session in localStorage
             localStorage.setItem("sg-user", JSON.stringify({ email: signUpEmail, name: signUpName }))
 
@@ -125,12 +125,12 @@ function SignInPageContent() {
     return (
         <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-4 sm:p-8">
             <div className="flex flex-col md:flex-row max-w-[960px] w-full rounded-[24px] overflow-hidden shadow-xl border border-gray-100 bg-white">
-                
+
                 {/* Left branding panel */}
-                <div className="md:w-[42%] bg-gradient-to-br from-brand-gradient-start to-brand-gradient-end p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+                <div className="md:w-[42%] bg-linear-to-br from-brand-gradient-start to-brand-gradient-end p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
                     {/* Background glow decoration */}
                     <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-                    
+
                     <div className="relative z-10">
                         {/* Company Logo Section */}
                         <div className="flex items-center gap-2.5 mb-12 sm:mb-16">
@@ -153,8 +153,8 @@ function SignInPageContent() {
                         {/* Dynamic Checkmarks */}
                         <div className="flex flex-col gap-4">
                             {[
-                                "Track your recovery progress", 
-                                "Book sessions with experts", 
+                                "Track your recovery progress",
+                                "Book sessions with experts",
                                 "Access wellness insights"
                             ].map((text, i) => (
                                 <div key={i} className="flex items-center gap-3">
@@ -176,7 +176,7 @@ function SignInPageContent() {
 
                 {/* Right form panel */}
                 <div className="flex-1 p-8 sm:p-12 flex flex-col justify-center">
-                    
+
                     {/* Tabs switcher */}
                     <div className="flex bg-gray-100/80 rounded-2xl p-1 mb-8 max-w-sm w-full mx-auto md:mx-0">
                         <button
@@ -184,11 +184,10 @@ function SignInPageContent() {
                                 setActiveTab("signin")
                                 setError("")
                             }}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-                                activeTab === "signin" 
-                                    ? "bg-white text-brand-primary shadow-sm hover:scale-[1.02]" 
-                                    : "text-gray-500 hover:text-gray-800"
-                            }`}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === "signin"
+                                ? "bg-white text-brand-primary shadow-sm hover:scale-[1.02]"
+                                : "text-gray-500 hover:text-gray-800"
+                                }`}
                         >
                             Sign In
                         </button>
@@ -197,11 +196,10 @@ function SignInPageContent() {
                                 setActiveTab("signup")
                                 setError("")
                             }}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-                                activeTab === "signup" 
-                                    ? "bg-white text-brand-primary shadow-sm hover:scale-[1.02]" 
-                                    : "text-gray-500 hover:text-gray-800"
-                            }`}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${activeTab === "signup"
+                                ? "bg-white text-brand-primary shadow-sm hover:scale-[1.02]"
+                                : "text-gray-500 hover:text-gray-800"
+                                }`}
                         >
                             Sign Up
                         </button>
@@ -242,8 +240,8 @@ function SignInPageContent() {
                                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
                                         Password
                                     </label>
-                                    <Link 
-                                        href={getLinkWithCompany("/forgot-password")} 
+                                    <Link
+                                        href={getLinkWithCompany("/forgot-password")}
                                         className="text-xs font-bold text-brand-primary hover:text-brand-primary-hover transition-colors"
                                     >
                                         Forgot Password?
@@ -274,7 +272,7 @@ function SignInPageContent() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-3.5 bg-gradient-to-r from-brand-gradient-start to-brand-gradient-end text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
+                                className="w-full py-3.5 bg-linear-to-r from-brand-gradient-start to-brand-gradient-end text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -401,7 +399,7 @@ function SignInPageContent() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-3 bg-gradient-to-r from-brand-gradient-start to-brand-gradient-end text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
+                                className="w-full py-3 bg-linear-to-r from-brand-gradient-start to-brand-gradient-end text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-75 disabled:pointer-events-none"
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -422,13 +420,5 @@ function SignInPageContent() {
                 </div>
             </div>
         </div>
-    )
-}
-
-export default function SignInPage() {
-    return (
-        <CompanyProvider>
-            <SignInPageContent />
-        </CompanyProvider>
     )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useMemo } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import {
     Users,
@@ -34,23 +34,31 @@ import { PatientDataTable } from "./_patient-table/patient-data-table"
 import { AddPatientDialog } from "./add-patient-dialog"
 import { CollectPaymentDialog } from "./collect-payment-dialog"
 
+import ClinicalAssessmentsPage from "../../activity-management/assessments/page"
+import TreatmentPlansPage from "../../activity-management/treatment-plans/page"
+import SessionManagementPage from "../../appointments/sessions/page"
+import ExercisePrescriptionPage from "../../activity-management/exercise-prescription/page"
+import BillingInvoicesPage from "../../billing/invoices/page"
+
+import { ClipboardList } from "lucide-react"
+import { getPatientClinicalData } from "../../activity-management/clinical-data-helper"
+
 import ChiefComplaint from "../../activity-management/assessments/components/ChiefComplaint"
 import DiagnosisArea from "../../activity-management/assessments/components/DiagnosisArea"
 import PhysicalTesting from "../../activity-management/assessments/components/PhysicalTesting"
 import DocumentUpload from "../../activity-management/assessments/components/DocumentUpload"
 import ActionButtons from "../../activity-management/assessments/components/ActionButtons"
 
-import { ClipboardList } from "lucide-react"
 import PlanDetails from "../../activity-management/treatment-plans/components/PlanDetails"
 import TherapyAndPhases from "../../activity-management/treatment-plans/components/TheapyAndPhases"
 import PlanActionBtns from "../../activity-management/treatment-plans/components/PlanActionBtns"
-
-import { getPatientClinicalData } from "../../activity-management/clinical-data-helper"
 
 export default function PatientsWorkspace() {
     const params = useParams()
     const company = params.company as string
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const activeSection = searchParams.get("tab") || "list"
 
     const [patients, setPatients] = useState<Patient[]>([])
     const [loaded, setLoaded] = useState(false)
@@ -451,47 +459,100 @@ export default function PatientsWorkspace() {
                             🏥 Patients ›
                         </Button>
                         <div className="pl-4 space-y-1 mt-1">
-                            <Button variant="ghost" className="w-full justify-start text-xs text-foreground font-semibold h-8 bg-muted/40 cursor-default">
+                            <Button
+                                variant="ghost"
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "list"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => activeSection !== "list" && router.push(`/c/${company}/patient-management/patients`)}
+                            >
                                 Patient List
                             </Button>
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start text-xs text-muted-foreground hover:text-foreground h-8 cursor-pointer"
-                                onClick={() => handleRedirect("Assessments", "/activity-management/assessments")}
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "assessments"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => router.push(`/c/${company}/patient-management/patients?tab=assessments`)}
                             >
                                 Assessments
                             </Button>
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start text-xs text-muted-foreground hover:text-foreground h-8 cursor-pointer"
-                                onClick={() => handleRedirect("Treatment Plans", "/activity-management/treatment-plans")}
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "plans"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => router.push(`/c/${company}/patient-management/patients?tab=plans`)}
                             >
                                 Treatment Plans
                             </Button>
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start text-xs text-muted-foreground hover:text-foreground h-8 cursor-pointer"
-                                onClick={() => handleRedirect("Sessions", "/appointments/sessions")}
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "sessions"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => router.push(`/c/${company}/patient-management/patients?tab=sessions`)}
                             >
                                 Sessions
                             </Button>
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start text-xs text-muted-foreground hover:text-foreground h-8 cursor-pointer"
-                                onClick={() => handleRedirect("Exercises", "/activity-management/exercise-prescription")}
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "exercises"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => router.push(`/c/${company}/patient-management/patients?tab=exercises`)}
                             >
                                 Exercises
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={`w-full justify-start text-xs h-8 cursor-pointer ${
+                                    activeSection === "billing"
+                                        ? "bg-muted/40 text-foreground font-semibold cursor-default"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                                onClick={() => router.push(`/c/${company}/patient-management/patients?tab=billing`)}
+                            >
+                                Billing
                             </Button>
                         </div>
                     </div>
 
-                    {/* Table View */}
-                    <PatientDataTable
-                        columns={columns}
-                        data={patients}
-                        onAddPatient={() => setAddDialogOpen(true)}
-                        onExport={handleExportPatients}
-                    />
+                    {/* Content View on Right */}
+                    <div className="flex-1 w-full min-w-0">
+                        {activeSection === "list" && (
+                            <div className="border-2 border-slate-300 bg-slate-50 rounded-[10px] overflow-hidden w-full shadow-sm">
+                                <div className="bg-[#37474f] px-3.5 py-2 flex items-center gap-1.5">
+                                    <span className="text-[#cfd8dc] text-[11px] font-bold tracking-[0.5px] uppercase ml-2">
+                                        PATIENT REGISTER
+                                    </span>
+                                </div>
+                                <div className="p-4">
+                                    <PatientDataTable
+                                        columns={columns}
+                                        data={patients}
+                                        onAddPatient={() => setAddDialogOpen(true)}
+                                        onExport={handleExportPatients}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {activeSection === "assessments" && <ClinicalAssessmentsPage />}
+                        {activeSection === "plans" && <TreatmentPlansPage />}
+                        {activeSection === "sessions" && <SessionManagementPage />}
+                        {activeSection === "exercises" && <ExercisePrescriptionPage />}
+                        {activeSection === "billing" && <BillingInvoicesPage />}
+                    </div>
                 </div>
             )}
 

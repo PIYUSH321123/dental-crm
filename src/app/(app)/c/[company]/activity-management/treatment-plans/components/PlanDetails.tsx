@@ -1,33 +1,54 @@
 import * as React from "react"
 import { ClinicalData } from "../../clinical-data-helper"
 
+// Define unified type for treatment plans
+export interface TreatmentPlan {
+    id: string
+    patientId: string
+    date: string
+    diagnosis: string
+    goals: string
+    status: "Active" | "Completed" | "Discontinued"
+    expectedRecovery: string
+    frequency: string
+    therapyType: string
+    primaryComplaint: string
+    painScore: number
+    painDuration: string
+    painType: string
+    rom: string
+    strength: string
+    specialTests: string
+    icdCode: string
+    clinicalNotes: string
+    sessionsCount: number
+    startDate: string
+    recoveryDate: string
+    therapist: string
+    selectedTherapies: string[]
+    phases: { id: string; name: string; sessions: string; focus: string }[]
+}
+
 interface PlanDetailsProps {
+    plan?: TreatmentPlan
+    onChange?: (plan: Partial<TreatmentPlan>) => void
     clinicalData?: ClinicalData
 }
 
-export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
-    // Reusable field styles locked to light mode
+export default function PlanDetails({ plan, onChange, clinicalData }: PlanDetailsProps) {
+    // Reusable field styles locked to light mode wireframe style
     const fieldStyles = "w-full text-[11px] px-2 py-1.5 border border-slate-300 rounded-[5px] text-slate-600 bg-white focus:outline-none focus:border-[#1a6eb5] transition-colors"
     const labelStyles = "text-[9px] text-slate-400 font-semibold uppercase tracking-wider block"
 
-    const diagnosis = clinicalData?.diagnosis ?? "Knee OA (Kellgren-Lawrence Grade II)"
-    
-    let formattedGoals = "1. Reduce pain to ≤3/10 within 4 weeks.\n2. Restore full ROM.\n3. Return to normal gait."
-    let therapist = "Dr. Ankita Kumar"
-    let sessionsCount = 15
-    let freqValue = "2x per week"
-
-    if (diagnosis.includes("Shoulder") || diagnosis.includes("Capsulitis")) {
-        formattedGoals = "1. Restore shoulder ROM to 160° flexion and abduction.\n2. Reduce night pain to ≤2/10.\n3. Return to daily light overhead activities."
-        therapist = "Dr. Kavita Rao"
-        sessionsCount = 10
-        freqValue = "3x per week"
-    } else if (diagnosis.includes("ACL") || diagnosis.includes("Sports Knee")) {
-        formattedGoals = "1. Achieve full terminal extension (0°).\n2. Quad strength symmetry index ≥ 85%.\n3. Return to running drills without instability."
-        therapist = "Dr. Ankita Kumar"
-        sessionsCount = 10
-        freqValue = "3x per week"
-    }
+    // Derive values dynamically based on which props are provided
+    const diagnosis = plan ? (plan.diagnosis || "") : (clinicalData?.diagnosis || "Knee OA (Kellgren-Lawrence Grade II)")
+    const goals = plan ? (plan.goals || "") : (clinicalData?.goals || "1. Reduce pain to ≤3/10 within 4 weeks.\n2. Restore full ROM.\n3. Return to normal gait.")
+    const sessionsCount = plan ? (plan.sessionsCount || 10) : 15
+    const frequency = plan ? (plan.frequency || "2x per week") : "2x per week"
+    const startDate = plan ? (plan.startDate || "") : "2026-06-15"
+    const recoveryDate = plan ? (plan.recoveryDate || "") : "2026-08-30"
+    const therapistVal = plan ? (plan.therapist || "Dr. Ankita Kumar") : "Dr. Ankita Kumar"
+    const statusVal = plan ? (plan.status || "Active") : "Active"
 
     return (
         <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3.5 font-sans">
@@ -35,15 +56,16 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
                 PLAN DETAILS
             </div>
 
-            {/* Diagnosis reference link (Disabled/Read-only) */}
+            {/* Diagnosis (Read-only if legacy/derived) */}
             <div className="flex flex-col gap-1">
                 <label className={labelStyles}>Diagnosis (from Assessment)</label>
                 <input
                     type="text"
-                    key={diagnosis}
-                    className={`${fieldStyles} bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed`}
-                    defaultValue={diagnosis}
-                    readOnly
+                    className={`${fieldStyles} ${!onChange ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : ""}`}
+                    value={diagnosis}
+                    onChange={(e) => onChange && onChange({ diagnosis: e.target.value })}
+                    readOnly={!onChange}
+                    placeholder="Diagnosis description"
                 />
             </div>
 
@@ -52,8 +74,10 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
                 <label className={labelStyles}>Treatment Goals</label>
                 <textarea
                     className={`${fieldStyles} h-16 resize-none`}
-                    key={formattedGoals}
-                    defaultValue={formattedGoals}
+                    value={goals}
+                    onChange={(e) => onChange && onChange({ goals: e.target.value })}
+                    readOnly={!onChange}
+                    placeholder="Enter treatment goals..."
                 />
             </div>
 
@@ -61,11 +85,22 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Number of Sessions</label>
-                    <input type="number" key={sessionsCount} className={fieldStyles} defaultValue={sessionsCount} />
+                    <input 
+                        type="number" 
+                        className={fieldStyles} 
+                        value={sessionsCount} 
+                        onChange={(e) => onChange && onChange({ sessionsCount: parseInt(e.target.value) || 0 })} 
+                        readOnly={!onChange}
+                    />
                 </div>
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Session Frequency</label>
-                    <select className={fieldStyles} key={freqValue} defaultValue={freqValue}>
+                    <select 
+                        className={fieldStyles} 
+                        value={frequency}
+                        onChange={(e) => onChange && onChange({ frequency: e.target.value })}
+                        disabled={!onChange}
+                    >
                         <option value="3x per week">3x per week</option>
                         <option value="2x per week">2x per week</option>
                         <option value="1x per week">1x per week</option>
@@ -77,7 +112,14 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Plan Start Date</label>
-                    <input type="date" className={fieldStyles} style={{ colorScheme: "light" }} defaultValue="2026-06-15" />
+                    <input 
+                        type="date" 
+                        className={fieldStyles} 
+                        style={{ colorScheme: "light" }} 
+                        value={startDate} 
+                        onChange={(e) => onChange && onChange({ startDate: e.target.value })}
+                        readOnly={!onChange}
+                    />
                 </div>
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Expected Recovery Date</label>
@@ -85,7 +127,9 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
                         type="date"
                         className={`${fieldStyles} bg-emerald-50 text-emerald-800 border-emerald-200`}
                         style={{ colorScheme: "light" }}
-                        defaultValue="2026-08-30"
+                        value={recoveryDate}
+                        onChange={(e) => onChange && onChange({ recoveryDate: e.target.value })}
+                        readOnly={!onChange}
                     />
                 </div>
             </div>
@@ -94,16 +138,27 @@ export default function PlanDetails({ clinicalData }: PlanDetailsProps) {
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Assigned Therapist</label>
-                    <select className={fieldStyles} key={therapist} defaultValue={therapist}>
+                    <select 
+                        className={fieldStyles} 
+                        value={therapistVal}
+                        onChange={(e) => onChange && onChange({ therapist: e.target.value })}
+                        disabled={!onChange}
+                    >
                         <option value="Dr. Ankita Kumar">Dr. Ankita Kumar</option>
                         <option value="Dr. Kavita Rao">Dr. Kavita Rao</option>
                     </select>
                 </div>
                 <div className="flex flex-col gap-1">
                     <label className={labelStyles}>Plan Status</label>
-                    <select className={fieldStyles} defaultValue="Active">
+                    <select 
+                        className={fieldStyles} 
+                        value={statusVal}
+                        onChange={(e) => onChange && onChange({ status: e.target.value as any })}
+                        disabled={!onChange}
+                    >
                         <option value="Active">Active</option>
-                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Discontinued">Discontinued</option>
                     </select>
                 </div>
             </div>

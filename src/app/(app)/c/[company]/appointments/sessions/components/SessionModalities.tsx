@@ -1,59 +1,22 @@
 "use client"
 import * as React from "react"
-import { ClinicalData } from "../../../activity-management/clinical-data-helper"
+import { PatientSession } from "./sessionInfo"
 
 interface SessionModalitiesProps {
-    clinicalData?: ClinicalData
+    session: PatientSession
+    onChange: (fields: Partial<PatientSession>) => void
 }
 
-export default function SessionModalities({ clinicalData }: SessionModalitiesProps) {
+export default function SessionModalities({ session, onChange }: SessionModalitiesProps) {
     const inputStyles = "w-full p-1.5 border border-slate-300 rounded-[5px] text-[11px] bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-all duration-200"
 
-    // Derive modalities and notes based on clinicalData
-    const defaultSelected = React.useMemo(() => {
-        const diagnosis = clinicalData?.diagnosis ?? ""
-        if (diagnosis.includes("Shoulder")) {
-            return ["Hot Pack", "Ultrasound", "Manual Therapy"]
-        }
-        if (diagnosis.includes("ACL")) {
-            return ["Ice Pack", "Manual Therapy", "TENS"]
-        }
-        return ["Hot Pack", "IFT", "Manual Therapy"]
-    }, [clinicalData])
-
-    const defaultManualNotes = React.useMemo(() => {
-        const diagnosis = clinicalData?.diagnosis ?? ""
-        if (diagnosis.includes("Shoulder")) {
-            return "Grade II-III glenohumeral joint mobilization applied to restore abduction and external rotation."
-        }
-        if (diagnosis.includes("ACL")) {
-            return "Soft tissue mobilization around patella, passive knee flexion mobilization to 125 degrees."
-        }
-        return "Grade III mobilization applied to patellofemoral joint"
-    }, [clinicalData])
-
-    const defaultIftParams = React.useMemo(() => {
-        const diagnosis = clinicalData?.diagnosis ?? ""
-        if (diagnosis.includes("Shoulder") || diagnosis.includes("ACL")) {
-            return "N/A"
-        }
-        return "80-120Hz, 15 mins, comfortable intensity"
-    }, [clinicalData])
-
-    const [selectedModalities, setSelectedModalities] = React.useState<string[]>(defaultSelected)
-    const [manualNotes, setManualNotes] = React.useState(defaultManualNotes)
-    const [iftParams, setIftParams] = React.useState(defaultIftParams)
-
-    React.useEffect(() => {
-        setSelectedModalities(defaultSelected)
-        setManualNotes(defaultManualNotes)
-        setIftParams(defaultIftParams)
-    }, [defaultSelected, defaultManualNotes, defaultIftParams])
+    const selectedModalities = session?.selectedModalities || []
 
     const handleToggleModality = (item: string) => {
-        setSelectedModalities(prev => 
-            prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]
-        )
+        const updated = selectedModalities.includes(item) 
+            ? selectedModalities.filter(x => x !== item) 
+            : [...selectedModalities, item]
+        onChange({ selectedModalities: updated })
     }
 
     return (
@@ -88,8 +51,8 @@ export default function SessionModalities({ clinicalData }: SessionModalitiesPro
                 <input 
                     type="text" 
                     className={inputStyles} 
-                    key={iftParams}
-                    defaultValue={iftParams}
+                    value={session?.iftParams || ""}
+                    onChange={(e) => onChange({ iftParams: e.target.value })}
                     placeholder="Frequency, duration, intensity" 
                 />
             </div>
@@ -99,8 +62,8 @@ export default function SessionModalities({ clinicalData }: SessionModalitiesPro
                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Manual Therapy Notes</label>
                 <textarea 
                     className={`${inputStyles} h-[55px] resize-none`}
-                    key={manualNotes}
-                    defaultValue={manualNotes}
+                    value={session?.manualNotes || ""}
+                    onChange={(e) => onChange({ manualNotes: e.target.value })}
                 />
             </div>
         </div>
