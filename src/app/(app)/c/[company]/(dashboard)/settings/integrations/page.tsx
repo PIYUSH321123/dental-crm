@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { 
     CheckCircle2, 
     AlertCircle, 
@@ -25,6 +25,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { toast } from "sonner"
+import {
+    getIntegrationsAction,
+    disconnectIntegrationAction,
+    toggleIntegrationSyncAction,
+    saveMockIntegrationAction
+} from "@/lib/actions/integrations"
 
 interface AdProvider {
     id: "meta" | "google" | "youtube"
@@ -44,7 +50,7 @@ const AD_PROVIDERS: AdProvider[] = [
         logoColor: "#1877F2",
         bgLight: "rgba(24, 119, 242, 0.08)",
         description: "Sync Meta Lead Ads forms directly to Sales Guru pipelines. Automate WhatsApp outreach for new Instagram/Facebook leads.",
-        scopes: ["ads_management", "leads_retrieval", "pages_manage_metadata", "instagram_basic"],
+        scopes: ["ads_management", "leads_retrieval", "pages_manage_metadata", "pages_show_list", "pages_read_engagement"],
         features: ["Real-time Lead Form Syncing", "Instagram Direct Messaging Automation", "Web Conversion Pixel Tracking"],
         docUrl: "https://developers.facebook.com/docs/marketing-apis"
     },
@@ -89,16 +95,14 @@ interface IntegrationLog {
 
 export default function IntegrationsPage() {
     const params = useParams()
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    
     const companySlug = (Array.isArray(params.company) ? params.company[0] : params.company) || "clinic"
     
     // Connection State
-    const [connections, setConnections] = React.useState<Record<string, ConnectedAccount>>(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem(`sg-integrations-${companySlug}`)
-            return saved ? JSON.parse(saved) : {}
-        }
-        return {}
-    })
+    const [connections, setConnections] = React.useState<Record<string, ConnectedAccount>>({})
+    const [isLoading, setIsLoading] = React.useState(true)
 
     // Active OAuth simulation modal
     const [oauthProvider, setOauthProvider] = React.useState<AdProvider | null>(null)
@@ -114,17 +118,66 @@ export default function IntegrationsPage() {
         { timestamp: "5 hours ago", provider: "youtube", event: "Video campaign performance metrics synced (124 clicks)", status: "success" }
     ])
 
-    // Save connections to localStorage
-    const saveConnections = (updated: Record<string, ConnectedAccount>) => {
-        setConnections(updated)
-        localStorage.setItem(`sg-integrations-${companySlug}`, JSON.stringify(updated))
-    }
+    // Load active connections from database on mount
+    React.useEffect(() => {
+        let isMounted = true
+        setIsLoading(true)
+        getIntegrationsAction(companySlug)
+            .then((res) => {
+                if (isMounted) {
+                    if (res.success) {
+                        const mapped: Record<string, ConnectedAccount> = {}
+                        res.data.forEach((item) => {
+                            mapped[item.id] = item
+                        })
+                        setConnections(mapped)
+                    } else {
+                        toast.error(res.error || "Failed to load integrations from database.")
+                    }
+                }
+            })
+            .catch((err) => {
+                if (isMounted) {
+                    toast.error("An error occurred while loading integrations.")
+                }
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setIsLoading(false)
+                }
+            })
 
-    // Trigger simulated OAuth Flow
+        return () => {
+            isMounted = false
+        }
+    }, [companySlug])
+
+    // Check URL parameters for OAuth status toast
+    React.useEffect(() => {
+        const success = searchParams.get("success")
+        const error = searchParams.get("error")
+
+        if (success === "meta") {
+            toast.success("Meta Ads (Facebook & Instagram) connected successfully!")
+            // Remove parameters from URL bar cleanly
+            router.replace(`/c/${companySlug}/settings/integrations`)
+        } else if (error) {
+            toast.error(`Meta Ads connection failed: ${error.replace(/_/g, " ")}`)
+            router.replace(`/c/${companySlug}/settings/integrations`)
+        }
+    }, [searchParams, companySlug, router])
+
+    // Trigger OAuth Flow or redirection
     const handleConnectClick = (provider: AdProvider) => {
-        setOauthProvider(provider)
-        setLinkingStep("consent")
-        setSelectedOauthAccount("")
+        if (provider.id === "meta") {
+            // Redirect to backend OAuth route
+            window.location.href = `/api/integrations/meta/auth?company=${companySlug}`
+        } else {
+            // Simulated local flow for google / youtube
+            setOauthProvider(provider)
+            setLinkingStep("consent")
+            setSelectedOauthAccount("")
+        }
     }
 
     // Grant simulated credentials
@@ -133,9 +186,7 @@ export default function IntegrationsPage() {
         setTimeout(() => {
             setLinkingStep("select-account")
             // Prefill standard mock accounts depending on provider
-            if (oauthProvider?.id === "meta") {
-                setSelectedOauthAccount("Stark Wellness Page (FB-Page ID: 918239)")
-            } else if (oauthProvider?.id === "google") {
+            if (oauthProvider?.id === "google") {
                 setSelectedOauthAccount("YogaPlus Main Ads Account (CID: 481-923-1029)")
             } else {
                 setSelectedOauthAccount("Wayne Rehab Channel Ads (CH-ID: YT-9201384)")
@@ -143,64 +194,85 @@ export default function IntegrationsPage() {
         }, 1200)
     }
 
-    // Complete connection
-    const handleFinalizeConnection = () => {
+    // Complete connection for simulated providers, saving them in DB
+    const handleFinalizeConnection = async () => {
         if (!oauthProvider) return
         
-        const newConnection: ConnectedAccount = {
-            id: oauthProvider.id,
-            accountId: oauthProvider.id === "meta" ? "ACT-920193481" : oauthProvider.id === "google" ? "CID-481-923-1029" : "YT-9201384",
-            accountName: selectedOauthAccount,
-            connectedAt: new Date().toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }),
-            syncEnabled: true,
-            leadsSyncedCount: 0,
-            spendTracked: oauthProvider.id === "meta" ? "₹12,490" : oauthProvider.id === "google" ? "₹24,800" : "₹4,200"
+        setIsRefreshing(true)
+        const res = await saveMockIntegrationAction(
+            companySlug,
+            oauthProvider.id,
+            selectedOauthAccount,
+            oauthProvider.id === "google" ? "CID-481-923-1029" : "YT-9201384"
+        )
+        setIsRefreshing(false)
+
+        if (res.success) {
+            setConnections(prev => ({ ...prev, [oauthProvider.id]: res.data }))
+            toast.success(`${oauthProvider.name} connected successfully!`)
+            
+            // Add connection log
+            setLogs(prev => [
+                {
+                    timestamp: "Just now",
+                    provider: oauthProvider.id,
+                    event: `Authorized connection to ${oauthProvider.name} (${res.data.accountId})`,
+                    status: "success"
+                },
+                ...prev
+            ])
+        } else {
+            toast.error(res.error || "Failed to link provider to database.")
         }
-
-        const updated = { ...connections, [oauthProvider.id]: newConnection }
-        saveConnections(updated)
-
-        // Add connection log
-        setLogs(prev => [
-            {
-                timestamp: "Just now",
-                provider: oauthProvider.id,
-                event: `Authorized connection to ${oauthProvider.name} (${newConnection.accountId})`,
-                status: "success"
-            },
-            ...prev
-        ])
-
-        toast.success(`${oauthProvider.name} connected successfully!`)
         setOauthProvider(null)
     }
 
-    // Disconnect Integration
-    const handleDisconnect = (id: string) => {
-        const updated = { ...connections }
-        delete updated[id]
-        saveConnections(updated)
+    // Disconnect Integration from Database
+    const handleDisconnect = async (id: string) => {
+        const res = await disconnectIntegrationAction(companySlug, id)
+        
+        if (res.success) {
+            setConnections(prev => {
+                const updated = { ...prev }
+                delete updated[id]
+                return updated
+            })
 
-        setLogs(prev => [
-            {
-                timestamp: "Just now",
-                provider: id as any,
-                event: `Disconnected integration for ${id.toUpperCase()} Ads`,
-                status: "warning"
-            },
-            ...prev
-        ])
+            setLogs(prev => [
+                {
+                    timestamp: "Just now",
+                    provider: id as any,
+                    event: `Disconnected integration for ${id.toUpperCase()} Ads`,
+                    status: "warning"
+                },
+                ...prev
+            ])
 
-        toast.info(`Disconnected integration. Credentials revoked.`)
+            toast.info(`Disconnected integration. Credentials revoked.`)
+        } else {
+            toast.error(res.error || "Failed to disconnect integration.")
+        }
     }
 
-    // Toggle Sync
-    const handleToggleSync = (id: string) => {
-        const updated = { ...connections }
-        if (updated[id]) {
-            updated[id].syncEnabled = !updated[id].syncEnabled
-            saveConnections(updated)
-            toast.info(`Real-time sync ${updated[id].syncEnabled ? 'enabled' : 'paused'} for ${id.toUpperCase()}`)
+    // Toggle Sync in Database
+    const handleToggleSync = async (id: string) => {
+        const conn = connections[id]
+        if (!conn) return
+
+        const nextSyncState = !conn.syncEnabled
+        const res = await toggleIntegrationSyncAction(companySlug, id, nextSyncState)
+
+        if (res.success) {
+            setConnections(prev => {
+                if (!prev[id]) return prev
+                return {
+                    ...prev,
+                    [id]: { ...prev[id], syncEnabled: nextSyncState }
+                }
+            })
+            toast.info(`Real-time sync ${nextSyncState ? 'enabled' : 'paused'} for ${id.toUpperCase()}`)
+        } else {
+            toast.error(res.error || "Failed to toggle sync state.")
         }
     }
 
@@ -222,6 +294,15 @@ export default function IntegrationsPage() {
                 ...prev
             ])
         }, 1000)
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex flex-col justify-center items-center h-[50vh] gap-3">
+                <Loader2 className="h-8 w-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                <span className="text-sm font-semibold text-slate-500">Loading active integrations...</span>
+            </div>
+        )
     }
 
     return (
