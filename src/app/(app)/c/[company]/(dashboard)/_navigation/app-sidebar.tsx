@@ -177,6 +177,10 @@ const data = {
                     url: "#",
                 },
                 {
+                    title: "Integrations / Linked Apps",
+                    url: "/c/[company]/settings/integrations",
+                },
+                {
                     title: "Team",
                     url: "#",
                 },
