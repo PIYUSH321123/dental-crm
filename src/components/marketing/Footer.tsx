@@ -14,7 +14,7 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                     {/* Brand column */}
                     <div>
-                        <Link href={getLinkWithCompany("/")} className="flex items-center gap-2 text-xl font-extrabold text-white tracking-tight mb-4">
+                        <Link href={`/c/${company.slug}/home`} className="flex items-center gap-2 text-xl font-extrabold text-white tracking-tight mb-4">
                             <img src="/logo.webp" alt={`${company.name} Logo`} className="h-9 w-auto brightness-200" />
                             <span>{company.logoText}</span>
                         </Link>
@@ -30,13 +30,13 @@ export default function Footer() {
                         </h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href={getLinkWithCompany("/")} className="hover:text-white transition-colors">Home</Link>
+                                <Link href={`/c/${company.slug}/home`} className="hover:text-white transition-colors">Home</Link>
                             </li>
                             <li>
-                                <Link href={getLinkWithCompany("/sessions")} className="hover:text-white transition-colors">Online Sessions</Link>
+                                <Link href={`/c/${company.slug}/home/sessions`} className="hover:text-white transition-colors">Online Sessions</Link>
                             </li>
                             <li>
-                                <Link href={getLinkWithCompany("/blogs")} className="hover:text-white transition-colors">Blogs & Insights</Link>
+                                <Link href={`/c/${company.slug}/home/blogs`} className="hover:text-white transition-colors">Blogs & Insights</Link>
                             </li>
                         </ul>
                     </div>
@@ -48,10 +48,10 @@ export default function Footer() {
                         </h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href={getLinkWithCompany("/Sign-inPage")} className="hover:text-white transition-colors">Client Sign In</Link>
+                                <Link href={`/${company.slug}/login`} className="hover:text-white transition-colors">Client Sign In</Link>
                             </li>
                             <li>
-                                <Link href={getLinkWithCompany("/onboarding")} className="hover:text-white transition-colors">Book Appointment</Link>
+                                <Link href={`/c/${company.slug}/home/onboarding`} className="hover:text-white transition-colors">Book Appointment</Link>
                             </li>
                             <li>
                                 <Link href={getLinkWithCompany("/admin/dashboard")} className="hover:text-white transition-colors">Provider Dashboard</Link>

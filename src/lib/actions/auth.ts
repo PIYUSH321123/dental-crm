@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { companyLoginSchema, adminLoginSchema } from "@/lib/validations/auth";
-import { getCompanyBySlug } from "@/lib/companies";
+import { getCompanyBySlug } from "@/lib/companies-server";
 
 type ActionResult =
   | { success: true }

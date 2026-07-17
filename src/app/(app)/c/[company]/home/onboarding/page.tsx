@@ -6,20 +6,20 @@ import { useCompany } from "@/components/marketing/CompanyContext";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { getLinkWithCompany } = useCompany();
+  const { company } = useCompany();
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     const user = localStorage.getItem("sg-user");
     if (!user) {
-      // Redirect to Sign-inPage with active tab set to signup, redirecting back here after successful registration
-      const currentUrl = getLinkWithCompany("/onboarding");
-      const redirectUrl = getLinkWithCompany(`/Sign-inPage?tab=signup&redirect=${encodeURIComponent(currentUrl)}`);
+      // Redirect to login page, redirecting back here after successful registration
+      const currentUrl = `/c/${company.slug}/home/onboarding`;
+      const redirectUrl = `/c/${company.slug}/home/login?tab=login&redirect=${encodeURIComponent(currentUrl)}`;
       router.push(redirectUrl);
     } else {
       setAuthorized(true);
     }
-  }, [router, getLinkWithCompany]);
+  }, [router, company]);
 
   if (!authorized) {
     return (

@@ -10,7 +10,7 @@ const CalendarWorkspace = dynamic(
     { ssr: false }
 )
 
-export default function TimelineCalendarPage({ params }: { params: React.Usable<{ company: string }> }) {
+export default function TimelineCalendarPage({ params }: { params: Promise<{ company: string }> }) {
     const { company } = React.use(params)
 
     return <CalendarWorkspace />

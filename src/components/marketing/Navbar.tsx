@@ -11,13 +11,11 @@ export default function Navbar() {
     const [mobileOpen, setMobileOpen] = React.useState(false)
     const { company, getLinkWithCompany } = useCompany()
 
-    const dashboardSlug = company.slug === "yogaplus" ? "Phyiso" : company.slug
-
     const navLinks = [
-        { name: "Home", href: "/" },
-        { name: "Dashboard", href: `/c/${dashboardSlug}/dashboard` },
-        { name: "Online Sessions", href: "/sessions" },
-        { name: "Blogs", href: "/blogs" },
+        { name: company.name, href: `/c/${company.slug}/home` },
+        { name: "Dashboard", href: `/c/${company.slug}/dashboard` },
+        { name: "Online Sessions", href: `/c/${company.slug}/home/sessions` },
+        { name: "Blogs", href: `/c/${company.slug}/home/blogs` },
     ]
 
     return (
@@ -26,8 +24,8 @@ export default function Navbar() {
                 <div className="flex h-20 items-center justify-between">
                     {/* Logo Section */}
                     <div className="flex items-center">
-                        <Link href={getLinkWithCompany("/")} className="flex items-center gap-2 text-xl font-extrabold text-brand-primary tracking-tight">
-                            <img src="/logo.webp" alt={`${company.name} Logo`} className="h-10 w-auto" />
+                        <Link href={`/c/${company.slug}/home`} className="flex items-center gap-2 text-xl font-extrabold text-brand-primary tracking-tight">
+                            <img src="/logo.webp" alt={`${company.slug} Logo`} className="h-10 w-auto" />
                             <span>{company.logoText}</span>
                         </Link>
                     </div>
@@ -36,14 +34,13 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map((link) => {
                             const isActive = pathname === link.href
-                            const href = link.name === "Dashboard" ? link.href : getLinkWithCompany(link.href)
+                            const href = link.href
                             return (
                                 <Link
                                     key={link.name}
                                     href={href}
-                                    className={`relative py-2 text-sm font-semibold transition-colors ${
-                                        isActive ? "text-brand-primary" : "text-gray-500 hover:text-brand-primary"
-                                    }`}
+                                    className={`relative py-2 text-sm font-semibold transition-colors ${isActive ? "text-brand-primary" : "text-gray-500 hover:text-brand-primary"
+                                        }`}
                                 >
                                     {link.name}
                                     {isActive && (
@@ -57,14 +54,14 @@ export default function Navbar() {
                     {/* Right CTAs */}
                     <div className="hidden md:flex items-center gap-4">
                         <Link
-                            href={getLinkWithCompany("/Sign-inPage")}
+                            href={`/c/${company.slug}/home/login`}
                             className="flex items-center gap-1.5 rounded-full border border-brand-primary/20 bg-brand-primary/5 px-4 py-2 text-xs font-semibold text-brand-primary hover:bg-brand-primary/10 transition-all"
                         >
                             <LogIn className="h-4 w-4" />
                             Sign In
                         </Link>
                         <Link
-                            href={getLinkWithCompany("/onboarding")}
+                            href={`/c/${company.slug}/home/onboarding`}
                             className="rounded-full bg-brand-primary px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-primary-hover transition-all hover:scale-105 active:scale-95 duration-200"
                         >
                             Book Appointment
@@ -88,15 +85,14 @@ export default function Navbar() {
                 <div className="md:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-4 space-y-2 shadow-lg">
                     {navLinks.map((link) => {
                         const isActive = pathname === link.href
-                        const href = link.name === "Dashboard" ? link.href : getLinkWithCompany(link.href)
+                        const href = link.href
                         return (
                             <Link
                                 key={link.name}
                                 href={href}
                                 onClick={() => setMobileOpen(false)}
-                                className={`block px-3 py-2 rounded-md text-sm font-medium ${
-                                    isActive ? "bg-brand-bg-light text-brand-primary" : "text-gray-600 hover:bg-gray-50 hover:text-brand-primary"
-                                }`}
+                                className={`block px-3 py-2 rounded-md text-sm font-medium ${isActive ? "bg-brand-bg-light text-brand-primary" : "text-gray-600 hover:bg-gray-50 hover:text-brand-primary"
+                                    }`}
                             >
                                 {link.name}
                             </Link>
@@ -104,7 +100,7 @@ export default function Navbar() {
                     })}
                     <div className="pt-4 flex flex-col gap-2 border-t border-gray-100">
                         <Link
-                            href={getLinkWithCompany("/Sign-inPage")}
+                            href={`/c/${company.slug}/home/login`}
                             onClick={() => setMobileOpen(false)}
                             className="flex items-center justify-center gap-1.5 rounded-full border border-brand-primary/20 bg-brand-primary/5 py-2.5 text-xs font-semibold text-brand-primary hover:bg-brand-primary/10"
                         >
@@ -112,7 +108,7 @@ export default function Navbar() {
                             Sign In
                         </Link>
                         <Link
-                            href={getLinkWithCompany("/onboarding")}
+                            href={`/c/${company.slug}/home/onboarding`}
                             onClick={() => setMobileOpen(false)}
                             className="flex items-center justify-center rounded-full bg-brand-primary py-2.5 text-xs font-semibold text-white hover:bg-brand-primary-hover"
                         >

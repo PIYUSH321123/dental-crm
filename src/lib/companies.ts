@@ -9,6 +9,8 @@ export interface CompanyColors {
 }
 
 export interface CompanyConfig {
+  id: string;
+  primaryColor: string;
   slug: string;
   name: string;
   logoText: string;
@@ -22,6 +24,8 @@ export interface CompanyConfig {
 
 export const COMPANIES: Record<string, CompanyConfig> = {
   yogaplus: {
+    id: "yogaplus",
+    primaryColor: "#f97316",
     slug: "yogaplus",
     name: "YogaPlus",
     logoText: "YogaPlus",
@@ -41,6 +45,8 @@ export const COMPANIES: Record<string, CompanyConfig> = {
     }
   },
   stark: {
+    id: "stark",
+    primaryColor: "#e11d48",
     slug: "stark",
     name: "Stark Industries",
     logoText: "Stark Rehab",
@@ -60,6 +66,8 @@ export const COMPANIES: Record<string, CompanyConfig> = {
     }
   },
   wayne: {
+    id: "wayne",
+    primaryColor: "#1e293b",
     slug: "wayne",
     name: "Wayne Enterprises",
     logoText: "Wayne Care",
@@ -79,6 +87,8 @@ export const COMPANIES: Record<string, CompanyConfig> = {
     }
   },
   hooli: {
+    id: "hooli",
+    primaryColor: "#0284c7",
     slug: "hooli",
     name: "Hooli Inc",
     logoText: "Hooli Health",
@@ -119,3 +129,6 @@ export function getCompanyConfig(slug?: string | null): CompanyConfig {
   // If not found, return default
   return DEFAULT_COMPANY;
 }
+
+
+

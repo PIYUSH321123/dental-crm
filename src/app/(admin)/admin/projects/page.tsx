@@ -4,13 +4,59 @@ import { columns } from "./columns"
 import { mockProjects } from "./data"
 import { Card, CardHeader, CardDescription, CardContent } from "@/components/ui/card"
 import { Briefcase, Activity, Landmark, ShieldCheck } from "lucide-react"
+import db from "@/lib/db"
+import { CreateProjectDialog } from "./create-project-dialog"
 
-export default function ProjectsPage() {
-    const totalProjects = mockProjects.length
-    const activeProjects = mockProjects.filter((p) => p.status === "Active").length
-    const enterpriseProjects = mockProjects.filter((p) => p.subscription_plan === "Enterprise").length
+export default async function ProjectsPage() {
+    // 1. Fetch dynamically created companies/projects from PostgreSQL database
+    let dbProjects: any[] = [];
+    try {
+        const dbCompanies = await db.company.findMany({
+            include: {
+                subscriptionPlan: true,
+                integrations: {
+                    include: {
+                        project: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
 
-    const totalBudget = mockProjects.reduce((sum, p) => sum + p.budget, 0)
+        dbProjects = dbCompanies.map((company) => {
+            // Find integration containing project details stored in config JSON
+            const integration = company.integrations.find((i) => i.projectId !== null);
+            const config = (integration?.config as any) || {};
+
+            return {
+                id: company.id,
+                project_name: integration?.project?.name || company.name,
+                company_name: company.name,
+                status: "Active",
+                subscription_plan: company.subscriptionPlan?.name || "Basic",
+                renewal_date: company.subscriptionRenewalDate
+                    ? company.subscriptionRenewalDate.toISOString().split("T")[0]
+                    : new Date().toISOString().split("T")[0],
+                budget: config.budget || 0,
+                lead_name: config.leadName || "Admin",
+                email: company.email || "info@" + company.slug + ".com",
+                created_at: company.createdAt.toISOString().split("T")[0]
+            };
+        });
+    } catch (error) {
+        console.error("Failed to fetch database projects:", error);
+    }
+
+    // 2. Merge database records (newly created) with mock data
+    const allProjects = [...dbProjects, ...mockProjects];
+
+    const totalProjects = allProjects.length
+    const activeProjects = allProjects.filter((p) => p.status === "Active").length
+    const enterpriseProjects = allProjects.filter((p) => p.subscription_plan === "Enterprise").length
+
+    const totalBudget = allProjects.reduce((sum, p) => sum + p.budget, 0)
     const formattedBudget = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
@@ -28,12 +74,15 @@ export default function ProjectsPage() {
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    {/* Header */}
-                    <div className="px-4 lg:px-6">
-                        <h1 className="text-2xl font-bold tracking-tight">Projects Directory</h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Monitor client companies, subscription plans, budget allocation, and renewal metrics.
-                        </p>
+                    {/* Header with New Project Button */}
+                    <div className="flex flex-row justify-between items-center px-4 lg:px-6">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight">Projects Directory</h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Monitor client companies, subscription plans, budget allocation, and renewal metrics.
+                            </p>
+                        </div>
+                        <CreateProjectDialog />
                     </div>
 
                     {/* Stats Section */}
@@ -89,7 +138,7 @@ export default function ProjectsPage() {
                     <div className="px-4 lg:px-6">
                         <DataTable
                             columns={columns}
-                            data={mockProjects}
+                            data={allProjects}
                             searchFilters={searchFilters}
                             defaultSearchField="project_name"
                         />

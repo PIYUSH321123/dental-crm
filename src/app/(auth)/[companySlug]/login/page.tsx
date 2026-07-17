@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-import { getCompanyBySlug } from "@/lib/companies";
+import { getCompanyBySlug } from "@/lib/companies-server";
 import { CompanyLoginForm } from "@/components/auth/company-login-form";
 
 export async function generateMetadata({

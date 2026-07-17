@@ -23,10 +23,10 @@ import {
     Workflow,
 } from "lucide-react"
 
-import { NavMain } from "@/app/(app)/c/[company]/_navigation/nav-main"
-import { NavProjects } from "@/app/(app)/c/[company]/_navigation/nav-projects"
-import { NavSecondary } from "@/app/(app)/c/[company]/_navigation/nav-secondary"
-import { NavUser } from "@/app/(app)/c/[company]/_navigation/nav-user"
+import { NavMain } from "@/app/(app)/c/[company]/(dashboard)/_navigation/nav-main"
+import { NavProjects } from "@/app/(app)/c/[company]/(dashboard)/_navigation/nav-projects"
+import { NavSecondary } from "@/app/(app)/c/[company]/(dashboard)/_navigation/nav-secondary"
+import { NavUser } from "@/app/(app)/c/[company]/(dashboard)/_navigation/nav-user"
 import {
     Sidebar,
     SidebarContent,
