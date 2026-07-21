@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   } else {
     // Fallback: redirect to mock OAuth consent page in the local app
     const origin = request.nextUrl.origin;
-    const mockAuthUrl = `${origin}/c/${companySlug}/settings/integrations/meta-mock-auth?state=${companySlug}`;
+    const mockAuthUrl = `${origin}/c/${companySlug}/dashboard/settings/integrations/meta-mock-auth?state=${companySlug}`;
     return NextResponse.redirect(mockAuthUrl);
   }
 }

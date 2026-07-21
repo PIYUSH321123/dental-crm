@@ -5,7 +5,7 @@ import { ArrowLeft, Clock, Calendar, User, ChevronRight } from "lucide-react"
 import { Blog, ALL_BLOGS } from "@/lib/blogs"
 
 interface BlogDetailPageProps {
-    params: Promise<{ id: string }>
+    params: Promise<{ company: string; id: string }>
 }
 
 async function getBlog(id: string): Promise<Blog | null> {
@@ -29,7 +29,7 @@ async function getBlog(id: string): Promise<Blog | null> {
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
-    const { id } = await params
+    const { company: companySlug, id } = await params
     const blog = await getBlog(id)
 
     // Handle missing/invalid blog IDs gracefully - triggers Next.js 404
@@ -40,10 +40,10 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
             {/* Breadcrumbs & Back Nav */}
-            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-8">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-8 text-left">
                 <Link
-                    href="/blogs"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-[#f97316] transition-colors mb-6"
+                    href={`/c/${companySlug}/home/blogs`}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-brand-primary transition-colors mb-6"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to Articles
                 </Link>
@@ -58,7 +58,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                         />
                     </div>
                     <div className="p-8 sm:p-10">
-                        <div className="inline-block rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-[#f97316] uppercase tracking-wider mb-4">
+                        <div className="inline-block rounded-full bg-brand-bg-light px-3 py-1 text-xs font-bold text-brand-primary uppercase tracking-wider mb-4">
                             {blog.category}
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6">
@@ -101,14 +101,14 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <Link
-                            href="/onboarding"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold bg-[#f97316] text-white rounded-full hover:bg-[#ea580c] transition-all hover:scale-105 active:scale-95 duration-200"
+                            href={`/c/${companySlug}/home/onboarding`}
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold bg-brand-primary text-white rounded-full hover:bg-brand-primary-hover transition-all hover:scale-105 active:scale-95 duration-200"
                         >
                             Schedule Consultation
                             <ChevronRight className="h-4 w-4" />
                         </Link>
                         <Link
-                            href="/blogs"
+                            href={`/c/${companySlug}/home/blogs`}
                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold bg-white/10 text-white border border-white/20 rounded-full hover:bg-white/20 transition-all hover:scale-105 active:scale-95 duration-200"
                         >
                             Browse more articles

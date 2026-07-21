@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     if (!code) {
       return NextResponse.redirect(
-        `${request.nextUrl.origin}/c/${normalizedSlug}/settings/integrations?error=no_auth_code`
+        `${request.nextUrl.origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=no_auth_code`
       );
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       if (!tokenResponse.ok || !tokenData.access_token) {
         console.error("Meta OAuth token exchange failed:", tokenData);
         return NextResponse.redirect(
-          `${origin}/c/${normalizedSlug}/settings/integrations?error=oauth_exchange_failed`
+          `${origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=oauth_exchange_failed`
         );
       }
 
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
       const staticConfig = await getCompanyBySlug(normalizedSlug);
       if (!staticConfig) {
         return NextResponse.redirect(
-          `${origin}/c/${normalizedSlug}/settings/integrations?error=company_not_found`
+          `${origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=company_not_found`
         );
       }
 
@@ -150,12 +150,12 @@ export async function GET(request: NextRequest) {
 
     // Redirect user back with success parameter
     return NextResponse.redirect(
-      `${origin}/c/${normalizedSlug}/settings/integrations?success=meta`
+      `${origin}/c/${normalizedSlug}/dashboard/settings/integrations?success=meta`
     );
   } catch (error) {
     console.error("Unexpected error in Meta OAuth Callback route:", error);
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/c/${normalizedSlug}/settings/integrations?error=unexpected_callback_error`
+      `${request.nextUrl.origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=unexpected_callback_error`
     );
   }
 }

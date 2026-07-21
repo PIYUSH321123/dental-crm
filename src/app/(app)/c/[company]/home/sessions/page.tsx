@@ -66,7 +66,7 @@ export default function SessionsPage() {
                 {/* Page Header */}
                 <div className="bg-white border-b border-gray-200 py-16 text-center">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-[#f97316] mb-5">
+                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand-bg-light text-brand-primary mb-5">
                             <Video className="h-7 w-7" />
                         </div>
                         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
@@ -81,7 +81,7 @@ export default function SessionsPage() {
                 {/* Grid Content */}
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12">
                     <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-[#f97316]" />
+                        <Sparkles className="h-5 w-5 text-brand-primary" />
                         This Week's Live Schedule
                     </h2>
 
@@ -98,7 +98,7 @@ export default function SessionsPage() {
                                         alt={session.title} 
                                         className="h-full w-full object-cover opacity-85" 
                                     />
-                                    <span className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs text-xs font-bold text-[#f97316] border border-gray-100 rounded-full px-3 py-1 shadow-xs uppercase tracking-wider">
+                                    <span className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs text-xs font-bold text-brand-primary border border-gray-100 rounded-full px-3 py-1 shadow-xs uppercase tracking-wider">
                                         {session.category}
                                     </span>
                                 </div>
@@ -131,7 +131,7 @@ export default function SessionsPage() {
                                         <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-1">
                                             {session.capacity}
                                         </span>
-                                        <button className="rounded-xl bg-[#f97316] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#ea580c] transition-all hover:scale-105 active:scale-95 duration-200">
+                                        <button className="rounded-xl bg-brand-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-primary-hover transition-all hover:scale-105 active:scale-95 duration-200 cursor-pointer">
                                             Book Spot
                                         </button>
                                     </div>
