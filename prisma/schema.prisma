@@ -70,6 +70,7 @@ model Company {
   slug                    String            @unique
   email                   String?
   phone                   String?
+  status                  String            @default("Active")
   subscriptionPlanId      String?
   subscriptionPlan        SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id], onDelete: Cascade)
   subscriptionRenewalDate DateTime?

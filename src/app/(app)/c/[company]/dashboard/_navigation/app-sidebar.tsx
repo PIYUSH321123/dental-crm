@@ -28,7 +28,6 @@ import { NavMain } from "@/app/(app)/c/[company]/dashboard/_navigation/nav-main"
 import { NavProjects } from "@/app/(app)/c/[company]/dashboard/_navigation/nav-projects"
 import { NavSecondary } from "@/app/(app)/c/[company]/dashboard/_navigation/nav-secondary"
 import { NavUser } from "@/app/(app)/c/[company]/dashboard/_navigation/nav-user"
-import { CreateSubscriptionButton } from "./subscription/CreateSubscriptionButton"
 import {
     Sidebar,
     SidebarContent,
@@ -330,7 +329,6 @@ export function AppSidebar({
                     </SidebarMenu>
                 </SidebarGroup>
                 {crmVisible && <NavMain items={filteredNavMain} />}
-                <CreateSubscriptionButton />
                 {erpVisible && <NavProjects projects={filteredProjects} />}
                 <NavSecondary items={filteredSecondary} className="mt-auto" />
             </SidebarContent>

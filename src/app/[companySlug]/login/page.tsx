@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { loginStaff, staffLoginSchema, type StaffLoginInput } from "@/lib/auth/staff"
+import { loginStaff } from "@/lib/auth/staff"
+import { staffLoginSchema, type StaffLoginInput } from "@/lib/validations/auth"
 import { COMPANIES } from "@/lib/companies"
 
 export default function StaffLoginPage() {

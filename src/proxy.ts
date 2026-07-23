@@ -28,8 +28,24 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    // Check if the path contains /dashboard or /patient-portal
-    const isDashboard = pathname.includes("/dashboard")
+    // Super Admin protection
+    if (pathname.startsWith("/admin")) {
+        const isAdminLogin = pathname === "/admin/login"
+        const hasAdminSession = request.cookies.has("admin_session")
+
+        if (isAdminLogin && hasAdminSession) {
+            // Already logged in, redirect to admin dashboard
+            return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+        }
+
+        if (!isAdminLogin && !hasAdminSession) {
+            // Not logged in, redirect to admin login page
+            return NextResponse.redirect(new URL("/admin/login", request.url))
+        }
+    }
+
+    // Check if the path contains /dashboard or /patient-portal (excluding super admin pages)
+    const isDashboard = pathname.includes("/dashboard") && !pathname.startsWith("/admin")
     const isPatientPortal = pathname.includes("/patient-portal")
 
     if (isDashboard) {

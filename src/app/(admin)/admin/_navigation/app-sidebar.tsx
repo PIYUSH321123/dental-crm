@@ -7,6 +7,7 @@ import {
   ChartBarIcon,
   CircleHelpIcon,
   CommandIcon,
+  CreditCardIcon,
   DatabaseIcon,
   FileChartColumnIcon,
   FileIcon,
@@ -79,8 +80,14 @@ const data = {
       title: "Team",
       url: "/team",
       icon: (
-        <UsersIcon
-        />
+        <UsersIcon />
+      ),
+    },
+    {
+      title: "Subscription",
+      url: "/admin/subscription",
+      icon: (
+        <CreditCardIcon />
       ),
     },
   ],
