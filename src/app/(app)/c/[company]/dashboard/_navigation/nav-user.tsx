@@ -29,6 +29,8 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar"
+import { useParams, useRouter } from "next/navigation"
+import { logoutStaff } from "@/lib/auth/staff"
 
 export function NavUser({
     user,
@@ -40,6 +42,15 @@ export function NavUser({
     }
 }) {
     const { isMobile } = useSidebar()
+    const params = useParams()
+    const router = useRouter()
+    const companySlug = (Array.isArray(params.company) ? params.company[0] : params.company) || ""
+
+    const handleLogout = async () => {
+        await logoutStaff()
+        router.push(`/${companySlug}/login`)
+        router.refresh()
+    }
 
     return (
         <SidebarMenu>
@@ -101,8 +112,7 @@ export function NavUser({
                                 Notifications
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
                             <LogOut />
                             Log out
                         </DropdownMenuItem>
