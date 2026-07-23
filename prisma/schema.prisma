@@ -85,6 +85,7 @@ model Company {
   campaigns      Campaign[]
   leads          Lead[]
   exercises      Exercise[]
+  accessConfig   CompanyAccessConfig?
 }
 
 model User {
@@ -159,6 +160,7 @@ model Patient {
   mobile              String
   altMobile           String?
   email               String?
+  password            String   @default("")
   occupation          String?
   address             String?
   height              Float    @default(0)
@@ -353,3 +355,20 @@ model ExercisePrescription {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+model CompanyAccessConfig {
+  id                 String   @id @default(cuid())
+  companyId          String   @unique
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  marketing          Boolean  @default(false)
+  appointments       Boolean  @default(false)
+  billing            Boolean  @default(false)
+  patientManagement  Boolean  @default(false)
+  leadManagement     Boolean  @default(false)
+  activityManagement Boolean  @default(false)
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
