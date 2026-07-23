@@ -76,7 +76,7 @@ export default function StaffLoginPage() {
                     setServerError(result.error || "Login failed")
                     return
                 }
-                router.push(`/${companySlug}/dashboard`)
+                router.push(`/c/${companySlug}/dashboard`)
                 router.refresh()
             } catch (err: any) {
                 setServerError(err.message || "An unexpected error occurred.")

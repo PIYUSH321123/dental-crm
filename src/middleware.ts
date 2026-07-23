@@ -4,6 +4,30 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
+    // If accessing staff login page with an active session, redirect to staff dashboard
+    if (pathname.endsWith("/login")) {
+        const hasSession = request.cookies.has("session")
+        if (hasSession) {
+            const parts = pathname.split("/").filter(Boolean)
+            const companySlug = parts[0]
+            if (companySlug && companySlug !== "admin" && companySlug !== "c") {
+                return NextResponse.redirect(new URL(`/c/${companySlug}/dashboard`, request.url))
+            }
+        }
+    }
+
+    // If accessing patient login page with an active patient session, redirect to patient portal
+    if (pathname.endsWith("/patient-login")) {
+        const hasPatientSession = request.cookies.has("patient_session")
+        if (hasPatientSession) {
+            const parts = pathname.split("/").filter(Boolean)
+            const companySlug = parts[0]
+            if (companySlug && companySlug !== "admin" && companySlug !== "c") {
+                return NextResponse.redirect(new URL(`/${companySlug}/patient-portal`, request.url))
+            }
+        }
+    }
+
     // Check if the path contains /dashboard or /patient-portal
     const isDashboard = pathname.includes("/dashboard")
     const isPatientPortal = pathname.includes("/patient-portal")
