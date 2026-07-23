@@ -17,7 +17,8 @@ import {
     Upload,
     Share2,
     Trash2,
-    Clock
+    Clock,
+    Video
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { useSidebar } from "@/components/ui/sidebar"
 import { Patient, mockTherapists, initialPatients, TimelineEvent, DocumentItem, InvoiceItem } from "./_patient-table/patient-data"
 import { getColumns } from "./_patient-table/patient-columns"
 import { PatientDataTable } from "./_patient-table/patient-data-table"
@@ -57,6 +59,9 @@ export default function PatientsWorkspace() {
     const params = useParams()
     const company = params.company as string
     const router = useRouter()
+
+    const { open, openMobile, isMobile } = useSidebar()
+    const isCollapsed = isMobile ? !openMobile : !open
     const searchParams = useSearchParams()
     const activeSection = searchParams.get("tab") || "list"
 
@@ -397,13 +402,21 @@ export default function PatientsWorkspace() {
 
     return (
         <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 bg-background/50">
-            {/* Header Title */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Patient Management</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Manage clinical patient registers, demographical sheets, emergency records, payments, and files.
-                    </p>
+            {/* Header Title Banner */}
+            <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm mt-2">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-950/30 rounded-full blur-2xl -mr-10 -mt-10" />
+                <div className={`relative flex items-center gap-4 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
+                    <div className="p-3 bg-emerald-500 dark:bg-emerald-900 rounded-xl text-white shadow-sm">
+                        <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-950 to-slate-750 dark:from-slate-550 dark:to-slate-200 bg-clip-text text-transparent">
+                            Patient Management
+                        </h1>
+                        <p className="text-xs md:text-sm text-slate-500 mt-0.5">
+                            Manage clinical patient registers, demographical sheets, emergency records, payments, and files.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -556,8 +569,8 @@ export default function PatientsWorkspace() {
                                 />
                             </div>
                         )}
-                        {activeSection === "assessments" && <ClinicalAssessmentsPage />}
-                        {activeSection === "plans" && <TreatmentPlansPage />}
+                        {activeSection === "assessments" && <ClinicalAssessmentsPage isEmbedded={true} />}
+                        {activeSection === "plans" && <TreatmentPlansPage isEmbedded={true} />}
                         {activeSection === "sessions" && <SessionManagementPage />}
                         {activeSection === "exercises" && <ExercisePrescriptionPage />}
                         {activeSection === "billing" && <BillingInvoicesPage />}
@@ -569,7 +582,7 @@ export default function PatientsWorkspace() {
             {viewMode === "profile" && selectedPatient && (
                 <div className="space-y-4">
                     {/* Back Button */}
-                    <div>
+                    <div className={isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}>
                         <Button
                             variant="ghost"
                             size="sm"

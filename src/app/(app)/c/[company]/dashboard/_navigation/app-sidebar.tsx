@@ -38,6 +38,8 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarTrigger,
+    useSidebar,
 } from "@/components/ui/sidebar"
 import { useParams } from "next/navigation"
 
@@ -285,24 +287,34 @@ export function AppSidebar({
         return data.navSecondary.filter((item) => !hiddenSecondaryModules.includes(item.title))
     }, [hiddenSecondaryModules])
 
+    const { open, setOpen } = useSidebar()
+
+    const handleLogoClick = (e: React.MouseEvent) => {
+        if (!open) {
+            e.preventDefault()
+            setOpen(true)
+        }
+    }
+
     return (
         <Sidebar variant="inset" {...props}>
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <a href={`/c/${companyStr}/dashboard`}>
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <Command className="size-4" />
-                                </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">{company}</span>
-                                    <span className="truncate text-xs">Enterprise</span>
-                                </div>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+            <SidebarHeader className="border-b border-sidebar-border pb-2">
+                <div className="flex items-center justify-between px-1">
+                    <a 
+                        href={`/c/${companyStr}/dashboard`} 
+                        onClick={handleLogoClick}
+                        className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center w-full"
+                    >
+                        <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground cursor-pointer">
+                            <Command className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                            <span className="truncate font-medium">{companyStr}</span>
+                            <span className="truncate text-xs text-muted-foreground">Enterprise</span>
+                        </div>
+                    </a>
+                    <SidebarTrigger className="hidden md:flex ml-auto h-7 w-7 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground group-data-[collapsible=icon]:hidden cursor-pointer" />
+                </div>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup className="pb-0">

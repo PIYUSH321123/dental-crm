@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { DataTable } from "./data-table"
 import { columns } from "./columns"
 import { mockCampaigns, Campaign } from "./data"
@@ -10,6 +11,9 @@ import { Megaphone, Users, Target, TrendingUp } from "lucide-react"
 import { CreateCampaignDialog } from "./create-campaign-dialog"
 
 export function CampaignsClient() {
+    const searchParams = useSearchParams()
+    const statusParam = searchParams.get("status")
+
     const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("sales_guru_campaigns")
@@ -30,10 +34,18 @@ export function CampaignsClient() {
         }
     }, [campaigns])
 
-    const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0)
-    const totalLeads = campaigns.reduce((sum, c) => sum + c.leads, 0)
-    const totalConverted = campaigns.reduce((sum, c) => sum + c.converted, 0)
-    const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
+    // Filter campaigns based on status query parameter (e.g. status=Active)
+    const filteredCampaigns = useMemo(() => {
+        if (statusParam) {
+            return campaigns.filter(c => c.status.toLowerCase() === statusParam.toLowerCase())
+        }
+        return campaigns
+    }, [campaigns, statusParam])
+
+    const totalBudget = filteredCampaigns.reduce((sum, c) => sum + c.budget, 0)
+    const totalLeads = filteredCampaigns.reduce((sum, c) => sum + c.leads, 0)
+    const totalConverted = filteredCampaigns.reduce((sum, c) => sum + c.converted, 0)
+    const totalRevenue = filteredCampaigns.reduce((sum, c) => sum + c.revenue, 0)
 
     const conversionRate = totalLeads > 0 ? ((totalConverted / totalLeads) * 100).toFixed(1) : "0.0"
     const averageRoi = totalBudget > 0 ? ((totalRevenue - totalBudget) / totalBudget) * 100 : 0
@@ -63,9 +75,13 @@ export function CampaignsClient() {
                     {/* Header */}
                     <div className="px-4 lg:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Marketing Campaigns</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">
+                                {statusParam ? `${statusParam} Campaigns` : "Marketing Campaigns"}
+                            </h1>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Track, analyze, and optimize advertising spend, lead generation, and overall campaign ROI.
+                                {statusParam 
+                                    ? `Track, analyze, and optimize your currently ${statusParam.toLowerCase()} advertising campaigns.`
+                                    : "Track, analyze, and optimize advertising spend, lead generation, and overall campaign ROI."}
                             </p>
                         </div>
                         <CreateCampaignDialog
@@ -132,7 +148,7 @@ export function CampaignsClient() {
                         {/* Table Section */}
                         <DataTable
                             columns={columns}
-                            data={campaigns}
+                            data={filteredCampaigns}
                             searchFilters={searchFilters}
                             defaultSearchField="campaign_name"
                         />

@@ -47,7 +47,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         return getCompanyConfig(companySlug)
     }, [companySlug])
 
-    // Utility function to preserve the company parameter across navigation
+    // Utility function to preserve the company parameter across navigation and namespace client-facing routes
     const getLinkWithCompany = React.useCallback((href: string) => {
         if (!href) return href
         
@@ -56,20 +56,49 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
             return href
         }
 
-        // If company is the default, don't append query param
-        if (company.slug === DEFAULT_COMPANY.slug) {
-            return href
+        let targetHref = href
+
+        // Client-facing landing pages need to be routed under /c/[company]/home
+        const clientFacingPages = [
+            "/sessions",
+            "/blogs",
+            "/onboarding",
+            "/login",
+            "/forgot-password",
+            "/terms",
+            "/privacy"
+        ]
+        
+        const isClientFacing = clientFacingPages.some(page => 
+            targetHref === page || targetHref.startsWith(page + "/")
+        ) || targetHref === "/" || targetHref === "/home"
+
+        if (isClientFacing) {
+            const prefix = `/c/${company.slug}/home`
+            if (!targetHref.startsWith(prefix)) {
+                if (targetHref === "/" || targetHref === "/home") {
+                    targetHref = prefix
+                } else {
+                    // Prepend company home prefix
+                    targetHref = `${prefix}${targetHref}`
+                }
+            }
         }
 
-        const [path, hash] = href.split("#")
-        const [basePath, search] = path.split("?")
-        const searchParams = new URLSearchParams(search || "")
-        
-        searchParams.set("company", company.slug)
-        
-        const newSearch = searchParams.toString()
-        const newPath = newSearch ? `${basePath}?${newSearch}` : basePath
-        return hash ? `${newPath}#${hash}` : newPath
+        // If company is not the default, append query param to preserve context in non-company pathnames (like /admin)
+        if (company.slug !== DEFAULT_COMPANY.slug) {
+            const [path, hash] = targetHref.split("#")
+            const [basePath, search] = path.split("?")
+            const searchParams = new URLSearchParams(search || "")
+            
+            searchParams.set("company", company.slug)
+            
+            const newSearch = searchParams.toString()
+            const newPath = newSearch ? `${basePath}?${newSearch}` : basePath
+            targetHref = hash ? `${newPath}#${hash}` : newPath
+        }
+
+        return targetHref
     }, [company])
 
     // Dynamically build the CSS custom properties style object

@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { SlidersHorizontal } from "lucide-react"
+import { SlidersHorizontal, Menu } from "lucide-react"
 
 // UI Components
 import { SiteHeader } from "@/components/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -50,8 +50,8 @@ export default function CompanyLayout({
                 hiddenSecondaryModules={hiddenSecondaryModules}
                 variant="inset"
             />
-            <SidebarInset>
-                <SiteHeader />
+            <MySidebarInset>
+                <SidebarTriggerButton />
                 {children}
 
                 {/* Floating Navigation Controls Bubble */}
@@ -178,7 +178,38 @@ export default function CompanyLayout({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-            </SidebarInset>
+            </MySidebarInset>
         </SidebarProvider>
     );
+}
+
+function MySidebarInset({ children }: { children: React.ReactNode }) {
+    return (
+        <SidebarInset>
+            {children}
+        </SidebarInset>
+    )
+}
+
+function SidebarTriggerButton() {
+    const { open, openMobile, isMobile, setOpen, setOpenMobile } = useSidebar()
+    const showTrigger = isMobile ? !openMobile : !open
+
+    if (!showTrigger) return null
+
+    return (
+        <button
+            onClick={() => {
+                if (isMobile) {
+                    setOpenMobile(true)
+                } else {
+                    setOpen(true)
+                }
+            }}
+            className="fixed top-4 left-4 md:top-5 md:left-5 z-40 h-9 w-9 rounded-full border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-300 flex items-center justify-center shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+            title="Open Sidebar"
+        >
+            <Menu className="h-5 w-5" />
+        </button>
+    )
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ClipboardList, ArrowLeft, Users, Eye, Pencil, Plus } from "lucide-react"
+import { ClipboardList, ArrowLeft, Users, Eye, Pencil, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Table,
@@ -13,6 +13,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { toast } from "sonner"
+import { useSidebar } from "@/components/ui/sidebar"
 
 import PlanDetails, { TreatmentPlan } from "./components/PlanDetails"
 import TherapyAndPhases, { Phase } from "./components/TheapyAndPhases"
@@ -200,10 +201,13 @@ const createNewBlankPlan = (patientId: string): TreatmentPlan => {
     };
 };
 
-export default function TreatmentPlansPage() {
+export default function TreatmentPlansPage({ isEmbedded = false }: { isEmbedded?: boolean }) {
     const params = useParams()
     const company = params.company as string
     const router = useRouter()
+
+    const { open, openMobile, isMobile } = useSidebar()
+    const isCollapsed = !isEmbedded && (isMobile ? !openMobile : !open)
 
     const [activePatient, setActivePatient] = React.useState("P-0142")
     const [plans, setPlans] = React.useState<TreatmentPlan[]>([])
@@ -275,8 +279,8 @@ export default function TreatmentPlansPage() {
 
     if (viewMode === "list") {
         return (
-            <div className="flex-1 p-6 space-y-4">
-                <div className="space-y-2">
+            <div className="flex-1 flex flex-col p-4 lg:p-6 max-w-7xl mx-auto w-full space-y-4">
+                <div className={`space-y-2 shrink-0 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
                     <Button
                         variant="ghost"
                         size="sm"
@@ -285,32 +289,44 @@ export default function TreatmentPlansPage() {
                     >
                         <ArrowLeft className="h-4 w-4" /> Back to Patients
                     </Button>
-                    <div className="flex flex-col gap-1 px-1">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Treatment Plans</h1>
-                        <p className="text-sm text-muted-foreground">
-                            Goal setting, therapy types, session planning, and recovery tracking.
-                        </p>
-                    </div>
                 </div>
 
-                {/* Selector Row - Siblings instead of Nested */}
-                <div className="max-w-[1200px] mx-auto text-[13px] font-bold text-foreground/90 flex flex-wrap items-center justify-between gap-4 bg-card border border-border rounded-xl p-4 shadow-xs w-full">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span>📋 Treatment Plans for</span>
-                        <select
-                            className="px-2 py-0.5 border border-border rounded-[5px] text-[11px] bg-background text-foreground focus:outline-none font-semibold h-7 cursor-pointer"
-                            value={activePatient}
-                            onChange={(e) => setActivePatient(e.target.value)}
-                        >
-                            <option value="P-0142">Ravi Kumar (P-0142)</option>
-                            <option value="P-0141">Meera Shah (P-0141)</option>
-                            <option value="P-0139">Arjun Singh (P-0139)</option>
-                        </select>
+                {/* Page Header Banner */}
+                <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-950/30 rounded-full blur-2xl -mr-10 -mt-10" />
+                    <div className={`relative flex items-center gap-4 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
+                        <div className="p-3 bg-emerald-500 dark:bg-emerald-900 rounded-xl text-white shadow-sm">
+                            <ClipboardList className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-950 to-slate-750 dark:from-slate-550 dark:to-slate-200 bg-clip-text text-transparent">
+                                Treatment Plans
+                            </h1>
+                            <p className="text-xs md:text-sm text-slate-500 mt-0.5">
+                                Goal setting, therapy types, session planning, and recovery tracking.
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex items-center">
+                    
+                    {/* Controls Row */}
+                    <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto shrink-0">
+                        <div className="flex items-center gap-2 bg-white/60 dark:bg-slate-900/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550 pl-1.5">
+                                Patient:
+                            </span>
+                            <select
+                                className="px-2 py-0.5 border border-border rounded-[5px] text-[11px] bg-background text-brand-primary focus:outline-none font-bold h-7 cursor-pointer"
+                                value={activePatient}
+                                onChange={(e) => setActivePatient(e.target.value)}
+                            >
+                                <option value="P-0142">Ravi Kumar (P-0142)</option>
+                                <option value="P-0141">Meera Shah (P-0141)</option>
+                                <option value="P-0139">Arjun Singh (P-0139)</option>
+                            </select>
+                        </div>
                         <Button
                             onClick={handleCreateNew}
-                            className="h-8.5 text-xs bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer rounded-[5px] font-semibold gap-1 px-3.5 py-0"
+                            className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-550 dark:hover:bg-emerald-600 text-white rounded-xl shadow-xs cursor-pointer gap-1 px-4 py-2 font-bold"
                         >
                             <Plus className="h-3.5 w-3.5" /> Create New Plan
                         </Button>
@@ -318,16 +334,16 @@ export default function TreatmentPlansPage() {
                 </div>
 
                 {/* List Grid View in White Card - Siblings instead of Nested */}
-                <div className="max-w-[1200px] mx-auto bg-card border border-border rounded-xl p-4 shadow-xs w-full">
-                    <Table className="table-fixed">
+                <div className="bg-card border border-border rounded-xl p-4 shadow-xs w-full flex-1 flex flex-col justify-between min-h-[400px]">
+                    <Table className="table-fixed min-w-[800px]">
                         <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-border">
                             <TableRow className="hover:bg-transparent">
                                 <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[10%]">Plan ID</TableHead>
-                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[15%]">Start Date</TableHead>
-                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[42%]">Diagnosis</TableHead>
-                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[13%]">Status</TableHead>
-                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[13%]">Therapist</TableHead>
-                                <TableHead className="font-bold text-foreground/80 h-10 text-xs text-right w-[7%]">Actions</TableHead>
+                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[12%]">Start Date</TableHead>
+                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[46%]">Diagnosis</TableHead>
+                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[10%]">Status</TableHead>
+                                <TableHead className="font-bold text-foreground/80 h-10 text-xs w-[12%]">Therapist</TableHead>
+                                <TableHead className="font-bold text-foreground/80 h-10 text-xs text-right w-[10%]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -369,6 +385,34 @@ export default function TreatmentPlansPage() {
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* Pagination Controls */}
+                    <div className="flex items-center justify-between border-t border-border pt-4 mt-4 text-xs text-muted-foreground font-semibold shrink-0">
+                        <div>
+                            Showing {activePatientPlans.length} of {activePatientPlans.length} plans
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 cursor-not-allowed border border-border bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-[5px] opacity-50"
+                                disabled
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="text-xs text-slate-500 font-bold">
+                                Page 1 of 1
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 cursor-not-allowed border border-border bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-[5px] opacity-50"
+                                disabled
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
         )
@@ -376,8 +420,8 @@ export default function TreatmentPlansPage() {
 
     // Editor View Mode
     return (
-        <div className="flex-1 p-6 space-y-6">
-            <div>
+        <div className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full space-y-6">
+            <div className={isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}>
                 <Button
                     variant="ghost"
                     size="sm"
@@ -388,9 +432,9 @@ export default function TreatmentPlansPage() {
                 </Button>
             </div>
 
-            <div className="max-w-7xl mx-auto border border-border bg-card rounded-xl shadow-xs overflow-hidden">
+            <div className="border border-border bg-card rounded-xl shadow-xs overflow-hidden w-full">
                 <div className="border-b border-border bg-white dark:bg-slate-900 px-5 py-3 flex items-center gap-1.5">
-                    <span className="text-slate-800 dark:text-slate-200 text-sm font-semibold uppercase tracking-wider ml-1">
+                    <span className={`text-slate-800 dark:text-slate-200 text-sm font-semibold uppercase tracking-wider ml-1 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
                         {viewMode === "new" ? "CREATE NEW TREATMENT PLAN" : `EDIT PLAN: ${editingPlan?.id}`}
                     </span>
                 </div>
