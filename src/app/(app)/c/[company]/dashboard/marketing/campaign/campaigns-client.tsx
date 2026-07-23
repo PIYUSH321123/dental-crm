@@ -1,18 +1,34 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DataTable } from "./data-table"
 import { columns } from "./columns"
 import { mockCampaigns, Campaign } from "./data"
 import { Card, CardHeader, CardDescription, CardContent } from "@/components/ui/card"
-import { Megaphone, Users, Target, TrendingUp, Sparkles, BarChart3 } from "lucide-react"
+import { Megaphone, Users, Target, TrendingUp } from "lucide-react"
 import { CreateCampaignDialog } from "./create-campaign-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AiAdStudio } from "./ai-ad-studio"
 
 export function CampaignsClient() {
-    const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns)
+    const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("sales_guru_campaigns")
+            if (saved) {
+                try {
+                    return JSON.parse(saved)
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+        }
+        return mockCampaigns
+    })
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("sales_guru_campaigns", JSON.stringify(campaigns))
+        }
+    }, [campaigns])
 
     const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0)
     const totalLeads = campaigns.reduce((sum, c) => sum + c.leads, 0)
@@ -58,87 +74,68 @@ export function CampaignsClient() {
                         />
                     </div>
 
-                    {/* Tab Navigation */}
-                    <div className="px-4 lg:px-6">
-                        <Tabs defaultValue="overview" className="w-full space-y-6">
-                            <TabsList className="grid grid-cols-2 max-w-[360px] h-9">
-                                <TabsTrigger value="overview" className="flex items-center gap-1.5 cursor-pointer">
-                                    <BarChart3 className="h-3.5 w-3.5" />
-                                    <span>Campaigns Overview</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="studio" className="flex items-center gap-1.5 cursor-pointer">
-                                    <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-                                    <span className="font-semibold text-primary">AI Ad Studio</span>
-                                </TabsTrigger>
-                            </TabsList>
+                    {/* Content Section */}
+                    <div className="px-4 lg:px-6 space-y-6">
+                        {/* Stats Section */}
+                        <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+                            <Card className="@container/card">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                    <CardDescription className="text-sm font-medium">Marketing Budget</CardDescription>
+                                    <Megaphone className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-semibold tracking-tight">{formattedBudget}</div>
+                                    <p className="text-xs text-muted-foreground mt-1">Allocated across active channels</p>
+                                </CardContent>
+                            </Card>
 
-                            <TabsContent value="overview" className="space-y-6 outline-hidden border-none p-0">
-                                {/* Stats Section */}
-                                <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-                                    <Card className="@container/card">
-                                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                            <CardDescription className="text-sm font-medium">Marketing Budget</CardDescription>
-                                            <Megaphone className="h-4 w-4 text-muted-foreground" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-semibold tracking-tight">{formattedBudget}</div>
-                                            <p className="text-xs text-muted-foreground mt-1">Allocated across active channels</p>
-                                        </CardContent>
-                                    </Card>
+                            <Card className="@container/card">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                    <CardDescription className="text-sm font-medium">Total Leads</CardDescription>
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-semibold tracking-tight">
+                                        {new Intl.NumberFormat("en-IN").format(totalLeads)}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">Inbound marketing prospects</p>
+                                </CardContent>
+                            </Card>
 
-                                    <Card className="@container/card">
-                                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                            <CardDescription className="text-sm font-medium">Total Leads</CardDescription>
-                                            <Users className="h-4 w-4 text-muted-foreground" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-semibold tracking-tight">
-                                                {new Intl.NumberFormat("en-IN").format(totalLeads)}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">Inbound marketing prospects</p>
-                                        </CardContent>
-                                    </Card>
+                            <Card className="@container/card">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                    <CardDescription className="text-sm font-medium">Conversions</CardDescription>
+                                    <Target className="h-4 w-4 text-emerald-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400">
+                                        {totalConverted}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">Avg. Conversion Rate: {conversionRate}%</p>
+                                </CardContent>
+                            </Card>
 
-                                    <Card className="@container/card">
-                                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                            <CardDescription className="text-sm font-medium">Conversions</CardDescription>
-                                            <Target className="h-4 w-4 text-emerald-500" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400">
-                                                {totalConverted}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">Avg. Conversion Rate: {conversionRate}%</p>
-                                        </CardContent>
-                                    </Card>
+                            <Card className="@container/card">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                    <CardDescription className="text-sm font-medium">Average ROI</CardDescription>
+                                    <TrendingUp className="h-4 w-4 text-primary" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-semibold tracking-tight">
+                                        {formattedRoi}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">Net positive returns on ads spend</p>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                                    <Card className="@container/card">
-                                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                            <CardDescription className="text-sm font-medium">Average ROI</CardDescription>
-                                            <TrendingUp className="h-4 w-4 text-primary" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-semibold tracking-tight">
-                                                {formattedRoi}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-1">Net positive returns on ads spend</p>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-
-                                {/* Table Section */}
-                                <DataTable
-                                    columns={columns}
-                                    data={campaigns}
-                                    searchFilters={searchFilters}
-                                    defaultSearchField="campaign_name"
-                                />
-                            </TabsContent>
-
-                            <TabsContent value="studio" className="outline-hidden border-none p-0">
-                                <AiAdStudio onCampaignCreated={handleCampaignCreated} />
-                            </TabsContent>
-                        </Tabs>
+                        {/* Table Section */}
+                        <DataTable
+                            columns={columns}
+                            data={campaigns}
+                            searchFilters={searchFilters}
+                            defaultSearchField="campaign_name"
+                        />
                     </div>
                 </div>
             </div>

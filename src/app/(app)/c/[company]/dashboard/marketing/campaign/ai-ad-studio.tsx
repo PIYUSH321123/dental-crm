@@ -3,18 +3,18 @@
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { 
-    Send, 
-    Sparkles, 
-    Smartphone, 
-    Search, 
-    Image as ImageIcon, 
-    Check, 
-    Loader2, 
-    Plus, 
-    Undo, 
-    Edit, 
-    MessageSquare, 
+import {
+    Send,
+    Sparkles,
+    Smartphone,
+    Search,
+    Image as ImageIcon,
+    Check,
+    Loader2,
+    Plus,
+    Undo,
+    Edit,
+    MessageSquare,
     Megaphone,
     DollarSign,
     Link as LinkIcon,
@@ -91,7 +91,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
     const [isMobile, setIsMobile] = useState(false)
     const [isMounted, setIsMounted] = useState(false)
     const [activeMobileTab, setActiveMobileTab] = useState<"chat" | "edit" | "preview">("chat")
-    
+
     // Form State
     const [adForm, setAdForm] = useState<AdFormState>({
         platform: "facebook",
@@ -118,7 +118,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
     const [isTyping, setIsTyping] = useState(false)
     const [isGeneratingImage, setIsGeneratingImage] = useState(false)
     const [isExporting, setIsExporting] = useState(false)
-    
+
     const chatEndRef = useRef<HTMLDivElement>(null)
 
     // Handle screen resizing to switch to mobile layout if needed
@@ -250,7 +250,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
         setIsExporting(true)
         try {
             await new Promise(resolve => setTimeout(resolve, 1000))
-            
+
             const newCamp: Campaign = {
                 id: `camp-${Date.now()}`,
                 campaign_name: adForm.campaignName,
@@ -318,9 +318,9 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
 
                     {/* Ad Image */}
                     <div className="relative aspect-video w-full bg-zinc-100 dark:bg-zinc-900 border-y border-zinc-100 dark:border-zinc-800 overflow-hidden">
-                        <img 
-                            src={imageUrl} 
-                            alt="Ad Creative" 
+                        <img
+                            src={imageUrl}
+                            alt="Ad Creative"
                             className="w-full h-full object-cover transition-all duration-300"
                         />
                     </div>
@@ -335,7 +335,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                                 {headline}
                             </div>
                         </div>
-                        <Button 
+                        <Button
                             variant="secondary"
                             size="sm"
                             className="bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold px-4 cursor-pointer"
@@ -372,9 +372,9 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
 
                     {/* Creative */}
                     <div className="relative aspect-square w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                        <img 
-                            src={imageUrl} 
-                            alt="Instagram Ad" 
+                        <img
+                            src={imageUrl}
+                            alt="Instagram Ad"
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -472,16 +472,14 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                 {messages.map((msg) => (
                     <div
                         key={msg.id}
-                        className={`flex flex-col max-w-[85%] ${
-                            msg.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
-                        }`}
+                        className={`flex flex-col max-w-[85%] ${msg.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
+                            }`}
                     >
                         <div
-                            className={`p-3 rounded-2xl text-sm leading-relaxed ${
-                                msg.role === "user"
-                                    ? "bg-primary text-primary-foreground rounded-br-none"
-                                    : "bg-card border border-border text-foreground rounded-bl-none shadow-xs"
-                            }`}
+                            className={`p-3 rounded-2xl text-sm leading-relaxed ${msg.role === "user"
+                                ? "bg-primary text-primary-foreground rounded-br-none"
+                                : "bg-card border border-border text-foreground rounded-bl-none shadow-xs"
+                                }`}
                         >
                             {msg.content}
                         </div>
@@ -533,9 +531,9 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                         disabled={isTyping}
                         className="flex-1 h-9 rounded-full px-4"
                     />
-                    <Button 
-                        type="submit" 
-                        size="icon" 
+                    <Button
+                        type="submit"
+                        size="icon"
                         disabled={isTyping || !chatInput.trim()}
                         className="rounded-full h-9 w-9 shrink-0 cursor-pointer"
                     >
@@ -564,8 +562,8 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                     <Label htmlFor="editor-platform" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Ad Platform
                     </Label>
-                    <Select 
-                        value={adForm.platform} 
+                    <Select
+                        value={adForm.platform}
                         onValueChange={(val: any) => handleInputChange("platform", val)}
                     >
                         <SelectTrigger id="editor-platform" className="h-9 w-full flex">
@@ -628,8 +626,8 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                         <Label htmlFor="editor-cta" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             Call to Action
                         </Label>
-                        <Select 
-                            value={adForm.cta} 
+                        <Select
+                            value={adForm.cta}
                             onValueChange={(val) => handleInputChange("cta", val)}
                         >
                             <SelectTrigger id="editor-cta" className="h-9 w-full flex">
@@ -705,10 +703,10 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                             </div>
                             <div className="flex-1 space-y-1">
                                 <p className="text-[10px] text-muted-foreground truncate">{adForm.imageUrl.split('/').pop()}</p>
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    size="sm" 
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
                                     onClick={handleGenerateImage}
                                     disabled={isGeneratingImage}
                                     className="h-7 w-full flex items-center justify-center gap-1.5 text-xs cursor-pointer border-dashed border-primary/40 hover:border-primary"
@@ -733,9 +731,9 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
 
             {/* Action Bar */}
             <div className="p-3 border-t border-border bg-muted/30">
-                <Button 
-                    onClick={handleExportCampaign} 
-                    disabled={isExporting || !adForm.campaignName.trim() || !adForm.headline.trim()} 
+                <Button
+                    onClick={handleExportCampaign}
+                    disabled={isExporting || !adForm.campaignName.trim() || !adForm.headline.trim()}
                     className="w-full h-10 font-semibold cursor-pointer shadow-sm"
                 >
                     {isExporting ? (
@@ -764,19 +762,19 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                 </div>
                 {/* Platform Sync Indicator */}
                 <div className="flex gap-1 bg-muted p-1 rounded-md">
-                    <button 
+                    <button
                         onClick={() => handleInputChange("platform", "facebook")}
                         className={`p-1 rounded-sm cursor-pointer ${adForm.platform === 'facebook' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
                     >
                         <FacebookIcon className="h-3.5 w-3.5" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => handleInputChange("platform", "instagram")}
                         className={`p-1 rounded-sm cursor-pointer ${adForm.platform === 'instagram' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
                     >
                         <InstagramIcon className="h-3.5 w-3.5" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => handleInputChange("platform", "google")}
                         className={`p-1 rounded-sm cursor-pointer ${adForm.platform === 'google' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground'}`}
                     >
@@ -805,33 +803,30 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                 <div className="grid grid-cols-3 bg-muted/30 border-b border-border h-11">
                     <button
                         onClick={() => setActiveMobileTab("chat")}
-                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${
-                            activeMobileTab === "chat" 
-                                ? "border-primary text-primary bg-card" 
-                                : "border-transparent text-muted-foreground"
-                        }`}
+                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${activeMobileTab === "chat"
+                            ? "border-primary text-primary bg-card"
+                            : "border-transparent text-muted-foreground"
+                            }`}
                     >
                         <MessageSquare className="h-3.5 w-3.5" />
                         AI Copilot
                     </button>
                     <button
                         onClick={() => setActiveMobileTab("edit")}
-                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${
-                            activeMobileTab === "edit" 
-                                ? "border-primary text-primary bg-card" 
-                                : "border-transparent text-muted-foreground"
-                        }`}
+                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${activeMobileTab === "edit"
+                            ? "border-primary text-primary bg-card"
+                            : "border-transparent text-muted-foreground"
+                            }`}
                     >
                         <Edit className="h-3.5 w-3.5" />
                         Edit Form
                     </button>
                     <button
                         onClick={() => setActiveMobileTab("preview")}
-                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${
-                            activeMobileTab === "preview" 
-                                ? "border-primary text-primary bg-card" 
-                                : "border-transparent text-muted-foreground"
-                        }`}
+                        className={`flex items-center justify-center gap-1 text-xs font-semibold border-b-2 cursor-pointer ${activeMobileTab === "preview"
+                            ? "border-primary text-primary bg-card"
+                            : "border-transparent text-muted-foreground"
+                            }`}
                     >
                         <Smartphone className="h-3.5 w-3.5" />
                         Preview
@@ -851,7 +846,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
         <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[650px] w-full">
             <ResizablePanelGroup direction="horizontal" className="h-full w-full" id="ad-studio-outer-group">
                 {/* Panel One: AI Assistant Chat Panel */}
-                <ResizablePanel id="ad-studio-chat-panel" defaultSize={35} minSize={20} maxSize={60} className="min-w-0">
+                <ResizablePanel id="ad-studio-chat-panel" defaultSize={35} className="min-w-0">
                     <div className="h-full w-full min-w-0 overflow-hidden p-2">
                         <div className="h-full border border-border rounded-xl overflow-hidden bg-card flex flex-col shadow-xs">
                             {renderChatPanel()}
@@ -862,11 +857,11 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                 <ResizableHandle withHandle />
 
                 {/* Right side container */}
-                <ResizablePanel id="ad-studio-right-panel" defaultSize={65} minSize={40} className="min-w-0">
+                <ResizablePanel id="ad-studio-right-panel" defaultSize={65} className="min-w-0">
                     <div className="h-full w-full min-w-0">
                         <ResizablePanelGroup direction="vertical" className="h-full" id="ad-studio-inner-group">
                             {/* Panel Two: Live Preview Panel */}
-                            <ResizablePanel id="ad-studio-preview-panel" defaultSize={60} minSize={20} className="min-w-0">
+                            <ResizablePanel id="ad-studio-preview-panel" defaultSize={60} className="min-w-0">
                                 <div className="h-full w-full min-w-0 overflow-hidden p-2">
                                     <div className="h-full border border-border rounded-xl overflow-hidden bg-card flex flex-col shadow-xs">
                                         {renderPreviewPanel()}
@@ -877,7 +872,7 @@ export function AiAdStudio({ onCampaignCreated }: AiAdStudioProps) {
                             <ResizableHandle withHandle />
 
                             {/* Panel Three: Edit Form Panel */}
-                            <ResizablePanel id="ad-studio-edit-panel" defaultSize={40} minSize={20} className="min-w-0">
+                            <ResizablePanel id="ad-studio-edit-panel" defaultSize={40} className="min-w-0">
                                 <div className="h-full w-full min-w-0 overflow-hidden p-2">
                                     <div className="h-full border border-border rounded-xl overflow-hidden bg-card flex flex-col shadow-xs">
                                         {renderEditPanel()}

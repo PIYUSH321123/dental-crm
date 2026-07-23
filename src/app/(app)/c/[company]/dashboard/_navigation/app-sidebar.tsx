@@ -61,6 +61,10 @@ const data = {
                 {
                     title: "Active Campaigns",
                     url: "/c/[company]/dashboard/marketing/campaign?status=Active",
+                },
+                {
+                    title: "AI Ad Studio",
+                    url: "/c/[company]/dashboard/marketing/ai-ad-studio",
                 }
             ],
         },
