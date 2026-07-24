@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { initialPatients, mockTherapists } from "@/app/(app)/c/[company]/dashboard/patient-management/patients/_patient-table/patient-data";
 
 // Helper to map DB Patient to Frontend format
 function mapDbPatientToFrontend(dbPatient: any): any {
@@ -57,10 +58,80 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const dbPatients = await db.patient.findMany({
+    let dbPatients = await db.patient.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "desc" },
     });
+
+    // Seed database with initialPatients if no patients are found for this company
+    if (dbPatients.length === 0) {
+      // First, seed mock therapists to ensure foreign keys resolve
+      for (const t of mockTherapists) {
+        try {
+          const existingUser = await db.user.findUnique({
+            where: { email: `${t.id}@mock.com` },
+          });
+          if (!existingUser) {
+            await db.user.create({
+              data: {
+                id: t.id,
+                companyId: company.id,
+                name: t.name,
+                email: `${t.id}@mock.com`,
+                password: "mockpasswordhashed",
+                role: "STAFF",
+              },
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to seed mock therapist ${t.id}:`, err);
+        }
+      }
+
+      const seededPatients = [];
+      for (const p of initialPatients) {
+        try {
+          const seeded = await db.patient.create({
+            data: {
+              id: p.id,
+              companyId: company.id,
+              name: p.name,
+              dob: new Date(p.dob),
+              gender: p.gender || "Male",
+              bloodGroup: p.blood_group || null,
+              mobile: p.mobile,
+              altMobile: p.alt_mobile || null,
+              email: p.email || null,
+              occupation: p.occupation || null,
+              address: p.address || null,
+              height: p.height || 0,
+              weight: p.weight || 0,
+              bmi: p.bmi || null,
+              bp: p.bp || null,
+              condition: p.condition || null,
+              assignedTherapistId: p.assigned_therapist_id || null,
+              sessionsAttended: p.sessions_attended || 0,
+              sessionsTotal: p.sessions_total || 0,
+              balance: p.balance || 0,
+              status: p.status || "Active",
+              medicalHistory: (p.medical_history || {}) as any,
+              emergencyContact: (p.emergency_contact || {}) as any,
+              documents: (p.documents || []) as any,
+              timeline: (p.timeline || []) as any,
+              invoices: (p.invoices || []) as any,
+              createdAt: new Date(p.created_at),
+            },
+          });
+          seededPatients.push(seeded);
+        } catch (err) {
+          console.error(`Failed to seed patient ${p.id}:`, err);
+        }
+      }
+      dbPatients = await db.patient.findMany({
+        where: { companyId: company.id },
+        orderBy: { createdAt: "desc" },
+      });
+    }
 
     const formattedPatients = dbPatients.map(mapDbPatientToFrontend);
 
@@ -124,6 +195,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if therapist exists in this company
+    if (assigned_therapist_id) {
+      const therapistExists = await db.user.findFirst({
+        where: {
+          id: assigned_therapist_id,
+          companyId: company.id,
+        },
+      });
+
+      if (!therapistExists) {
+        return NextResponse.json(
+          { success: false, message: "The selected therapist/staff member does not exist in this company." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if patient already exists
     const existingPatient = await db.patient.findFirst({
       where: {
@@ -164,11 +252,11 @@ export async function POST(request: NextRequest) {
         sessionsTotal: parseInt(sessions_total) || 0,
         balance: parseFloat(balance) || 0,
         status: "Active",
-        medicalHistory: medical_history || {},
-        emergencyContact: emergency_contact || {},
-        documents: documents || [],
-        timeline: timeline || [],
-        invoices: invoices || [],
+        medicalHistory: (medical_history || {}) as any,
+        emergencyContact: (emergency_contact || {}) as any,
+        documents: (documents || []) as any,
+        timeline: (timeline || []) as any,
+        invoices: (invoices || []) as any,
       },
     });
 
@@ -178,6 +266,94 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in POST /api/patients:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, companySlug, ...updatedFields } = body;
+
+    if (!id || !companySlug) {
+      return NextResponse.json(
+        { success: false, message: "id and companySlug are required." },
+        { status: 400 }
+      );
+    }
+
+    const company = await db.company.findUnique({
+      where: { slug: companySlug.toLowerCase() },
+    });
+
+    if (!company) {
+      return NextResponse.json(
+        { success: false, message: "Company not found." },
+        { status: 404 }
+      );
+    }
+
+    // Check if therapist exists in this company if assigned_therapist_id is provided
+    if (updatedFields.assigned_therapist_id !== undefined && updatedFields.assigned_therapist_id !== null && updatedFields.assigned_therapist_id !== "") {
+      const therapistExists = await db.user.findFirst({
+        where: {
+          id: updatedFields.assigned_therapist_id,
+          companyId: company.id,
+        },
+      });
+
+      if (!therapistExists) {
+        return NextResponse.json(
+          { success: false, message: "The selected therapist/staff member does not exist in this company." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Map frontend fields to DB fields if they are sent
+    const dataToUpdate: any = {};
+    if (updatedFields.name !== undefined) dataToUpdate.name = updatedFields.name;
+    if (updatedFields.dob !== undefined) dataToUpdate.dob = new Date(updatedFields.dob);
+    if (updatedFields.gender !== undefined) dataToUpdate.gender = updatedFields.gender;
+    if (updatedFields.blood_group !== undefined) dataToUpdate.bloodGroup = updatedFields.blood_group;
+    if (updatedFields.mobile !== undefined) dataToUpdate.mobile = updatedFields.mobile;
+    if (updatedFields.alt_mobile !== undefined) dataToUpdate.altMobile = updatedFields.alt_mobile;
+    if (updatedFields.email !== undefined) dataToUpdate.email = updatedFields.email;
+    if (updatedFields.occupation !== undefined) dataToUpdate.occupation = updatedFields.occupation;
+    if (updatedFields.address !== undefined) dataToUpdate.address = updatedFields.address;
+    if (updatedFields.height !== undefined) dataToUpdate.height = parseFloat(updatedFields.height) || 0;
+    if (updatedFields.weight !== undefined) dataToUpdate.weight = parseFloat(updatedFields.weight) || 0;
+    if (updatedFields.bmi !== undefined) dataToUpdate.bmi = updatedFields.bmi;
+    if (updatedFields.bp !== undefined) dataToUpdate.bp = updatedFields.bp;
+    if (updatedFields.condition !== undefined) dataToUpdate.condition = updatedFields.condition;
+    if (updatedFields.assigned_therapist_id !== undefined) dataToUpdate.assignedTherapistId = updatedFields.assigned_therapist_id || null;
+    if (updatedFields.sessions_attended !== undefined) dataToUpdate.sessionsAttended = parseInt(updatedFields.sessions_attended) || 0;
+    if (updatedFields.sessions_total !== undefined) dataToUpdate.sessionsTotal = parseInt(updatedFields.sessions_total) || 0;
+    if (updatedFields.balance !== undefined) dataToUpdate.balance = parseFloat(updatedFields.balance) || 0;
+    if (updatedFields.status !== undefined) dataToUpdate.status = updatedFields.status;
+    if (updatedFields.medical_history !== undefined) dataToUpdate.medicalHistory = updatedFields.medical_history as any;
+    if (updatedFields.emergency_contact !== undefined) dataToUpdate.emergencyContact = updatedFields.emergency_contact as any;
+    if (updatedFields.documents !== undefined) dataToUpdate.documents = updatedFields.documents as any;
+    if (updatedFields.timeline !== undefined) dataToUpdate.timeline = updatedFields.timeline as any;
+    if (updatedFields.invoices !== undefined) dataToUpdate.invoices = updatedFields.invoices as any;
+
+    const updatedPatient = await db.patient.update({
+      where: {
+        id,
+        companyId: company.id,
+      },
+      data: dataToUpdate,
+    });
+
+    return NextResponse.json({
+      success: true,
+      patient: mapDbPatientToFrontend(updatedPatient),
+    });
+  } catch (error) {
+    console.error("Error in PUT /api/patients:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error." },
       { status: 500 }

@@ -237,7 +237,7 @@ const data = {
         },
         {
             name: "Staff",
-            url: "#",
+            url: "/c/[company]/dashboard/erp/staff",
             icon: Users,
         },
         {
@@ -279,8 +279,13 @@ export function AppSidebar({
     }, [hiddenCrmModules, companyStr])
 
     const filteredProjects = React.useMemo(() => {
-        return data.projects.filter((item) => !hiddenErpModules.includes(item.name))
-    }, [hiddenErpModules])
+        return data.projects
+            .filter((item) => !hiddenErpModules.includes(item.name))
+            .map((item) => ({
+                ...item,
+                url: item.url.replace("[company]", companyStr),
+            }))
+    }, [hiddenErpModules, companyStr])
 
     const filteredSecondary = React.useMemo(() => {
         return data.navSecondary.filter((item) => !hiddenSecondaryModules.includes(item.title))
@@ -299,8 +304,8 @@ export function AppSidebar({
         <Sidebar variant="inset" {...props}>
             <SidebarHeader className="border-b border-sidebar-border pb-2">
                 <div className="flex items-center justify-between px-1">
-                    <a 
-                        href={`/c/${companyStr}/dashboard`} 
+                    <a
+                        href={`/c/${companyStr}/dashboard`}
                         onClick={handleLogoClick}
                         className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center w-full"
                     >

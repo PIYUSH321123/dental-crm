@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Patient, mockTherapists } from "./_patient-table/patient-data"
+import { Patient } from "./_patient-table/patient-data"
 
 interface AddPatientDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSave: (patient: Omit<Patient, "id" | "created_at" | "timeline" | "documents" | "invoices" | "sessions_attended" | "last_visit">) => void
+    therapists?: { id: string; name: string }[]
 }
 
-export function AddPatientDialog({ open, onOpenChange, onSave }: AddPatientDialogProps) {
+export function AddPatientDialog({ open, onOpenChange, onSave, therapists = [] }: AddPatientDialogProps) {
     // Form fields
     const [name, setName] = useState("")
     const [dob, setDob] = useState("")
@@ -27,10 +28,16 @@ export function AddPatientDialog({ open, onOpenChange, onSave }: AddPatientDialo
     const [weight, setWeight] = useState("70")
     const [bp, setBp] = useState("120/80")
     const [condition, setCondition] = useState("Knee OA")
-    const [assignedTherapistId, setAssignedTherapistId] = useState(mockTherapists[0].id)
+    const [assignedTherapistId, setAssignedTherapistId] = useState("")
     const [sessionsTotal, setSessionsTotal] = useState("10")
     const [status, setStatus] = useState<"Active" | "Completed" | "On Hold">("Active")
     const [balance, setBalance] = useState("0")
+
+    useEffect(() => {
+        if (open) {
+            setAssignedTherapistId(therapists && therapists.length > 0 ? therapists[0].id : "")
+        }
+    }, [open, therapists])
 
     // Medical history fields
     const [medConditions, setMedConditions] = useState("")
@@ -128,7 +135,7 @@ export function AddPatientDialog({ open, onOpenChange, onSave }: AddPatientDialo
         setWeight("70")
         setBp("120/80")
         setCondition("Knee OA")
-        setAssignedTherapistId(mockTherapists[0].id)
+        setAssignedTherapistId(therapists && therapists.length > 0 ? therapists[0].id : "")
         setSessionsTotal("10")
         setStatus("Active")
         setBalance("0")
@@ -255,7 +262,7 @@ export function AddPatientDialog({ open, onOpenChange, onSave }: AddPatientDialo
                                         <SelectValue placeholder="Select Therapist" />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-60 overflow-y-auto">
-                                        {mockTherapists.map(t => (
+                                        {therapists.map(t => (
                                             <SelectItem key={t.id} value={t.id} className="text-xs cursor-pointer">{t.name}</SelectItem>
                                         ))}
                                     </SelectContent>

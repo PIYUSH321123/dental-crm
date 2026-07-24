@@ -30,20 +30,22 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Patient, mockTherapists } from "./patient-data"
+import { Patient } from "./patient-data"
 
 interface PatientDataTableProps {
     columns: ColumnDef<Patient, any>[]
     data: Patient[]
     onAddPatient: () => void
     onExport: () => void
+    therapists?: { id: string; name: string }[]
 }
 
 export function PatientDataTable({
     columns,
     data,
     onAddPatient,
-    onExport
+    onExport,
+    therapists = []
 }: PatientDataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -168,7 +170,7 @@ export function PatientDataTable({
                             <Button variant="outline" size="sm" className="h-9 gap-1 px-2.5 cursor-pointer border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground rounded-[5px]">
                                 <span className="text-xs text-muted-foreground">Therapist:</span>
                                 <span className="text-xs font-semibold text-foreground font-sans">
-                                    {selectedTherapist ? (mockTherapists.find(t => t.id === selectedTherapist)?.name || "Selected") : "All"}
+                                    {selectedTherapist ? (therapists.find(t => t.id === selectedTherapist)?.name || "Selected") : "All"}
                                 </span>
                             </Button>
                         </DropdownMenuTrigger>
@@ -176,7 +178,7 @@ export function PatientDataTable({
                             <DropdownMenuItem onClick={() => handleTherapistFilter("")} className={!selectedTherapist ? "bg-accent font-medium text-xs text-foreground" : "cursor-pointer text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"}>
                                 All Therapists
                             </DropdownMenuItem>
-                            {mockTherapists.map((therapist) => (
+                            {therapists.map((therapist) => (
                                 <DropdownMenuItem
                                     key={therapist.id}
                                     onClick={() => handleTherapistFilter(therapist.id)}

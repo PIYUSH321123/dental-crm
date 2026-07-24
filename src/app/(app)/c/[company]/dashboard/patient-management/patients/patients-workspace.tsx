@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -30,7 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useSidebar } from "@/components/ui/sidebar"
-import { Patient, mockTherapists, initialPatients, TimelineEvent, DocumentItem, InvoiceItem } from "./_patient-table/patient-data"
+import { Patient, TimelineEvent, DocumentItem, InvoiceItem } from "./_patient-table/patient-data"
 import { getColumns } from "./_patient-table/patient-columns"
 import { PatientDataTable } from "./_patient-table/patient-data-table"
 import { AddPatientDialog } from "./add-patient-dialog"
@@ -67,6 +67,7 @@ export default function PatientsWorkspace() {
 
     const [patients, setPatients] = useState<Patient[]>([])
     const [loaded, setLoaded] = useState(false)
+    const [dbTherapists, setDbTherapists] = useState<{ id: string; name: string }[]>([])
 
     // View & Dialog control
     const [viewMode, setViewMode] = useState<"list" | "profile">("list")
@@ -79,22 +80,55 @@ export default function PatientsWorkspace() {
     const [addDialogOpen, setAddDialogOpen] = useState(false)
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
 
-    // Load from localStorage
-    const loadPatients = () => {
-        const savedPatients = localStorage.getItem("sg-patients")
-        if (savedPatients) {
-            setPatients(JSON.parse(savedPatients))
-        } else {
-            setPatients(initialPatients)
+    const prevPatientsRef = useRef<Patient[]>([])
+
+    // Load from database
+    const loadPatients = async () => {
+        try {
+            const res = await fetch(`/api/patients?companySlug=${company}`)
+            const data = await res.json()
+            if (data.success) {
+                setPatients(data.patients)
+                prevPatientsRef.current = data.patients
+            } else {
+                setPatients([])
+                prevPatientsRef.current = []
+            }
+        } catch (error) {
+            console.error("Error loading patients:", error)
+            setPatients([])
+            prevPatientsRef.current = []
         }
         setLoaded(true)
     }
 
+    const loadTherapists = async () => {
+        try {
+            const res = await fetch(`/api/staff?companySlug=${company}`)
+            const data = await res.json()
+            if (data.success) {
+                const therapistsOnly = data.staff.filter((member: any) => member.role === "STAFF")
+                setDbTherapists(therapistsOnly)
+            }
+        } catch (error) {
+            console.error("Error loading therapists:", error)
+        }
+    }
+
     useEffect(() => {
         loadPatients()
+        loadTherapists()
 
         const handleUpdate = () => {
-            loadPatients()
+            const saved = localStorage.getItem("sg-patients")
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved)
+                    setPatients(parsed)
+                } catch (e) {
+                    console.error("Failed to parse stored patients:", e)
+                }
+            }
         }
 
         window.addEventListener("storage", handleUpdate)
@@ -104,14 +138,35 @@ export default function PatientsWorkspace() {
             window.removeEventListener("storage", handleUpdate)
             window.removeEventListener("sg-patients-updated", handleUpdate)
         }
-    }, [])
+    }, [company])
 
-    // Sync to localStorage
+    // Sync to localStorage and PostgreSQL Database
     useEffect(() => {
         if (loaded) {
             localStorage.setItem("sg-patients", JSON.stringify(patients))
+
+            // Identify and sync modified/added patients
+            const syncToDb = async () => {
+                for (const patient of patients) {
+                    const prevPatient = prevPatientsRef.current.find(p => p.id === patient.id)
+                    if (!prevPatient || JSON.stringify(prevPatient) !== JSON.stringify(patient)) {
+                        try {
+                            await fetch("/api/patients", {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ...patient, companySlug: company })
+                            })
+                        } catch (error) {
+                            console.error(`Failed to sync patient ${patient.id} to db:`, error)
+                        }
+                    }
+                }
+                prevPatientsRef.current = patients
+            }
+
+            syncToDb()
         }
-    }, [patients, loaded])
+    }, [patients, loaded, company])
 
     // Stats calculations
     const stats = useMemo(() => {
@@ -123,42 +178,60 @@ export default function PatientsWorkspace() {
     }, [patients])
 
     // Add Patient handler
-    const handleAddPatientSave = (newPatientData: Omit<Patient, "id" | "created_at" | "timeline" | "documents" | "invoices" | "sessions_attended" | "last_visit">) => {
-        const sequentialNum = patients.length + 1
-        const id = `P-0${140 + sequentialNum}`
+    const handleAddPatientSave = async (newPatientData: Omit<Patient, "id" | "created_at" | "timeline" | "documents" | "invoices" | "sessions_attended" | "last_visit">) => {
         const timestamp = new Date().toISOString()
-
-        const newPatient: Patient = {
+        const newPatientPayload = {
             ...newPatientData,
-            id,
-            sessions_attended: 0,
-            last_visit: "Just Joined",
-            created_at: timestamp,
+            companySlug: company,
             documents: [],
             invoices: newPatientData.balance > 0 ? [
                 {
                     id: `inv-${Date.now()}`,
                     date: timestamp.split("T")[0],
                     amount: newPatientData.balance,
-                    status: "Unpaid",
+                    status: "Unpaid" as const,
                     description: `Initial diagnosis treatment package fee (${newPatientData.condition})`
                 }
             ] : [],
             timeline: [
                 {
                     id: `t-${Date.now()}`,
-                    type: "creation",
+                    type: "creation" as const,
                     title: "Patient Registered",
-                    description: `Patient profile created. ID assigned: ${id}. Initial condition: ${newPatientData.condition}`,
+                    description: `Patient profile created. Initial condition: ${newPatientData.condition}`,
                     timestamp,
                     operator: "Amit Verma"
                 }
             ]
         }
 
-        setPatients(prev => [newPatient, ...prev])
-        setAddDialogOpen(false)
-        toast.success(`Registered patient ${newPatient.name} with ID ${id}`)
+        try {
+            const res = await fetch("/api/patients", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newPatientPayload),
+            })
+            const data = await res.json()
+            if (data.success) {
+                const newPatient = data.patient
+                // Prepend to state and update prevRef so the PUT effect doesn't trigger for it
+                setPatients(prev => {
+                    const next = [newPatient, ...prev]
+                    prevPatientsRef.current = next
+                    return next
+                })
+                setAddDialogOpen(false)
+                toast.success(`Successfully registered patient ${newPatient.name} (ID: ${newPatient.id})`)
+                window.dispatchEvent(new Event("sg-patients-updated"))
+            } else {
+                toast.error(data.message || "Failed to register patient.")
+            }
+        } catch (error) {
+            console.error("Error registering patient:", error)
+            toast.error("Failed to register patient due to server error.")
+        }
     }
 
     // Edit Profile/Vitals handler
@@ -346,7 +419,7 @@ export default function PatientsWorkspace() {
     const handleExportPatients = () => {
         const headers = ["Patient ID", "Name", "DOB", "Gender", "Blood Group", "Mobile", "Email", "Condition", "Therapist", "Sessions", "Balance", "Status", "Joined Date"]
         const rows = patients.map(p => {
-            const therapist = mockTherapists.find(t => t.id === p.assigned_therapist_id)?.name || "Unassigned"
+            const therapist = dbTherapists.find(t => t.id === p.assigned_therapist_id)?.name || "Unassigned"
             return [
                 p.id,
                 p.name,
@@ -390,7 +463,7 @@ export default function PatientsWorkspace() {
         }
     }
 
-    const columns = getColumns(callbacks)
+    const columns = getColumns(callbacks, dbTherapists)
 
     // Redirect mappings for Clinical modules
     const handleRedirect = (aspectName: string, path: string) => {
@@ -566,6 +639,7 @@ export default function PatientsWorkspace() {
                                     data={patients}
                                     onAddPatient={() => setAddDialogOpen(true)}
                                     onExport={handleExportPatients}
+                                    therapists={dbTherapists}
                                 />
                             </div>
                         )}
@@ -715,7 +789,7 @@ export default function PatientsWorkspace() {
                                 {/* Tabs Content - Profile */}
                                 <TabsContent value="profile" className="space-y-4 focus-visible:ring-0">
                                     <Card className="bg-card border-border p-5">
-                                        <ProfileEditForm patient={selectedPatient} onSave={handleSaveProfileChanges} />
+                                        <ProfileEditForm patient={selectedPatient} onSave={handleSaveProfileChanges} therapists={dbTherapists} />
                                     </Card>
                                 </TabsContent>
 
@@ -955,6 +1029,7 @@ export default function PatientsWorkspace() {
                 open={addDialogOpen}
                 onOpenChange={setAddDialogOpen}
                 onSave={handleAddPatientSave}
+                therapists={dbTherapists}
             />
         </div>
     )
@@ -964,9 +1039,10 @@ export default function PatientsWorkspace() {
 interface ProfileEditFormProps {
     patient: Patient
     onSave: (patient: Patient) => void
+    therapists?: { id: string; name: string }[]
 }
 
-function ProfileEditForm({ patient, onSave }: ProfileEditFormProps) {
+function ProfileEditForm({ patient, onSave, therapists = [] }: ProfileEditFormProps) {
     const [name, setName] = useState(patient.name)
     const [dob, setDob] = useState(patient.dob)
     const [gender, setGender] = useState(patient.gender)
@@ -1134,7 +1210,7 @@ function ProfileEditForm({ patient, onSave }: ProfileEditFormProps) {
                                 <SelectValue placeholder="Therapist" />
                             </SelectTrigger>
                             <SelectContent className="max-h-60 overflow-y-auto">
-                                {mockTherapists.map(t => (
+                                {therapists.map(t => (
                                     <SelectItem key={t.id} value={t.id} className="text-xs cursor-pointer">{t.name}</SelectItem>
                                 ))}
                             </SelectContent>

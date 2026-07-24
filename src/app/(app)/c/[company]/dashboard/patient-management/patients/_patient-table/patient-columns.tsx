@@ -11,14 +11,14 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Patient, mockTherapists } from "./patient-data"
+import { Patient } from "./patient-data"
 
 interface PatientColumnsCallbacks {
     onView: (patient: Patient) => void
     onSchedule: (patient: Patient) => void
 }
 
-export const getColumns = (callbacks: PatientColumnsCallbacks): ColumnDef<Patient>[] => [
+export const getColumns = (callbacks: PatientColumnsCallbacks, therapists: { id: string; name: string }[] = []): ColumnDef<Patient>[] => [
     {
         accessorKey: "id",
         header: "Patient ID",
@@ -30,23 +30,25 @@ export const getColumns = (callbacks: PatientColumnsCallbacks): ColumnDef<Patien
         accessorKey: "name",
         header: "Name",
         cell: ({ row }) => {
-            return <span className="font-semibold text-foreground">{row.getValue("name")}</span>
+            const name = row.getValue("name") as string
+            return <span className="text-xs font-bold text-foreground">{name}</span>
         }
     },
     {
         id: "age_gender",
-        header: "Age/Gender",
+        header: "Age / Gender",
         cell: ({ row }) => {
-            const dobString = row.original.dob
+            const dobStr = row.original.dob
             const gender = row.original.gender
-            // Simple age calculation
             let age = "N/A"
-            if (dobString) {
-                const birthYear = new Date(dobString).getFullYear()
-                const currentYear = new Date().getFullYear()
-                if (!isNaN(birthYear)) {
-                    age = String(currentYear - birthYear)
+            if (dobStr) {
+                const birth = new Date(dobStr)
+                const now = new Date()
+                let diff = now.getFullYear() - birth.getFullYear()
+                if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) {
+                    diff--
                 }
+                age = String(diff)
             }
             const genderLetter = gender ? gender.charAt(0) : "?"
             return <span className="text-xs text-muted-foreground">{age} / {genderLetter}</span>
@@ -64,7 +66,7 @@ export const getColumns = (callbacks: PatientColumnsCallbacks): ColumnDef<Patien
         header: "Therapist",
         cell: ({ row }) => {
             const therapistId = row.getValue("assigned_therapist_id") as string
-            const therapist = mockTherapists.find((t) => t.id === therapistId)
+            const therapist = therapists.find((t) => t.id === therapistId)
             return <span className="text-xs text-foreground/90">{therapist ? therapist.name : "Unassigned"}</span>
         }
     },
