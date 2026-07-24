@@ -126,8 +126,13 @@ export function getCompanyConfig(slug?: string | null): CompanyConfig {
     return COMPANIES.yogaplus;
   }
 
-  // If not found, return default
-  return DEFAULT_COMPANY;
+  // If not found, return default with active slug and name overrides to preserve navigation links
+  return {
+    ...DEFAULT_COMPANY,
+    slug: normalizedSlug,
+    name: normalizedSlug.charAt(0).toUpperCase() + normalizedSlug.slice(1),
+    logoText: normalizedSlug.charAt(0).toUpperCase() + normalizedSlug.slice(1),
+  };
 }
 
 

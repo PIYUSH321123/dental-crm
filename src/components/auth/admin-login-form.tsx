@@ -40,7 +40,7 @@ export function AdminLoginForm() {
       const result = await signInSuperAdmin(values);
       if (!result.success) {
         setServerError(result.error);
-        
+
         // Track attempts remaining on failure
         setAttemptsRemaining((prev) => {
           if (prev === null) return 2; // Second attempt remaining after first failure
@@ -48,7 +48,7 @@ export function AdminLoginForm() {
         });
         return;
       }
-      
+
       // Success redirect
       router.push("/admin/dashboard");
       router.refresh();
@@ -70,25 +70,24 @@ export function AdminLoginForm() {
           name="email"
           render={({ field, fieldState }) => (
             <FormItem className="space-y-1.5">
-              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                 Admin email
               </FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="email"
                     placeholder="admin@physioyoga.com"
                     autoComplete="email"
                     disabled={isPending}
-                    className={`pl-9 bg-[#11131c] border-zinc-800 text-zinc-150 h-10 rounded-xl placeholder:text-zinc-600 focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50 transition-all ${
-                      fieldState.invalid ? "border-rose-500/80 focus-visible:border-rose-500 focus-visible:ring-rose-500/40" : ""
-                    }`}
+                    className={`pl-9 bg-background border-input text-foreground h-10 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50 transition-all ${fieldState.invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/40" : ""
+                      }`}
                     {...field}
                   />
                 </div>
               </FormControl>
-              <FormMessage className="text-xs text-rose-400 font-medium" />
+              <FormMessage className="text-xs text-destructive font-medium" />
             </FormItem>
           )}
         />
@@ -99,20 +98,19 @@ export function AdminLoginForm() {
           name="password"
           render={({ field, fieldState }) => (
             <FormItem className="space-y-1.5">
-              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                 Password
               </FormLabel>
               <FormControl>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     disabled={isPending}
-                    className={`pl-9 pr-10 bg-[#11131c] border-zinc-800 text-zinc-150 h-10 rounded-xl placeholder:text-zinc-600 focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50 transition-all ${
-                      fieldState.invalid ? "border-rose-500/80 focus-visible:border-rose-500 focus-visible:ring-rose-500/40" : ""
-                    }`}
+                    className={`pl-9 pr-10 bg-background border-input text-foreground h-10 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-violet-500/50 focus-visible:border-violet-500/50 transition-all ${fieldState.invalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/40" : ""
+                      }`}
                     {...field}
                   />
                   <button
@@ -120,7 +118,7 @@ export function AdminLoginForm() {
                     tabIndex={-1}
                     disabled={isPending}
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 focus:outline-hidden transition-colors cursor-pointer"
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground focus:outline-hidden transition-colors cursor-pointer"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -130,7 +128,7 @@ export function AdminLoginForm() {
                   </button>
                 </div>
               </FormControl>
-              <FormMessage className="text-xs text-rose-400 font-medium" />
+              <FormMessage className="text-xs text-destructive font-medium" />
             </FormItem>
           )}
         />
@@ -140,7 +138,7 @@ export function AdminLoginForm() {
           <Button
             type="submit"
             disabled={isPending}
-            className="w-full h-10 rounded-xl font-bold bg-[#881c24] hover:bg-[#a6252e] text-white hover:text-white transition-all shadow-md focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0f17] cursor-pointer"
+            className="w-full h-10 rounded-xl font-bold bg-violet-600 hover:bg-violet-750 text-white transition-all shadow-md focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 cursor-pointer"
           >
             {isPending ? (
               <>
@@ -153,20 +151,27 @@ export function AdminLoginForm() {
           </Button>
 
           {attemptsRemaining !== null && (
-            <p className="text-[11px] text-center text-rose-400 font-semibold animate-pulse">
+            <p className="text-[11px] text-center text-destructive font-semibold animate-pulse">
               Attempts remaining: {attemptsRemaining}
             </p>
           )}
         </div>
 
+        <div className="text-center text-xs text-muted-foreground pt-1">
+          Need super admin access?{" "}
+          <a href="/admin/register" className="font-semibold text-violet-500 dark:text-violet-400 hover:underline">
+            Register here
+          </a>
+        </div>
+
         {/* Security Notice Box */}
-        <div className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-[#0d0f17]/40 p-4 mt-6">
-          <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0 text-violet-400" />
+        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/40 p-4 mt-4">
+          <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0 text-violet-500 dark:text-violet-400" />
           <div className="space-y-1">
-            <p className="text-[11px] text-zinc-400 leading-normal font-medium">
+            <p className="text-[11px] text-muted-foreground leading-normal font-medium">
               All sign-in attempts are logged and monitored for security.
             </p>
-            <p className="text-[10px] text-zinc-500 font-mono">
+            <p className="text-[10px] text-muted-foreground/80 font-mono">
               Last successful login: 2 days ago from a recognized device
             </p>
           </div>

@@ -30,15 +30,15 @@ export function proxy(request: NextRequest) {
 
     // Super Admin protection
     if (pathname.startsWith("/admin")) {
-        const isAdminLogin = pathname === "/admin/login"
+        const isAuthPage = pathname === "/admin/login" || pathname === "/admin/register"
         const hasAdminSession = request.cookies.has("admin_session")
 
-        if (isAdminLogin && hasAdminSession) {
+        if (isAuthPage && hasAdminSession) {
             // Already logged in, redirect to admin dashboard
             return NextResponse.redirect(new URL("/admin/dashboard", request.url))
         }
 
-        if (!isAdminLogin && !hasAdminSession) {
+        if (!isAuthPage && !hasAdminSession) {
             // Not logged in, redirect to admin login page
             return NextResponse.redirect(new URL("/admin/login", request.url))
         }

@@ -15,7 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { loginStaff } from "@/lib/auth/staff"
 import { staffLoginSchema, type StaffLoginInput } from "@/lib/validations/auth"
-import { COMPANIES } from "@/lib/companies"
+import { COMPANIES, CompanyConfig } from "@/lib/companies"
+import { getCompanyBySlugAction } from "@/lib/actions/companies"
 
 export default function StaffLoginPage() {
     const params = useParams()
@@ -24,7 +25,22 @@ export default function StaffLoginPage() {
     const [serverError, setServerError] = useState<string | null>(null)
 
     const companySlug = (Array.isArray(params.companySlug) ? params.companySlug[0] : params.companySlug) || ""
-    const company = COMPANIES[companySlug]
+    const [company, setCompany] = useState<CompanyConfig | undefined>(COMPANIES[companySlug])
+    const [loadingCompany, setLoadingCompany] = useState(!company)
+
+    useEffect(() => {
+        if (!company && companySlug) {
+            getCompanyBySlugAction(companySlug).then((cfg) => {
+                if (cfg) {
+                    setCompany(cfg)
+                }
+                setLoadingCompany(false)
+            }).catch((err) => {
+                console.error("Error fetching company config:", err)
+                setLoadingCompany(false)
+            })
+        }
+    }, [company, companySlug])
 
     // Form setup with React Hook Form & Zod
     const {
@@ -48,6 +64,14 @@ export default function StaffLoginPage() {
         }
     }, [companySlug, setValue])
 
+    if (loadingCompany) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
+
     if (!company) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
@@ -60,7 +84,7 @@ export default function StaffLoginPage() {
                     </CardHeader>
                     <CardContent className="flex justify-center">
                         <Button onClick={() => router.push("/")} size="sm">
-                            Return Home
+                             Return Home
                         </Button>
                     </CardContent>
                 </Card>

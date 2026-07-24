@@ -77,6 +77,7 @@ export async function createCompanyAction(
 }
 
 import { getCompanyBySlug } from "@/lib/companies-server";
+import { CompanyConfig } from "@/lib/companies";
 
 export async function checkCompanyExistsAction(slug: string): Promise<boolean> {
   if (!slug) return false;
@@ -86,5 +87,15 @@ export async function checkCompanyExistsAction(slug: string): Promise<boolean> {
   } catch (error) {
     console.error("Error in checkCompanyExistsAction:", error);
     return false;
+  }
+}
+
+export async function getCompanyBySlugAction(slug: string): Promise<CompanyConfig | null> {
+  if (!slug) return null;
+  try {
+    return await getCompanyBySlug(slug);
+  } catch (error) {
+    console.error("Error in getCompanyBySlugAction:", error);
+    return null;
   }
 }

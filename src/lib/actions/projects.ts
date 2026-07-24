@@ -1,9 +1,9 @@
 "use server";
 
 import db from "@/lib/db";
-import { getProjectSlug } from "@/app/(admin)/admin/projects/data";
 import { IntegrationProvider } from "@/generated/prisma/index";
 import { revalidatePath } from "next/cache";
+import { hashPassword } from "@/lib/auth-server";
 
 export interface CreateProjectInput {
   projectName: string;
@@ -12,6 +12,7 @@ export interface CreateProjectInput {
   email: string;
   subscriptionPlan: "Basic" | "Pro" | "Growth" | "Enterprise";
   budget: number;
+  adminPassword?: string;
 }
 
 type ActionResult =
@@ -23,21 +24,39 @@ type ActionResult =
  */
 export async function createProjectAction(input: CreateProjectInput): Promise<ActionResult> {
   try {
-    const { projectName, companyName, leadName, email, subscriptionPlan, budget } = input;
+    const { projectName, companyName, leadName, email, subscriptionPlan, budget, adminPassword } = input;
 
-    if (!projectName.trim() || !companyName.trim() || !leadName.trim() || !email.trim()) {
-      return { success: false, error: "All fields are required." };
+    if (!projectName.trim() || !companyName.trim() || !leadName.trim() || !email.trim() || !adminPassword || !adminPassword.trim()) {
+      return { success: false, error: "All fields are required, including the initial admin password." };
     }
 
-    // 1. Generate unique slug
-    let slug = getProjectSlug(projectName, companyName);
+    if (adminPassword.trim().length < 6) {
+      return { success: false, error: "Initial admin password must be at least 6 characters long." };
+    }
+
+    // Check if the user email already exists (User email is unique)
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      return { success: false, error: `A user with email "${email}" already exists.` };
+    }
+
+    // 1. Generate unique slug strictly based on project name
+    const slug = projectName.toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    if (!slug) {
+      return { success: false, error: "Invalid project name. A slug cannot be generated." };
+    }
+
     const existingCompany = await db.company.findUnique({
       where: { slug },
     });
 
     if (existingCompany) {
-      // Add a suffix if slug already exists to ensure uniqueness
-      slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
+      return { success: false, error: "A project with this name or slug already exists." };
     }
 
     // 2. Ensure Subscription Plan exists in the database
@@ -55,6 +74,9 @@ export async function createProjectAction(input: CreateProjectInput): Promise<Ac
       });
     }
 
+    // Hash the password outside the transaction to keep it short
+    const hashedPassword = await hashPassword(adminPassword.trim());
+
     // 3. Perform database operations in a transaction
     await db.$transaction(async (tx) => {
       // A. Create the Project
@@ -64,7 +86,7 @@ export async function createProjectAction(input: CreateProjectInput): Promise<Ac
         },
       });
 
-      // B. Create the Company (Dummy)
+      // B. Create the Company with access to all modules by default
       const renewalDate = new Date();
       renewalDate.setFullYear(renewalDate.getFullYear() + 1); // 1 year from now
 
@@ -75,10 +97,31 @@ export async function createProjectAction(input: CreateProjectInput): Promise<Ac
           email,
           subscriptionPlanId: plan.id,
           subscriptionRenewalDate: renewalDate,
+          accessConfig: {
+            create: {
+              marketing: true,
+              appointments: true,
+              billing: true,
+              patientManagement: true,
+              leadManagement: true,
+              activityManagement: true,
+            },
+          },
         },
       });
 
-      // C. Link them via a dummy Integration
+      // C. Create the Company Admin User
+      await tx.user.create({
+        data: {
+          companyId: company.id,
+          name: leadName,
+          email: email,
+          password: hashedPassword,
+          role: "COMPANY_ADMIN",
+        },
+      });
+
+      // D. Link them via a dummy Integration
       await tx.integration.create({
         data: {
           companyId: company.id,
@@ -98,7 +141,7 @@ export async function createProjectAction(input: CreateProjectInput): Promise<Ac
     // 4. Revalidate cache for the admin projects page
     revalidatePath("/admin/projects");
 
-    return { success: true, message: "Project and dummy company created successfully!" };
+    return { success: true, message: "Project, company, and admin user created successfully!" };
   } catch (error) {
     console.error("Error creating project server action:", error);
     return { success: false, error: "An unexpected database error occurred." };

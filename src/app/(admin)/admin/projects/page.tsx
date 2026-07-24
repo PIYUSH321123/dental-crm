@@ -42,15 +42,16 @@ export default async function ProjectsPage() {
                 budget: config.budget || 0,
                 lead_name: config.leadName || "Admin",
                 email: company.email || "info@" + company.slug + ".com",
-                created_at: company.createdAt.toISOString().split("T")[0]
+                created_at: company.createdAt.toISOString().split("T")[0],
+                slug: company.slug
             };
         });
     } catch (error) {
         console.error("Failed to fetch database projects:", error);
     }
 
-    // 2. Merge database records (newly created) with mock data
-    const allProjects = [...dbProjects, ...mockProjects];
+    // 2. Use database records (newly created)
+    const allProjects = dbProjects;
 
     const totalProjects = allProjects.length
     const activeProjects = allProjects.filter((p) => p.status === "Active").length

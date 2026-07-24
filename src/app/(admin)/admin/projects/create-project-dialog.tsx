@@ -37,6 +37,7 @@ export function CreateProjectDialog() {
     email: "",
     subscriptionPlan: "Basic" as "Basic" | "Pro" | "Growth" | "Enterprise",
     budget: "",
+    adminPassword: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +61,7 @@ export function CreateProjectDialog() {
           email: "",
           subscriptionPlan: "Basic",
           budget: "",
+          adminPassword: "",
         });
         router.refresh(); // Refresh page to load database changes
       } else {
@@ -132,6 +134,18 @@ export function CreateProjectDialog() {
                 placeholder="e.g. john@apex.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="adminPassword">Initial Admin Password</Label>
+              <Input
+                id="adminPassword"
+                type="password"
+                placeholder="Min 6 characters"
+                value={formData.adminPassword}
+                onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
                 required
               />
             </div>

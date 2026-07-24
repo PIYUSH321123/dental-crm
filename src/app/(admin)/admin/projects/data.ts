@@ -9,6 +9,7 @@ export interface Project {
     lead_name: string
     email: string
     created_at: string
+    slug?: string
 }
 
 export const mockProjects: Project[] = [

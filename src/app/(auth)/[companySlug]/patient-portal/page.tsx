@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useState, useEffect, useTransition } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useTransition } from "react"
 import { Button } from "@/components/ui/button"
-import { LogOut, Sparkles, Activity, ShieldCheck, Calendar, User } from "lucide-react"
+import { LogOut, Sparkles, Activity, ShieldCheck, Calendar, User, Loader2 } from "lucide-react"
 import { logoutPatient } from "@/lib/auth/patient"
-import { COMPANIES } from "@/lib/companies"
+import { COMPANIES, CompanyConfig } from "@/lib/companies"
+import { getCompanyBySlugAction } from "@/lib/actions/companies"
 
 export default function PatientPortalPage() {
     const params = useParams()
@@ -14,7 +15,22 @@ export default function PatientPortalPage() {
     const [isPending, startTransition] = useTransition()
 
     const companySlug = (Array.isArray(params.companySlug) ? params.companySlug[0] : params.companySlug) || ""
-    const company = COMPANIES[companySlug]
+    const [company, setCompany] = useState<CompanyConfig | undefined>(COMPANIES[companySlug])
+    const [loadingCompany, setLoadingCompany] = useState(!company)
+
+    useEffect(() => {
+        if (!company && companySlug) {
+            getCompanyBySlugAction(companySlug).then((cfg) => {
+                if (cfg) {
+                    setCompany(cfg)
+                }
+                setLoadingCompany(false)
+            }).catch((err) => {
+                console.error("Error fetching company config:", err)
+                setLoadingCompany(false)
+            })
+        }
+    }, [company, companySlug])
 
     const handleLogout = () => {
         startTransition(async () => {
@@ -25,6 +41,14 @@ export default function PatientPortalPage() {
     }
 
     const primaryColor = company?.colors?.primary || "#10b981"
+
+    if (loadingCompany) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">

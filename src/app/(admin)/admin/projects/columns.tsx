@@ -32,8 +32,7 @@ export const columns: ColumnDef<Project>[] = [
         header: "Project Name",
         cell: ({ row }) => {
             const projectName = row.getValue("project_name") as string
-            const companyName = row.original.company_name
-            const slug = getProjectSlug(projectName, companyName)
+            const slug = row.original.slug || getProjectSlug(projectName, row.original.company_name)
             return (
                 <Link
                     href={`/c/${slug}/`}
