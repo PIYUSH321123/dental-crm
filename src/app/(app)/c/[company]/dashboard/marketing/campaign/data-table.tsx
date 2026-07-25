@@ -1,6 +1,8 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
+import { getIntegrationsAction } from "@/lib/actions/integrations"
 import {
     ColumnDef,
     SortingState,
@@ -17,6 +19,20 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Filter, ListChecksIcon, ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react"
+
+const Facebook = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+    >
+        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+)
 
 import {
     DropdownMenu,
@@ -59,6 +75,29 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({})
+
+    const params = useParams()
+    const companySlug = (params?.company as string) || "clinic"
+    const [metaAccountId, setMetaAccountId] = useState<string | null>(null)
+    const [metaLoaded, setMetaLoaded] = useState(false)
+
+    useEffect(() => {
+        if (!companySlug) return
+        getIntegrationsAction(companySlug)
+            .then((res) => {
+                if (res.success) {
+                    const meta = res.data.find((item: any) => item.id === "meta")
+                    if (meta && meta.syncEnabled && meta.accountId) {
+                        setMetaAccountId(meta.accountId)
+                    }
+                }
+                setMetaLoaded(true)
+            })
+            .catch((err) => {
+                console.error("Error loading integrations in data-table:", err)
+                setMetaLoaded(true)
+            })
+    }, [companySlug])
 
     const table = useReactTable({
         data,
@@ -216,6 +255,34 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {metaAccountId ? (
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 gap-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 border-blue-200 dark:border-blue-900/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 cursor-pointer" 
+                            asChild
+                        >
+                            <a 
+                                href={`https://facebook.com_${metaAccountId}/campaigns`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                            >
+                                <Facebook className="h-3.5 w-3.5" />
+                                <span className="text-xs font-semibold hidden sm:inline">Facebook Campaigns</span>
+                            </a>
+                        </Button>
+                    ) : (
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-9 gap-1.5 text-muted-foreground bg-muted/20 border-muted-foreground/10 cursor-not-allowed" 
+                            disabled
+                        >
+                            <Facebook className="h-3.5 w-3.5" />
+                            <span className="text-xs font-semibold hidden sm:inline">Facebook Campaigns (Disconnected)</span>
+                        </Button>
+                    )}
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-9 gap-1">

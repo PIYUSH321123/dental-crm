@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         role: true,
+        branchId: true,
+        address: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { companySlug, name, email, password, role } = body;
+    const { companySlug, name, email, password, role, branchId, address } = body;
 
     if (!companySlug || !name || !email || !password) {
       return NextResponse.json(
@@ -104,12 +106,16 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         password: hashedPassword,
         role: userRole,
+        branchId: branchId || null,
+        address: address || null,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        branchId: true,
+        address: true,
         createdAt: true,
       },
     });

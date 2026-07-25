@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { Plus, Loader2, AlertCircle } from "lucide-react"
 import {
@@ -24,7 +25,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Campaign, User, Branch, fetchMockUsers, fetchMockBranches } from "./data"
+import { Campaign, User, Branch, fetchMockBranches } from "./data"
+import { createMetaCampaignAction, createCampaignAction } from "@/lib/actions/campaigns"
 
 interface CreateCampaignDialogProps {
     existingCampaigns: Campaign[]
@@ -42,6 +44,9 @@ export function CreateCampaignDialog({
     const [branches, setBranches] = useState<Branch[]>([])
     const [loadingOptions, setLoadingOptions] = useState(false)
 
+    const params = useParams()
+    const companySlug = (params?.company as string) || "clinic"
+
     // Form fields state
     const [campaignName, setCampaignName] = useState("")
     const [source, setSource] = useState<string>("")
@@ -56,6 +61,14 @@ export function CreateCampaignDialog({
     const [branchId, setBranchId] = useState<string>("")
     const [notes, setNotes] = useState("")
 
+    // Meta-specific settings
+    const [objective, setObjective] = useState<string>("OUTCOME_LEADS")
+    const [specialAdCategories, setSpecialAdCategories] = useState<string[]>(["NONE"])
+    const [buyingType, setBuyingType] = useState<string>("AUCTION")
+    const [bidStrategy, setBidStrategy] = useState<string>("LOWEST_COST_WITHOUT_CAP")
+    const [budgetType, setBudgetType] = useState<string>("daily")
+    const [spendCap, setSpendCap] = useState<string>("")
+
     // Validation errors state
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
@@ -67,12 +80,36 @@ export function CreateCampaignDialog({
         async function loadOptions() {
             setLoadingOptions(true)
             try {
-                const [fetchedUsers, fetchedBranches] = await Promise.all([
-                    fetchMockUsers(),
-                    fetchMockBranches()
+                const [staffRes, branchRes] = await Promise.all([
+                    fetch(`/api/staff?companySlug=${companySlug}`),
+                    fetch(`/api/branches?companySlug=${companySlug}`)
                 ])
-                setUsers(fetchedUsers)
-                setBranches(fetchedBranches)
+                const staffData = await staffRes.json()
+                const branchData = await branchRes.json()
+
+                if (staffData.success) {
+                    const mappedUsers: User[] = staffData.staff.map((s: any) => ({
+                        id: s.id,
+                        name: s.name,
+                        role: s.role === "COMPANY_ADMIN" ? "Clinic Admin" : "Therapist"
+                    }))
+                    setUsers(mappedUsers)
+                } else {
+                    toast.error("Failed to load staff list from database")
+                }
+
+                if (branchData.success && branchData.branches.length > 0) {
+                    setBranches(branchData.branches)
+                    if (!branchId && branchData.branches[0]) {
+                        setBranchId(branchData.branches[0].id)
+                    }
+                } else {
+                    const fallback = await fetchMockBranches()
+                    setBranches(fallback)
+                    if (!branchId && fallback[0]) {
+                        setBranchId(fallback[0].id)
+                    }
+                }
             } catch (err) {
                 console.error("Failed to load options", err)
                 toast.error("Failed to load staff and branch lists")
@@ -98,6 +135,12 @@ export function CreateCampaignDialog({
         setStatus("Draft")
         setBranchId("")
         setNotes("")
+        setObjective("OUTCOME_LEADS")
+        setSpecialAdCategories(["NONE"])
+        setBuyingType("AUCTION")
+        setBidStrategy("LOWEST_COST_WITHOUT_CAP")
+        setBudgetType("daily")
+        setSpendCap("")
         setErrors({})
     }
 
@@ -170,6 +213,13 @@ export function CreateCampaignDialog({
             tempErrors.status = "Status is required"
         }
 
+        if ((source === "Facebook" || source === "Instagram") && spendCap) {
+            const numSpendCap = Number(spendCap)
+            if (isNaN(numSpendCap) || numSpendCap <= 0) {
+                tempErrors.spendCap = "Spend cap must be a positive number"
+            }
+        }
+
         setErrors(tempErrors)
         return Object.keys(tempErrors).length === 0
     }
@@ -184,12 +234,44 @@ export function CreateCampaignDialog({
 
         setSubmitting(true)
 
-        // Simulate API call to save campaign
+        // Call API / Server Action if campaign source is Meta
+        const isMetaSource = source === "Facebook" || source === "Instagram"
+        let metaCampaignId = `camp-${Date.now()}`
+
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+            if (isMetaSource) {
+                const apiInput = {
+                    name: campaignName.trim(),
+                    objective: objective,
+                    status: (status === "Active" ? "ACTIVE" : "PAUSED") as "ACTIVE" | "PAUSED",
+                    special_ad_categories: specialAdCategories,
+                    buying_type: buyingType as any,
+                    bid_strategy: bidStrategy as any,
+                    daily_budget: budgetType === "daily" ? parseFloat(budget) : undefined,
+                    lifetime_budget: budgetType === "lifetime" ? parseFloat(budget) : undefined,
+                    spend_cap: spendCap ? parseFloat(spendCap) : undefined,
+                }
+
+                const response = await createMetaCampaignAction(companySlug, apiInput)
+                if (response.success && response.data?.id) {
+                    metaCampaignId = response.data.id
+                    if (response.data.simulated) {
+                        toast.success("Meta Ads Campaign created (Simulated)")
+                    } else {
+                        toast.success(`Synced with Meta Ads (Campaign ID: ${response.data.id})`)
+                    }
+                } else {
+                    toast.error(`Meta Ads Sync Failed: ${response.error || "Integration is disconnected."}`)
+                    setSubmitting(false)
+                    return
+                }
+            } else {
+                // Simulate regular API latency
+                await new Promise((resolve) => setTimeout(resolve, 800))
+            }
 
             const newCampaign: Campaign = {
-                id: `camp-${Date.now()}`,
+                id: metaCampaignId,
                 campaign_name: campaignName.trim(),
                 source: source as any,
                 budget: parseFloat(budget),
@@ -207,6 +289,27 @@ export function CreateCampaignDialog({
                 created_by: "usr-2", // Mock creator (e.g. Priya Patel from JWT)
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
+            }
+
+            const dbResponse = await createCampaignAction(companySlug, {
+                id: newCampaign.id,
+                campaign_name: newCampaign.campaign_name,
+                source: newCampaign.source,
+                budget: newCampaign.budget,
+                status: newCampaign.status,
+                start_date: newCampaign.start_date,
+                end_date: newCampaign.end_date,
+                target_condition: newCampaign.target_condition,
+                landing_page_url: newCampaign.landing_page_url,
+                assigned_staff_id: newCampaign.assigned_staff_id,
+                branch_id: newCampaign.branch_id,
+                notes: newCampaign.notes,
+            })
+
+            if (!dbResponse.success) {
+                toast.error(`Database Error: ${dbResponse.error || "Failed to save to database."}`)
+                setSubmitting(false)
+                return
             }
 
             onCampaignCreated(newCampaign)
@@ -517,6 +620,137 @@ export function CreateCampaignDialog({
                                 )}
                             </div>
                         </div>
+
+                        {(source === "Facebook" || source === "Instagram") && (
+                            <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/10 dark:bg-blue-950/5 space-y-4">
+                                <div className="flex items-center gap-2 border-b border-blue-150 dark:border-blue-900/40 pb-2">
+                                    <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                                        Meta Ads Campaign Settings
+                                    </h4>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {/* Campaign Objective */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaObjective" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Campaign Objective
+                                        </Label>
+                                        <Select value={objective} onValueChange={setObjective}>
+                                            <SelectTrigger id="metaObjective" className="h-10 w-full flex bg-card">
+                                                <SelectValue placeholder="Select Objective" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="OUTCOME_LEADS">Leads (OUTCOME_LEADS)</SelectItem>
+                                                <SelectItem value="OUTCOME_TRAFFIC">Traffic (OUTCOME_TRAFFIC)</SelectItem>
+                                                <SelectItem value="OUTCOME_SALES">Sales (OUTCOME_SALES)</SelectItem>
+                                                <SelectItem value="OUTCOME_AWARENESS">Awareness (OUTCOME_AWARENESS)</SelectItem>
+                                                <SelectItem value="OUTCOME_ENGAGEMENT">Engagement (OUTCOME_ENGAGEMENT)</SelectItem>
+                                                <SelectItem value="OUTCOME_APP_PROMOTION">App Promotion (OUTCOME_APP_PROMOTION)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Budget Distribution */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaBudgetType" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Budget Distribution
+                                        </Label>
+                                        <Select value={budgetType} onValueChange={setBudgetType}>
+                                            <SelectTrigger id="metaBudgetType" className="h-10 w-full flex bg-card">
+                                                <SelectValue placeholder="Select Budget Type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="daily">Daily Budget</SelectItem>
+                                                <SelectItem value="lifetime">Lifetime Budget</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Buying Type */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaBuyingType" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Buying Type
+                                        </Label>
+                                        <Select value={buyingType} onValueChange={setBuyingType}>
+                                            <SelectTrigger id="metaBuyingType" className="h-10 w-full flex bg-card">
+                                                <SelectValue placeholder="Select Buying Type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="AUCTION">Auction (AUCTION)</SelectItem>
+                                                <SelectItem value="RESERVED">Reserved (RESERVED)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Special Ad Category */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaSpecialAdCategory" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Special Ad Category <span className="text-rose-500">*</span>
+                                        </Label>
+                                        <Select 
+                                            value={specialAdCategories[0] || "NONE"} 
+                                            onValueChange={(val) => setSpecialAdCategories([val])}
+                                        >
+                                            <SelectTrigger id="metaSpecialAdCategory" className="h-10 w-full flex bg-card">
+                                                <SelectValue placeholder="Select Category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="NONE">None (NONE)</SelectItem>
+                                                <SelectItem value="HOUSING">Housing (HOUSING)</SelectItem>
+                                                <SelectItem value="EMPLOYMENT">Employment (EMPLOYMENT)</SelectItem>
+                                                <SelectItem value="CREDIT">Credit (CREDIT)</SelectItem>
+                                                <SelectItem value="ISSUES_ELECTIONS_POLITICS">Issues/Elections/Politics</SelectItem>
+                                                <SelectItem value="ONLINE_GAMBLING_AND_GAMING">Online Gambling & Gaming</SelectItem>
+                                                <SelectItem value="FINANCIAL_PRODUCTS_SERVICES">Financial Products & Services</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Bid Strategy */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaBidStrategy" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Bid Strategy
+                                        </Label>
+                                        <Select value={bidStrategy} onValueChange={setBidStrategy}>
+                                            <SelectTrigger id="metaBidStrategy" className="h-10 w-full flex bg-card">
+                                                <SelectValue placeholder="Select Bid Strategy" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="LOWEST_COST_WITHOUT_CAP">Lowest Cost (No Cap)</SelectItem>
+                                                <SelectItem value="LOWEST_COST_WITH_BID_CAP">Lowest Cost (Bid Cap)</SelectItem>
+                                                <SelectItem value="COST_CAP">Cost Cap</SelectItem>
+                                                <SelectItem value="LOWEST_COST_WITH_MIN_ROAS">Min ROAS Strategy</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Spend Cap */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaSpendCap" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Spend Cap (INR, Optional)
+                                        </Label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-sm text-muted-foreground font-semibold">₹</span>
+                                            <Input
+                                                id="metaSpendCap"
+                                                type="number"
+                                                placeholder="e.g. 100000"
+                                                value={spendCap}
+                                                onChange={(e) => setSpendCap(e.target.value)}
+                                                className={`h-10 pl-7 bg-card ${errors.spendCap ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                                            />
+                                        </div>
+                                        {errors.spendCap && (
+                                            <span className="flex items-center gap-1 text-xs font-medium text-destructive">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.spendCap}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Notes Area */}
                         <div className="space-y-2">
