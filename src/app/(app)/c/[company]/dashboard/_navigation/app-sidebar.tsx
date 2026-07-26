@@ -109,6 +109,10 @@ const data = {
                     url: "/c/[company]/dashboard/activity-management/assessments",
                 },
                 {
+                    title: "AI Biomechanical ROM",
+                    url: "/c/[company]/dashboard/activity-management/ai-assesment",
+                },
+                {
                     title: "Treatment Plans",
                     url: "/c/[company]/dashboard/activity-management/treatment-plans",
                 },

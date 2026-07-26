@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { PatientSearchSelect } from "@/components/ui/patient-search-select"
-import { ArrowLeft, ClipboardCheck } from "lucide-react"
+import { ArrowLeft, ClipboardCheck, Sparkles } from "lucide-react"
 
 // Import subcomponents
 import ChiefComplaint from "./components/ChiefComplaint"
@@ -30,6 +30,35 @@ export default function ClinicalAssessmentsPage({ isEmbedded = false }: { isEmbe
     const isCollapsed = !isEmbedded && (isMobile ? !openMobile : !open)
 
     const [activePatient, setActivePatient] = React.useState("Ravi Kumar (P-0142)")
+    const [patientOptions, setPatientOptions] = React.useState(PATIENT_OPTIONS)
+
+    React.useEffect(() => {
+        const loadPatients = async () => {
+            try {
+                const res = await fetch(`/api/patients?companySlug=${company}`)
+                const data = await res.json()
+                if (data.success && data.patients && data.patients.length > 0) {
+                    const dbOptions = data.patients.map((p: any) => ({
+                        value: p.id,
+                        label: `${p.name} (${p.id})`
+                    }))
+                    
+                    // Merge DB options and hardcoded defaults (prevent duplicates)
+                    const combined = [...dbOptions]
+                    PATIENT_OPTIONS.forEach(opt => {
+                        if (!combined.some(o => o.value === opt.value)) {
+                            combined.push(opt)
+                        }
+                    })
+                    setPatientOptions(combined)
+                }
+            } catch (error) {
+                console.error("Error fetching dynamic patients:", error)
+            }
+        }
+        loadPatients()
+    }, [company])
+
     const clinicalData = React.useMemo(() => {
         return getPatientClinicalData(activePatient)
     }, [activePatient])
@@ -69,16 +98,26 @@ export default function ClinicalAssessmentsPage({ isEmbedded = false }: { isEmbe
                                 </div>
                             </div>
                             
-                            {/* Patient Selector */}
-                            <div className="relative flex items-center gap-2 bg-white/60 dark:bg-slate-900/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550 pl-1.5">
-                                    Patient:
-                                </span>
-                                <PatientSearchSelect
-                                    options={PATIENT_OPTIONS}
-                                    value={activePatient}
-                                    onValueChange={setActivePatient}
-                                />
+                            {/* Patient Selector & Assess with AI */}
+                            <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <div className="relative flex items-center gap-2 bg-white/60 dark:bg-slate-900/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550 pl-1.5">
+                                        Patient:
+                                    </span>
+                                    <PatientSearchSelect
+                                        options={patientOptions}
+                                        value={activePatient}
+                                        onValueChange={setActivePatient}
+                                    />
+                                </div>
+                                
+                                <Button
+                                    onClick={() => router.push(`/c/${company}/dashboard/activity-management/ai-assesment?patientId=${encodeURIComponent(activePatient)}`)}
+                                    className="gap-1.5 bg-purple-650 hover:bg-purple-750 text-white font-semibold text-xs px-3 h-9 shadow-sm cursor-pointer"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                                    Assess with AI
+                                </Button>
                             </div>
                         </div>
                     </div>

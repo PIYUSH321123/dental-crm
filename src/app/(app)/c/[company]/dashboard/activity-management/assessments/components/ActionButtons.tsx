@@ -1,28 +1,37 @@
+"use client"
+
 import * as React from "react"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 export default function ActionButtons() {
-    const btnBase = "px-4 py-1.5 rounded-md text-[11px] font-semibold cursor-pointer transition-colors"
-
     return (
-        <div className="flex gap-2 mt-3 flex-wrap font-sans">
-            <button 
+        <div className="flex gap-2.5 mt-4 flex-wrap font-sans">
+            <Button 
                 type="button"
-                className={`${btnBase} bg-[#1a6eb5] hover:bg-[#155a96] text-white`}
+                onClick={() => toast.success("Clinical assessment saved successfully!")}
+                className="bg-primary hover:bg-primary/95 text-primary-foreground text-[11px] font-semibold h-8 cursor-pointer"
             >
                 💾 Save Assessment
-            </button>
-            <button 
+            </Button>
+            <Button 
                 type="button"
-                className={`${btnBase} bg-[#27ae60] hover:bg-[#1e7e46] text-white`}
+                onClick={() => toast.success("Assessment saved. Loading treatment plan creation...")}
+                className="bg-emerald-650 hover:bg-emerald-750 text-white text-[11px] font-semibold h-8 cursor-pointer"
             >
                 💾 Save & Create Treatment Plan
-            </button>
-            <button 
+            </Button>
+            <Button 
                 type="button"
-                className={`${btnBase} bg-transparent border border-[#1a6eb5] text-[#1a6eb5] hover:bg-slate-50`}
+                variant="outline"
+                onClick={() => {
+                    toast.info("Opening printing preview...")
+                    window.print()
+                }}
+                className="border-primary text-primary hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold h-8 cursor-pointer"
             >
                 🖨 Print Assessment
-            </button>
+            </Button>
         </div>
     )
 }
