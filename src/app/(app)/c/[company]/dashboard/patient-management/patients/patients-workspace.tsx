@@ -789,7 +789,7 @@ export default function PatientsWorkspace() {
                                 {/* Tabs Content - Profile */}
                                 <TabsContent value="profile" className="space-y-4 focus-visible:ring-0">
                                     <Card className="bg-card border-border p-5">
-                                        <ProfileEditForm patient={selectedPatient} onSave={handleSaveProfileChanges} therapists={dbTherapists} />
+                                        <ProfileEditForm key={selectedPatient.id} patient={selectedPatient} onSave={handleSaveProfileChanges} therapists={dbTherapists} />
                                     </Card>
                                 </TabsContent>
 
@@ -816,9 +816,9 @@ export default function PatientsWorkspace() {
                                                         if (p) setSelectedPatient(p)
                                                     }}
                                                 >
-                                                    <option value="P-0142">Ravi Kumar (P-0142)</option>
-                                                    <option value="P-0141">Meera Shah (P-0141)</option>
-                                                    <option value="P-0139">Arjun Singh (P-0139)</option>
+                                                    {patients.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+                                                    ))}
                                                 </select>
                                             </div>
 
@@ -868,9 +868,9 @@ export default function PatientsWorkspace() {
                                                         if (p) setSelectedPatient(p)
                                                     }}
                                                 >
-                                                    <option value="P-0142">Ravi Kumar (P-0142)</option>
-                                                    <option value="P-0141">Meera Shah (P-0141)</option>
-                                                    <option value="P-0139">Arjun Singh (P-0139)</option>
+                                                    {patients.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+                                                    ))}
                                                 </select>
                                             </div>
 

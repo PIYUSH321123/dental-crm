@@ -29,6 +29,7 @@ import {
 } from "./_lead-data-table/lead-data"
 import { getColumns } from "./_lead-data-table/lead-columns"
 import { LeadDataTable } from "./_lead-data-table/lead-data-table"
+import { initialPatients } from "../../patient-management/patients/_patient-table/patient-data"
 
 // Separated Subcomponents
 import { AddLeadDialog } from "./add-lead-dialog"
@@ -214,6 +215,80 @@ export default function LeadListComponent() {
             description: `Created patient record. Auto-generated Patient ID: ${patientId}.`,
             timestamp,
             operator: "Amit Verma"
+        }
+
+        // Add new patient to sg-patients localStorage list
+        const savedPatients = localStorage.getItem("sg-patients")
+        let currentPatients = []
+        if (savedPatients) {
+            try {
+                currentPatients = JSON.parse(savedPatients)
+            } catch (e) {
+                console.error("Error parsing sg-patients from localStorage:", e)
+            }
+        } else {
+            currentPatients = initialPatients
+        }
+        
+        let dob = "1990-01-01"
+        if (actionLead.age) {
+            const birthYear = new Date().getFullYear() - actionLead.age
+            dob = `${birthYear}-01-01`
+        }
+
+        const newPatient = {
+            id: patientId,
+            name: actionLead.name,
+            dob,
+            gender: actionLead.gender || "Male",
+            blood_group: "O+",
+            mobile: actionLead.mobile,
+            email: actionLead.email || "",
+            occupation: actionLead.occupation || "",
+            address: actionLead.city || "",
+            height: 170,
+            weight: 70,
+            bmi: "24.2 (Normal)",
+            bp: "120/80",
+            condition: actionLead.condition || actionLead.pain_area || "General",
+            assigned_therapist_id: actionLead.assigned_therapist_id || "ther-1",
+            sessions_attended: 0,
+            sessions_total: 10,
+            last_visit: "Just Joined",
+            balance: 0,
+            status: "Active" as const,
+            created_at: timestamp,
+            medical_history: {
+                conditions: "",
+                surgeries: "",
+                allergies: "",
+                medications: ""
+            },
+            emergency_contact: {
+                name: "",
+                relation: "",
+                phone: ""
+            },
+            documents: [],
+            invoices: [],
+            timeline: [
+                {
+                    id: `t-${Date.now()}`,
+                    type: "creation" as const,
+                    title: "Patient Registered",
+                    description: `Patient profile created via Lead conversion. ID assigned: ${patientId}.`,
+                    timestamp,
+                    operator: "Amit Verma"
+                }
+            ]
+        }
+        
+        try {
+            localStorage.setItem("sg-patients", JSON.stringify([newPatient, ...currentPatients]))
+            // Dispatch storage event so other components (e.g. PatientsWorkspace) update
+            window.dispatchEvent(new Event("sg-patients-updated"))
+        } catch (e) {
+            console.error("Error saving new patient to localStorage:", e)
         }
 
         setActivities(prev => [newActivity, ...prev])

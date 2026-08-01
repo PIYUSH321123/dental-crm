@@ -1,0 +1,80 @@
+PATIENT MOBILE APP — FEATURE LIST
+Sales Guru CRM & Telehealth Platform
+
+======================================
+HOME / OVERVIEW
+======================================
+- Next session card (date, therapist, join button if telehealth)
+- Adherence/progress snapshot (exercise completion streak, pain score trend)
+- Quick actions: Book consultation, Pay dues, Message therapist
+
+======================================
+CONSULTATION
+======================================
+- Book new consultation (select clinic, therapist/specialist, date & time slot)
+- Consultation type selector (in-person / telehealth video call)
+- Reason for visit / symptoms note (submitted before session)
+- Upcoming consultations list (reschedule / cancel)
+- Past consultation history with shared summary notes
+- Join video call button (for telehealth consultations)
+- Consultation reminders/notifications
+
+======================================
+MY SESSIONS
+======================================
+- Upcoming therapy/treatment sessions
+- Past session history with therapist notes (patient-visible only)
+- Session status (upcoming, completed, missed, cancelled)
+- Reschedule / cancel options
+- Reminders toggle
+
+======================================
+MY PROGRESS
+======================================
+- Exercise prescriptions with instructions/video demos
+- Daily/weekly adherence tracker (checkbox or streak view)
+- Pain/mobility score trend chart over time
+- Goals set by therapist, visible to patient
+
+======================================
+SUBSCRIPTION
+======================================
+- View active subscription plan (e.g. Monthly / Quarterly / Pay-per-session)
+- Plan details: sessions included, consultations included, validity period
+- Upgrade / downgrade / renew plan
+- Auto-renewal toggle
+- Subscription usage tracker (e.g. "5 of 8 sessions used")
+- Plan comparison view (if multiple tiers offered)
+- Cancel subscription option
+
+======================================
+BILLING
+======================================
+- Invoice history
+- Outstanding dues with in-app payment (UPI/card)
+- Payment method management
+- Linked to subscription plan billing cycle
+
+======================================
+MESSAGES
+======================================
+- Chat with assigned therapist/clinic (WhatsApp integration)
+- Consultation & session-related notifications
+- Reminders for reschedules and follow-ups
+
+======================================
+PROFILE / SETTINGS
+======================================
+- Personal details, emergency contact
+- Notification preferences
+- Linked clinic(s) if patient sees multiple providers
+- Document uploads (reports for therapist review)
+
+======================================
+EXCLUDED (staff-only, must NOT appear in patient app)
+======================================
+- Internal/staff notes
+- Lead-loss reasons
+- Other patients' data
+- Admin/feature-flag controls
+- Raw clinical assessment data (only patient-friendly summaries shown)
