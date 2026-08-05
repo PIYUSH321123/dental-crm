@@ -20,7 +20,7 @@ const clinicSubscriptions = [
 
 export default function SubscriptionsPage() {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-200 p-6 md:p-10 font-sans transition-colors duration-200">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 p-6 md:p-10 font-sans transition-colors duration-200">
             {/* Header */}
             <div className="mb-8">
                 <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
@@ -39,7 +39,7 @@ export default function SubscriptionsPage() {
                 {subscriptionPlans.map((plan) => (
                     <div 
                         key={plan.name}
-                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] p-5 flex flex-col justify-between shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all"
+                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col justify-between shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all"
                     >
                         <div>
                             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 text-[10px] font-bold border border-cyan-200 dark:border-cyan-900 mb-3">
@@ -63,7 +63,7 @@ export default function SubscriptionsPage() {
             </div>
 
             {/* Subscriptions Table */}
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] p-6 shadow-xs">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
                 <div className="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">Clinic Billings</h3>
                     <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-0 text-[10px] font-bold px-2 py-0.5">

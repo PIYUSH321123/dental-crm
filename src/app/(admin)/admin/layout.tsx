@@ -28,7 +28,7 @@ export default function AdminLayout({
       }
     >
       <AppSidebar variant="inset" />
-      <SidebarInset>
+      <SidebarInset className="bg-slate-50 dark:bg-slate-950">
         <SiteHeader />
         {children}
       </SidebarInset>

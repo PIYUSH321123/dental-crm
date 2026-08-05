@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent } from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -16,6 +17,13 @@ import {
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Building,
     ShieldAlert,
@@ -240,12 +248,12 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
     })
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-200 p-6 md:p-10 font-sans transition-colors duration-200">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 p-6 md:p-10 font-sans transition-colors duration-200">
             {/* Top Bar Header */}
             <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
                 <div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 border border-slate-300/50 dark:border-slate-700/50">
-                        <Activity className="h-3 w-3 text-cyan-600 dark:text-cyan-400 animate-pulse" /> Platform Administration
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 mb-2 border border-emerald-200/50 dark:border-emerald-800/30">
+                        <Activity className="h-3 w-3 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Platform Administration
                     </div>
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                         Super Admin Panel <Sparkles className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
@@ -253,7 +261,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
                         <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                         All Services Operational
                     </div>
@@ -265,7 +273,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                 <Plus className="h-4 w-4" /> Register Clinic
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white dark:bg-[#101626] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                        <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                             <form onSubmit={handleCreateClinic}>
                                 <DialogHeader>
                                     <DialogTitle className="text-slate-900 dark:text-white font-bold flex items-center gap-2">
@@ -286,7 +294,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                                 setNewClinicSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "-"))
                                             }}
                                             placeholder="Active Life Physio"
-                                            className="bg-slate-50 dark:bg-[#182033] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl"
+                                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -296,7 +304,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                             value={newClinicSlug}
                                             onChange={e => setNewClinicSlug(e.target.value)}
                                             placeholder="activelife"
-                                            className="bg-slate-50 dark:bg-[#182033] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl font-mono text-xs"
+                                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl font-mono text-xs"
                                         />
                                     </div>
                                 </div>
@@ -323,14 +331,14 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
             {/* Stat Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {[
-                    { label: "Total Clinics", value: totalClinics.toString(), delta: `${activeClinics} active now`, icon: Building, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-955/40" },
-                    { label: "Total Patients", value: formatCount(totalPatientsCount), delta: "Across all clinic locations", icon: Users, color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-955/40" },
-                    { label: "Active Staff", value: formatCount(totalStaffCount), delta: "Physiotherapists & Admins", icon: Users, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-955/40" },
-                    { label: "Platform MRR", value: computedMrr, delta: "Based on active subscription tiers", icon: DollarSign, color: "text-amber-600 bg-amber-50 dark:text-yellow-400 dark:bg-yellow-955/40" },
+                    { label: "Total Clinics", value: totalClinics.toString(), delta: `${activeClinics} active now`, icon: Building, color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/40" },
+                    { label: "Total Patients", value: formatCount(totalPatientsCount), delta: "Across all clinic locations", icon: Users, color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-950/40" },
+                    { label: "Active Staff", value: formatCount(totalStaffCount), delta: "Physiotherapists & Admins", icon: Users, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40" },
+                    { label: "Platform MRR", value: computedMrr, delta: "Based on active subscription tiers", icon: DollarSign, color: "text-amber-600 bg-amber-50 dark:text-yellow-400 dark:bg-yellow-950/40" },
                 ].map((stat) => (
-                    <div
+                    <Card
                         key={stat.label}
-                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] p-5 flex items-center justify-between shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700/80"
+                        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex items-center justify-between shadow-xs transition-all hover:border-slate-300 dark:hover:border-slate-700/80"
                     >
                         <div className="space-y-1.5">
                             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
@@ -340,7 +348,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                         <div className={`p-3.5 rounded-xl ${stat.color}`}>
                             <stat.icon className="h-5 w-5" />
                         </div>
-                    </div>
+                    </Card>
                 ))}
             </div>
 
@@ -353,7 +361,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registered Clinics</h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400">Configure status and module access rules per clinic.</p>
                         </div>
-                        <Badge className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-0 text-[10px] font-bold px-2.5 py-1">
+                        <Badge className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-750 dark:text-emerald-400 border border-emerald-200/30 dark:border-emerald-800/30 text-[10px] font-bold px-2.5 py-1">
                             {totalClinics} registered
                         </Badge>
                     </div>
@@ -364,9 +372,9 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                             const avatarColor = getClinicColor(clinic.id)
 
                             return (
-                                <div
+                                <Card
                                     key={clinic.id}
-                                    className={`rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700 ${
+                                    className={`rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700 ${
                                         isSuspended ? "opacity-60 grayscale-[40%]" : ""
                                     }`}
                                 >
@@ -458,26 +466,25 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                             </Button>
                                         </div>
                                     </div>
-                                </div>
+                                </Card>
                             )
                         })}
                     </div>
                 </div>
-
-                {/* Sidebar (Activity + Danger Zone) */}
+                            {/* Sidebar (Activity + Danger Zone) */}
                 <div className="space-y-6">
                     {/* Activity Feed */}
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <Activity className="h-4 w-4 text-cyan-650 dark:text-cyan-400" /> Platform Activity
+                            <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Platform Activity
                         </h3>
-                        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101626] p-4 flex flex-col gap-3 shadow-xs">
+                        <Card className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex flex-col gap-3 shadow-xs">
                             {activities.map((item, i) => (
                                 <div
                                     key={i}
-                                    className={`flex gap-3 items-start ${i > 0 ? "border-t border-slate-100 dark:border-slate-800/60 pt-3" : ""}`}
+                                    className={`flex gap-3 items-start ${i > 0 ? "border-t border-slate-100 dark:border-slate-800/40 pt-3" : ""}`}
                                 >
-                                    <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-850 flex items-center justify-center text-slate-400 mt-0.5">
+                                    <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mt-0.5">
                                         <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
                                     </div>
                                     <div className="space-y-0.5">
@@ -486,7 +493,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                        </Card>
                     </div>
 
                     {/* Danger Zone */}
@@ -494,7 +501,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                         <h3 className="text-sm font-bold text-rose-650 dark:text-rose-450 uppercase tracking-wider mb-3 flex items-center gap-2">
                             <ShieldAlert className="h-4 w-4" /> Danger Zone
                         </h3>
-                        <div className="rounded-2xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/20 dark:bg-[#1a0c0e] p-5 space-y-4">
+                        <Card className="rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/10 dark:bg-rose-950/10 p-5 space-y-4">
                             <div>
                                 <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Deactivate Organization</h4>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
@@ -511,7 +518,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                         Suspend Clinic Account
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white dark:bg-[#101626] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                                <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                                     <DialogHeader>
                                         <DialogTitle className="text-slate-900 dark:text-white font-bold flex items-center gap-2">
                                             <ShieldAlert className="h-5 w-5 text-rose-500 dark:text-rose-450 animate-bounce" /> Suspend Organization
@@ -520,23 +527,34 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                             Please choose a clinic organization to suspend. This blocks all access to dashboard features.
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <div className="py-4">
+                                    <div className="py-4 space-y-1.5">
                                         <Label htmlFor="clinic-select" className="text-xs font-semibold text-slate-500 dark:text-slate-400">Clinic Name</Label>
-                                        <select
-                                            id="clinic-select"
+                                        <Select
                                             value={selectedClinicToSuspend}
-                                            onChange={e => setSelectedClinicToSuspend(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-[#182033] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl px-3 mt-1.5 text-sm outline-hidden focus:border-slate-300 dark:focus:border-slate-650"
+                                            onValueChange={(val) => setSelectedClinicToSuspend(val)}
                                         >
-                                            <option value="">-- Select Active Clinic --</option>
-                                            {clinics.filter(c => c.status === "Active").map(c => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger
+                                                id="clinic-select"
+                                                className="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white px-3 text-sm focus:border-slate-300 dark:focus:border-slate-600 focus-visible:ring-1 focus-visible:ring-emerald-500"
+                                            >
+                                                <SelectValue placeholder="-- Select Active Clinic --" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl">
+                                                {clinics.filter(c => c.status === "Active").map(c => (
+                                                    <SelectItem
+                                                        key={c.id}
+                                                        value={c.id}
+                                                        className="cursor-pointer hover:bg-slate-105 dark:hover:bg-slate-800 rounded-lg text-slate-900 dark:text-white"
+                                                    >
+                                                        {c.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <DialogFooter>
                                         <DialogClose asChild>
-                                            <Button type="button" variant="ghost" className="h-10 text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-550 dark:text-slate-400 cursor-pointer">
+                                            <Button type="button" variant="ghost" className="h-10 text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer">
                                                 Cancel
                                             </Button>
                                         </DialogClose>
@@ -554,7 +572,7 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                        </div>
+                        </Card>
                     </div>
                 </div>
             </div>

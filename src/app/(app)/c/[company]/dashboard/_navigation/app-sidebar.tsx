@@ -132,10 +132,6 @@ const data = {
                     url: "/c/[company]/dashboard/appointments/timeline-calendar",
                 },
                 {
-                    title: "Schedule",
-                    url: "#",
-                },
-                {
                     title: "Session Management",
                     url: "/c/[company]/dashboard/appointments/sessions",
                 },

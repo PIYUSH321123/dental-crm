@@ -72,7 +72,7 @@ export default async function ProjectsPage() {
     ]
 
     return (
-        <div className="flex flex-1 flex-col">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-200 flex flex-1 flex-col font-sans">
             <div className="@container/main flex flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
                     {/* Header with New Project Button */}
@@ -87,8 +87,8 @@ export default async function ProjectsPage() {
                     </div>
 
                     {/* Stats Section */}
-                    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-                        <Card className="@container/card">
+                    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+                        <Card className="@container/card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all">
                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                                 <CardDescription className="text-sm font-medium">Total Clients</CardDescription>
                                 <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ export default async function ProjectsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="@container/card">
+                        <Card className="@container/card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all">
                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                                 <CardDescription className="text-sm font-medium">Active Subscriptions</CardDescription>
                                 <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
@@ -112,7 +112,7 @@ export default async function ProjectsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="@container/card">
+                        <Card className="@container/card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all">
                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                                 <CardDescription className="text-sm font-medium">Combined Budget</CardDescription>
                                 <Landmark className="h-4 w-4 text-muted-foreground" />
@@ -123,7 +123,7 @@ export default async function ProjectsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="@container/card">
+                        <Card className="@container/card rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:border-slate-350 dark:hover:border-slate-700/80 transition-all">
                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                                 <CardDescription className="text-sm font-medium">Enterprise Tier</CardDescription>
                                 <ShieldCheck className="h-4 w-4 text-primary" />

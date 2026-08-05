@@ -36,15 +36,15 @@ export default function SalesGuruPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white overflow-hidden relative">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white overflow-hidden relative">
       {/* Background Decorative Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-900/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/30">
+          <div className="h-9 w-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-600/30">
             SG
           </div>
           <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
@@ -56,7 +56,7 @@ export default function SalesGuruPortal() {
           className="text-slate-400 hover:text-white text-sm flex items-center gap-1.5 hover:bg-slate-900"
           onClick={() => router.push("/admin/login")}
         >
-          <Shield className="h-4 w-4" />
+          <Shield className="h-4 w-4 text-emerald-500" />
           <span>Super Admin Access</span>
         </Button>
       </header>
@@ -65,7 +65,7 @@ export default function SalesGuruPortal() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-12 md:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
         {/* Left Column: CRM Intro */}
         <div className="space-y-6 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-950 text-indigo-400 border border-indigo-900/50">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-900/50">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Next-Gen Clinic CRM Platform</span>
           </div>
@@ -79,7 +79,7 @@ export default function SalesGuruPortal() {
           {/* CRM Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-indigo-400">
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
                 <HeartHandshake className="h-5 w-5" />
               </div>
               <div>
@@ -88,7 +88,7 @@ export default function SalesGuruPortal() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-indigo-400">
+              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
                 <LayoutDashboard className="h-5 w-5" />
               </div>
               <div>
@@ -101,9 +101,9 @@ export default function SalesGuruPortal() {
 
         {/* Right Column: Portal Access & Login */}
         <div className="flex justify-center">
-          <Card className="w-full max-w-[450px] bg-slate-950/70 border-slate-900 backdrop-blur-xl shadow-2xl shadow-indigo-950/30">
+          <Card className="w-full max-w-[450px] bg-slate-950/70 border-slate-900 backdrop-blur-xl shadow-2xl shadow-emerald-950/20">
             <CardHeader className="pb-4">
-              <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-500 mb-3">
+              <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-500 mb-3">
                 <Building2 className="h-6 w-6" />
               </div>
               <CardTitle className="text-2xl font-bold text-white">Clinic Portal Access</CardTitle>
@@ -123,7 +123,7 @@ export default function SalesGuruPortal() {
                       placeholder="e.g. yogaplus, stark, hooli"
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
-                      className="bg-slate-900/50 border-slate-800 focus-visible:ring-indigo-600 text-white placeholder:text-slate-600 pr-12 h-11 rounded-lg"
+                      className="bg-slate-900/50 border-slate-800 focus-visible:ring-emerald-600 text-white placeholder:text-slate-600 pr-12 h-11 rounded-lg"
                       required
                     />
                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-600 select-none">
@@ -131,7 +131,7 @@ export default function SalesGuruPortal() {
                     </div>
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white h-11 gap-1.5 font-medium rounded-lg" disabled={loading}>
+                <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-11 gap-1.5 font-medium rounded-lg" disabled={loading}>
                   {loading ? "Verifying..." : "Access Workspace"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
