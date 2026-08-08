@@ -4,6 +4,7 @@ import { createCompanySchema, type CreateCompanyInput } from "@/lib/validations/
 import {
   createCompany,
   getCompanyBySlug,
+  getCompaniesList,
 } from "@/services/company.service";
 import type { CompanyConfig } from "@/lib/companies";
 
@@ -79,4 +80,8 @@ export async function getCompanyBySlugAction(slug: string): Promise<CompanyConfi
     console.error("Error in getCompanyBySlugAction:", error);
     return null;
   }
+}
+
+export async function getCompaniesListAction() {
+  return await getCompaniesList();
 }

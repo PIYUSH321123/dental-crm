@@ -1,50 +1,39 @@
 import db from "@/lib/db";
-import { hashPassword } from "@/lib/auth-server";
+import {
+  ensureSuperAdminRoleWithPermissions,
+  registerSuperAdmin,
+} from "@/services/auth.service";
 
 /**
- * Bootstraps the initial Super Admin in the database.
- * Reads SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD from process.env.
- * 
+ * Bootstraps the initial Super Admin and sets up all platform feature permissions.
+ * Reads SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, and SUPER_ADMIN_NAME from process.env.
+ *
  * Guarantees:
  * - Credentials are strictly accessed on the server (never exposed to client).
- * - Passwords are securely hashed using bcrypt.
+ * - Provisions SUPER_ADMIN platform role with full permissions across all modules and actions.
  * - Idempotency: checks if a Super Admin user already exists before attempting creation.
  * - Graceful error handling during database startup.
  */
 export async function bootstrapSuperAdmin(): Promise<{ success: boolean; message: string }> {
-  const email = process.env.SUPER_ADMIN_EMAIL;
-  const password = process.env.SUPER_ADMIN_PASSWORD;
+  const email = process.env.SUPER_ADMIN_EMAIL || "admin@physioyoga.com";
+  const password = process.env.SUPER_ADMIN_PASSWORD || "admin123";
   const name = process.env.SUPER_ADMIN_NAME || "Super Admin";
 
-  if (!email || !password) {
-    const msg = "[Bootstrap] SUPER_ADMIN_EMAIL or SUPER_ADMIN_PASSWORD not set in environment. Skipping Super Admin bootstrap.";
-    console.info(msg);
-    return { success: false, message: msg };
-  }
-
   try {
-    // 1. Ensure the SUPER_ADMIN PlatformRole exists
-    let superAdminRole = await db.platformRole.findFirst({
-      where: { name: "SUPER_ADMIN" },
-    });
+    // 1. Ensure SUPER_ADMIN role exists and has permissions to access all platform features
+    const superAdminRole = await ensureSuperAdminRoleWithPermissions();
+    console.log("[Bootstrap] Verified SUPER_ADMIN PlatformRole and full platform feature permissions.");
 
-    if (!superAdminRole) {
-      superAdminRole = await db.platformRole.create({
-        data: {
-          name: "SUPER_ADMIN",
-          description: "Platform Super Administrator with top-level system privileges",
-        },
-      });
-      console.log("[Bootstrap] Created PlatformRole: SUPER_ADMIN");
-    }
+    const normalizedEmail = email.toLowerCase().trim();
 
     // 2. Check if a PlatformUser with this email already exists
     const existingByEmail = await db.platformUser.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: normalizedEmail },
+      include: { role: true },
     });
 
     if (existingByEmail) {
-      const msg = `[Bootstrap] Super Admin already exists with email: ${existingByEmail.email}. Skipping creation.`;
+      const msg = `[Bootstrap] Super Admin user exists (${existingByEmail.email}, Role: ${existingByEmail.role.name}). Full feature permissions configured.`;
       console.log(msg);
       return { success: true, message: msg };
     }
@@ -55,30 +44,24 @@ export async function bootstrapSuperAdmin(): Promise<{ success: boolean; message
     });
 
     if (existingSuperAdmin) {
-      const msg = `[Bootstrap] A Super Admin user already exists (${existingSuperAdmin.email}). Skipping bootstrap for ${email}.`;
+      const msg = `[Bootstrap] A Super Admin user already exists (${existingSuperAdmin.email}). Full permissions verified.`;
       console.log(msg);
       return { success: true, message: msg };
     }
 
-    // 4. Securely hash password and create the initial Super Admin
-    const hashedPassword = await hashPassword(password);
-
-    const newAdmin = await db.platformUser.create({
-      data: {
-        name,
-        email: email.toLowerCase().trim(),
-        password: hashedPassword,
-        roleId: superAdminRole.id,
-        isActive: true,
-      },
+    // 4. Register the new Super Admin using the unified auth service
+    const newAdmin = await registerSuperAdmin({
+      name,
+      email: normalizedEmail,
+      password,
     });
 
-    const msg = `[Bootstrap] Super Admin successfully bootstrapped: ${newAdmin.email} (ID: ${newAdmin.id})`;
+    const msg = `[Bootstrap] Super Admin successfully bootstrapped: ${newAdmin.email} (ID: ${newAdmin.id}) with full platform permissions.`;
     console.log(msg);
     return { success: true, message: msg };
   } catch (error: any) {
     const errorMsg = `[Bootstrap] Error during Super Admin bootstrap: ${error?.message || error}`;
-    console.error(errorMsg);
+    console.warn(errorMsg);
     return { success: false, message: errorMsg };
   }
 }

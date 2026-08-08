@@ -124,8 +124,94 @@ export async function authenticateSuperAdmin(input: {
   };
 }
 
+export const PLATFORM_MODULES = [
+  "COMPANIES",
+  "PROJECTS",
+  "USERS",
+  "STAFF",
+  "PATIENTS",
+  "APPOINTMENTS",
+  "BILLING",
+  "MARKETING",
+  "LEAD_MANAGEMENT",
+  "ACTIVITY_MANAGEMENT",
+  "INTEGRATIONS",
+  "ANALYTICS",
+  "SETTINGS",
+  "SYSTEM",
+] as const;
+
+export const PLATFORM_ACTIONS = ["CREATE", "READ", "UPDATE", "DELETE", "MANAGE", "ALL"] as const;
+
 /**
- * Registers a new Super Admin platform user.
+ * Ensures the SUPER_ADMIN PlatformRole exists and has permissions to access all platform features.
+ */
+export async function ensureSuperAdminRoleWithPermissions() {
+  // 1. Ensure SUPER_ADMIN role exists
+  let superAdminRole = await db.platformRole.findFirst({
+    where: { name: "SUPER_ADMIN" },
+  });
+
+  if (!superAdminRole) {
+    superAdminRole = await db.platformRole.create({
+      data: {
+        name: "SUPER_ADMIN",
+        description: "Super Administrator with unrestricted access to all platform features",
+      },
+    });
+  }
+
+  // 2. Define all feature permissions across all modules and actions
+  const permissionDefinitions: Array<{ module: string; action: string }> = [];
+  for (const mod of PLATFORM_MODULES) {
+    for (const act of PLATFORM_ACTIONS) {
+      permissionDefinitions.push({ module: mod, action: act });
+    }
+  }
+
+  // 3. Ensure all PlatformPermission records exist in DB
+  const existingPermissions = await db.platformPermission.findMany();
+  const existingMap = new Set(existingPermissions.map((p) => `${p.module}:${p.action}`));
+
+  const permissionsToCreate = permissionDefinitions.filter(
+    (p) => !existingMap.has(`${p.module}:${p.action}`)
+  );
+
+  if (permissionsToCreate.length > 0) {
+    await db.platformPermission.createMany({
+      data: permissionsToCreate,
+      skipDuplicates: true,
+    });
+  }
+
+  // 4. Fetch all permission records
+  const allPermissions = await db.platformPermission.findMany();
+
+  // 5. Link all permissions to the SUPER_ADMIN role
+  const existingRolePerms = await db.platformRolePermission.findMany({
+    where: { roleId: superAdminRole.id },
+  });
+  const assignedPermIds = new Set(existingRolePerms.map((rp) => rp.permissionId));
+
+  const rolePermissionsToCreate = allPermissions
+    .filter((p) => !assignedPermIds.has(p.id))
+    .map((p) => ({
+      roleId: superAdminRole!.id,
+      permissionId: p.id,
+    }));
+
+  if (rolePermissionsToCreate.length > 0) {
+    await db.platformRolePermission.createMany({
+      data: rolePermissionsToCreate,
+      skipDuplicates: true,
+    });
+  }
+
+  return superAdminRole;
+}
+
+/**
+ * Registers a new Super Admin platform user and provisions full platform permissions.
  */
 export async function registerSuperAdmin(input: {
   name: string;
@@ -149,7 +235,7 @@ export async function registerSuperAdmin(input: {
 
   if (isDbOffline) {
     if (normalizedEmail === "admin@physioyoga.com") {
-      return { success: true };
+      return { success: true, id: "static-admin-id", name, email: normalizedEmail };
     }
     throw new Error("Database offline. Registration is disabled for other emails.");
   }
@@ -158,18 +244,8 @@ export async function registerSuperAdmin(input: {
     throw new Error("A user with this email already exists.");
   }
 
-  let superAdminRole = await db.platformRole.findFirst({
-    where: { name: "SUPER_ADMIN" },
-  });
-
-  if (!superAdminRole) {
-    superAdminRole = await db.platformRole.create({
-      data: {
-        name: "SUPER_ADMIN",
-        description: "Super Administrator with full platform controls",
-      },
-    });
-  }
+  // Ensure SUPER_ADMIN role exists and has permissions to all features
+  const superAdminRole = await ensureSuperAdminRoleWithPermissions();
 
   const hashedPassword = await hashPassword(password);
 

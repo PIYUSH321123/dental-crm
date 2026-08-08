@@ -66,7 +66,7 @@ model PlatformRolePermission {
 
 model Company {
   id                      String            @id @default(cuid())
-  name                    String
+  name                    String            @unique
   slug                    String            @unique
   email                   String?
   phone                   String?
@@ -78,6 +78,7 @@ model Company {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  projects       Project[]
   users          User[]
   integrations   Integration[]
   patients       Patient[]
@@ -157,7 +158,10 @@ enum IntegrationProvider {
 
 model Project {
   id           String        @id @default(cuid())
-  name         String
+  name         String        @unique
+  slug         String        @unique
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   integrations Integration[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

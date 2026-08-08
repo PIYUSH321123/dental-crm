@@ -7,51 +7,11 @@ import { Briefcase, Activity, Landmark, ShieldCheck } from "lucide-react"
 import db from "@/lib/db"
 import { CreateProjectDialog } from "./create-project-dialog"
 
+import { getAllProjectsWithDetails } from "@/services/project.service"
+
 export default async function ProjectsPage() {
-    // 1. Fetch dynamically created companies/projects from PostgreSQL database
-    let dbProjects: any[] = [];
-    try {
-        const dbCompanies = await db.company.findMany({
-            include: {
-                subscriptionPlan: true,
-                integrations: {
-                    include: {
-                        project: true
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: "desc"
-            }
-        });
-
-        dbProjects = dbCompanies.map((company) => {
-            // Find integration containing project details stored in config JSON
-            const integration = company.integrations.find((i) => i.projectId !== null);
-            const config = (integration?.config as any) || {};
-
-            return {
-                id: company.id,
-                project_name: integration?.project?.name || company.name,
-                company_name: company.name,
-                status: "Active",
-                subscription_plan: company.subscriptionPlan?.name || "Basic",
-                renewal_date: company.subscriptionRenewalDate
-                    ? company.subscriptionRenewalDate.toISOString().split("T")[0]
-                    : new Date().toISOString().split("T")[0],
-                budget: config.budget || 0,
-                lead_name: config.leadName || "Admin",
-                email: company.email || "info@" + company.slug + ".com",
-                created_at: company.createdAt.toISOString().split("T")[0],
-                slug: company.slug
-            };
-        });
-    } catch (error) {
-        console.error("Failed to fetch database projects:", error);
-    }
-
-    // 2. Use database records (newly created)
-    const allProjects = dbProjects;
+    // 1. Fetch dynamically created projects from database via service
+    const allProjects = await getAllProjectsWithDetails();
 
     const totalProjects = allProjects.length
     const activeProjects = allProjects.filter((p) => p.status === "Active").length
