@@ -38,7 +38,8 @@ import {
     Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
-import { toggleClinicModule, updateClinicStatus, createClinic } from "@/lib/actions/super-admin"
+import { toggleClinicModule, updateClinicStatus } from "@/lib/actions/super-admin"
+import { CreateProjectDialog } from "@/app/(admin)/admin/projects/create-project-dialog"
 
 interface Clinic {
     id: string
@@ -105,9 +106,6 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
     ])
 
     const [isPending, startTransition] = useTransition()
-    const [newClinicName, setNewClinicName] = useState("")
-    const [newClinicSlug, setNewClinicSlug] = useState("")
-    const [registerOpen, setRegisterOpen] = useState(false)
     const [suspendOpen, setSuspendOpen] = useState(false)
     const [selectedClinicToSuspend, setSelectedClinicToSuspend] = useState("")
     
@@ -116,48 +114,6 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
 
     const addActivity = (title: string, meta: string) => {
         setActivities(prev => [{ title, meta }, ...prev])
-    }
-
-    const handleCreateClinic = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!newClinicName || !newClinicSlug) {
-            toast.error("Please fill in all clinic fields.")
-            return
-        }
-
-        const sanitizedSlug = newClinicSlug.toLowerCase().replace(/[^a-z0-9-]/g, "")
-
-        startTransition(async () => {
-            const res = await createClinic(newClinicName, sanitizedSlug)
-            if (res.success) {
-                toast.success(`Clinic "${newClinicName}" registered successfully!`)
-                
-                // Add to client list
-                const addedClinic: Clinic = {
-                    id: res.company?.id || Math.random().toString(),
-                    name: newClinicName,
-                    slug: sanitizedSlug,
-                    status: "Active",
-                    staff: 0,
-                    patients: "0",
-                    accessConfig: {
-                        marketing: true,
-                        appointments: true,
-                        billing: false,
-                        patientManagement: true
-                    }
-                }
-                setClinics(prev => [...prev, addedClinic])
-                addActivity("New clinic registered", `${newClinicName} · Just now`)
-                
-                // Reset form
-                setNewClinicName("")
-                setNewClinicSlug("")
-                setRegisterOpen(false)
-            } else {
-                toast.error(res.error || "Failed to create clinic.")
-            }
-        })
     }
 
     const handleToggleModule = (clinicId: string, moduleKey: keyof Clinic["accessConfig"]) => {
@@ -266,65 +222,8 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                         All Services Operational
                     </div>
 
-                    {/* Register New Clinic Trigger */}
-                    <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="h-10 text-xs font-bold rounded-xl gap-2 cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md border-0">
-                                <Plus className="h-4 w-4" /> Register Clinic
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
-                            <form onSubmit={handleCreateClinic}>
-                                <DialogHeader>
-                                    <DialogTitle className="text-slate-900 dark:text-white font-bold flex items-center gap-2">
-                                        <Building className="h-5 w-5 text-emerald-500 dark:text-emerald-400" /> Register Clinic
-                                    </DialogTitle>
-                                    <DialogDescription className="text-slate-500 dark:text-slate-400 text-xs">
-                                        Create a new clinic profile. The slug determines the login sub-path.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="clinic-name" className="text-xs font-semibold text-slate-500 dark:text-slate-400">Clinic Name</Label>
-                                        <Input
-                                            id="clinic-name"
-                                            value={newClinicName}
-                                            onChange={e => {
-                                                setNewClinicName(e.target.value)
-                                                setNewClinicSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "-"))
-                                            }}
-                                            placeholder="Active Life Physio"
-                                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="clinic-slug" className="text-xs font-semibold text-slate-500 dark:text-slate-400">Subdomain/Slug</Label>
-                                        <Input
-                                            id="clinic-slug"
-                                            value={newClinicSlug}
-                                            onChange={e => setNewClinicSlug(e.target.value)}
-                                            placeholder="activelife"
-                                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white h-10 rounded-xl font-mono text-xs"
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant="ghost" className="h-10 text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer">
-                                            Cancel
-                                        </Button>
-                                    </DialogClose>
-                                    <Button
-                                        type="submit"
-                                        disabled={isPending}
-                                        className="h-10 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer"
-                                    >
-                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Clinic"}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    {/* Create Project / Clinic Trigger */}
+                    <CreateProjectDialog />
                 </div>
             </div>
 

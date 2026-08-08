@@ -157,13 +157,6 @@ export function AdminLoginForm() {
           )}
         </div>
 
-        <div className="text-center text-xs text-muted-foreground pt-1">
-          Need super admin access?{" "}
-          <a href="/admin/register" className="font-semibold text-violet-500 dark:text-violet-400 hover:underline">
-            Register here
-          </a>
-        </div>
-
         {/* Security Notice Box */}
         <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted/40 p-4 mt-4">
           <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0 text-violet-500 dark:text-violet-400" />

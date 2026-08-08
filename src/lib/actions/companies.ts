@@ -1,27 +1,29 @@
 "use server";
 
-import db from "@/lib/db";
-import { createCompanySchema, CreateCompanyInput } from "@/lib/validations/company";
+import { createCompanySchema, type CreateCompanyInput } from "@/lib/validations/company";
+import {
+  createCompany,
+  getCompanyBySlug,
+} from "@/services/company.service";
+import type { CompanyConfig } from "@/lib/companies";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string; errors?: Record<string, string[]> };
 
 /**
- * Next.js Server Action to create a company.
- * This can be imported and executed directly within React components (Client or Server).
+ * Server Action to create a company.
  */
 export async function createCompanyAction(
   input: CreateCompanyInput
 ): Promise<ActionResult<any>> {
   try {
-    // 1. Validate the input against the Zod schema
     const validationResult = createCompanySchema.safeParse(input);
 
     if (!validationResult.success) {
       const errors = validationResult.error.flatten().fieldErrors;
       const formattedErrors: Record<string, string[]> = {};
-      
+
       for (const [key, value] of Object.entries(errors)) {
         if (value) {
           formattedErrors[key] = value;
@@ -35,39 +37,20 @@ export async function createCompanyAction(
       };
     }
 
-    const { name, slug, email, phone, subscriptionPlanId } = validationResult.data;
-    const normalizedSlug = slug.toLowerCase();
+    const company = await createCompany(validationResult.data);
 
-    // 2. Check if a company with this slug already exists in the database
-    const existingCompany = await db.company.findUnique({
-      where: { slug: normalizedSlug },
-    });
-
-    if (existingCompany) {
-      return {
-        success: false,
-        error: "A clinic or company with this slug already exists.",
-        errors: { slug: ["Slug is already taken"] },
-      };
-    }
-
-    // 3. Create the company in the database using Prisma
-    const company = await db.company.create({
-      data: {
-        name,
-        slug: normalizedSlug,
-        email: email || null,
-        phone: phone || null,
-        subscriptionPlanId: subscriptionPlanId || null,
-      },
-    });
-
-    // 4. Return a success result with the company data
     return {
       success: true,
       data: company,
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode === 400) {
+      return {
+        success: false,
+        error: error.message,
+        errors: error.errors,
+      };
+    }
     console.error("Error in createCompanyAction server action:", error);
     return {
       success: false,
@@ -75,9 +58,6 @@ export async function createCompanyAction(
     };
   }
 }
-
-import { getCompanyBySlug } from "@/lib/companies-server";
-import { CompanyConfig } from "@/lib/companies";
 
 export async function checkCompanyExistsAction(slug: string): Promise<boolean> {
   if (!slug) return false;
@@ -93,7 +73,8 @@ export async function checkCompanyExistsAction(slug: string): Promise<boolean> {
 export async function getCompanyBySlugAction(slug: string): Promise<CompanyConfig | null> {
   if (!slug) return null;
   try {
-    return await getCompanyBySlug(slug);
+    const company = await getCompanyBySlug(slug);
+    return company as CompanyConfig | null;
   } catch (error) {
     console.error("Error in getCompanyBySlugAction:", error);
     return null;

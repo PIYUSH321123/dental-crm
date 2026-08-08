@@ -30,10 +30,9 @@ export default function AdminLoginPage() {
             Super admin access
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">
-            Restricted to authorized PhysioYoga CRM administrators.
+            Restricted to authorized salesguru CRM administrators.
           </p>
         </div>
-
         <AdminLoginForm />
       </div>
     </div>

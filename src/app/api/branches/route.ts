@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
+import {
+  getBranchesByCompanySlug,
+  createBranch,
+} from "@/services/branch.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,30 +16,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const company = await db.company.findUnique({
-      where: { slug: companySlug.toLowerCase() },
-    });
-
-    if (!company) {
-      return NextResponse.json(
-        { success: false, message: "Company not found." },
-        { status: 404 }
-      );
-    }
-
-    const branches = await db.branch.findMany({
-      where: { companyId: company.id },
-      orderBy: { createdAt: "asc" },
-    });
+    const branches = await getBranchesByCompanySlug(companySlug);
 
     return NextResponse.json({
       success: true,
       branches,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode === 404) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 404 }
+      );
+    }
     console.error("Error in GET /api/branches:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error." },
+      { success: false, message: error.message || "Internal server error." },
       { status: 500 }
     );
   }
@@ -47,40 +42,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { companySlug, name, address } = body;
 
-    if (!companySlug || !name) {
-      return NextResponse.json(
-        { success: false, message: "Missing required fields: companySlug, name." },
-        { status: 400 }
-      );
-    }
-
-    const company = await db.company.findUnique({
-      where: { slug: companySlug.toLowerCase() },
-    });
-
-    if (!company) {
-      return NextResponse.json(
-        { success: false, message: "Company not found." },
-        { status: 404 }
-      );
-    }
-
-    const newBranch = await db.branch.create({
-      data: {
-        companyId: company.id,
-        name,
-        address: address || null,
-      },
-    });
+    const newBranch = await createBranch(companySlug, { name, address });
 
     return NextResponse.json({
       success: true,
       branch: newBranch,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: error.statusCode }
+      );
+    }
     console.error("Error in POST /api/branches:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error." },
+      { success: false, message: error.message || "Internal server error." },
       { status: 500 }
     );
   }

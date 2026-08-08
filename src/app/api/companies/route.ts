@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
 import { createCompanySchema } from "@/lib/validations/company";
+import { createCompany } from "@/services/company.service";
 
 /**
  * Next.js Route Handler for POST /api/companies
- * This is the Next.js equivalent of an API controller method.
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. Parse the JSON body from the incoming request
     const body = await request.json();
 
-    // 2. Validate the request data against our Zod schema
     const validationResult = createCompanySchema.safeParse(body);
 
     if (!validationResult.success) {
-      // If validation fails, return 400 Bad Request with specific error messages
       return NextResponse.json(
         {
           success: false,
@@ -26,37 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, slug, email, phone, subscriptionPlanId } = validationResult.data;
-    const normalizedSlug = slug.toLowerCase();
+    const newCompany = await createCompany(validationResult.data);
 
-    // 3. Check if a company with the same slug already exists
-    const existingCompany = await db.company.findUnique({
-      where: { slug: normalizedSlug },
-    });
-
-    if (existingCompany) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "A clinic or company with this slug already exists.",
-          errors: { slug: ["Slug is already taken"] },
-        },
-        { status: 400 }
-      );
-    }
-
-    // 4. Create the new company record in the database
-    const newCompany = await db.company.create({
-      data: {
-        name,
-        slug: normalizedSlug,
-        email: email || null,
-        phone: phone || null,
-        subscriptionPlanId: subscriptionPlanId || null,
-      },
-    });
-
-    // 5. Return the created company with a 201 Created status
     return NextResponse.json(
       {
         success: true,
@@ -65,10 +32,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode === 400) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+        },
+        { status: 400 }
+      );
+    }
     console.error("Error creating company via API route:", error);
-
-    // 6. Return a generic 500 Internal Server Error for unhandled exceptions
     return NextResponse.json(
       {
         success: false,

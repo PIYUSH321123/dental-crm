@@ -1,97 +1,106 @@
-# API Reference - Authentication and Administration
+# API Reference - Role-Segregated Authentication and Administration
 
-This document provides a reference for the authentication, company registration, and role assignment API endpoints. Use these details to integrate the frontend with the backend.
+This document provides a comprehensive reference for the authentication, company registration, and role assignment API endpoints organized cleanly by **role level**.
 
 All endpoints use JSON payloads for requests and responses and store authentication sessions in HTTP-Only cookies.
 
 ---
 
-## Table of Contents
-1. [Super Admin Login](#1-super-admin-login)
-2. [Super Admin Logout](#2-super-admin-logout)
-3. [Company (Clinic) Registration](#3-company-clinic-registration)
-4. [Company Admin / Staff Login](#4-company-admin--staff-login)
-5. [Company Admin / Staff Logout](#5-company-admin--staff-logout)
-6. [Patient Login](#6-patient-login)
-7. [Patient Logout](#7-patient-logout)
-8. [Role Assignment](#8-role-assignment)
+## Role Authentication Architecture
+
+| Role Level | Namespace | Auth Cookie | Default Expiry |
+| :--- | :--- | :--- | :--- |
+| **Super Admin** | `/api/auth/super-admin/*` | `admin_session` | 4 Hours |
+| **Company / Clinic Admin** | `/api/auth/company/*` | `session` | 7 Days |
+| **Clinic Staff** | `/api/auth/staff/*` | `session` | 7 Days |
+| **Patient** | `/api/auth/patient/*` | `patient_session` | 30 Days |
 
 ---
 
-## 1. Super Admin Login
+## Table of Contents
+1. [Super Admin Bootstrap (Server Initiation)](#1-super-admin-bootstrap-server-initiation)
+2. [Super Admin Authentication](#2-super-admin-authentication)
+   - [Super Admin Login](#21-super-admin-login)
+   - [Super Admin Logout](#22-super-admin-logout)
+3. [Company (Clinic) Authentication & Registration](#3-company-clinic-authentication--registration)
+   - [Company Registration](#31-company-clinic-registration)
+   - [Company Login](#32-company-admin-login)
+   - [Company Logout](#33-company-logout)
+4. [Staff Authentication & Management](#4-staff-authentication--management)
+   - [Staff Login](#41-staff-login)
+   - [Staff Logout](#42-staff-logout)
+   - [Staff Role Assignment](#43-staff-role-assignment)
+5. [Patient Authentication](#5-patient-authentication)
+   - [Patient Login](#51-patient-login)
+   - [Patient Logout](#52-patient-logout)
+6. [Legacy Endpoint Compatibility](#6-legacy-endpoint-compatibility)
 
+---
+
+## 1. Super Admin Bootstrap (Server Initiation)
+
+The initial platform Super Admin is automatically created upon Next.js server startup using the `register()` hook in `src/instrumentation.ts` and `src/lib/bootstrap.ts`.
+
+### Environment Configuration (`.env`)
+```env
+SUPER_ADMIN_NAME="Platform Super Admin"
+SUPER_ADMIN_EMAIL="admin@physioyoga.com"
+SUPER_ADMIN_PASSWORD="your-strong-password"
+```
+
+* **Security**: These credentials remain strictly server-side (never prefixed with `NEXT_PUBLIC_`).
+* **Idempotency**: The system verifies if a Super Admin already exists in PostgreSQL before creating.
+* **Encryption**: Passwords are saved with bcrypt password hashing (10 salt rounds).
+
+---
+
+## 2. Super Admin Authentication
+
+### 2.1 Super Admin Login
 Authenticates a platform-level Super Admin. Sets the `admin_session` cookie on success.
 
-* **URL**: `/api/admin/login`
+* **URL**: `/api/auth/super-admin/login` *(Legacy alias: `/api/admin/login`)*
 * **Method**: `POST`
-* **Headers**:
-  * `Content-Type: application/json`
+* **Headers**: `Content-Type: application/json`
 
-### Request Body
+#### Request Body
 ```json
 {
-  "email": "superadmin@example.com",
-  "password": "super_admin_secure_password"
+  "email": "admin@physioyoga.com",
+  "password": "superadminpassword123"
 }
 ```
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | `string` | Yes | The email address of the Super Admin. |
-| `password` | `string` | Yes | The password of the Super Admin. |
-
-### Response Example (Success - 200 OK)
+#### Response Example (200 OK)
 *Sets HTTP-Only cookie `admin_session` (Expiry: 4 Hours, Path: `/`, SameSite: `Strict`)*
 ```json
 {
   "success": true,
   "user": {
     "id": "cmrx9ah310003wgrlu8axorxx",
-    "name": "Super Admin Name",
-    "email": "superadmin@example.com",
+    "name": "Platform Super Admin",
+    "email": "admin@physioyoga.com",
     "role": "SUPER_ADMIN"
   }
 }
 ```
 
-### Response Example (Error - 401 Unauthorized / 400 Bad Request)
-```json
-{
-  "error": "Invalid email or password"
-}
-```
-
----
-
-## 2. Super Admin Logout
-
-Logs out the Super Admin by clearing the `admin_session` cookie.
-
-* **URL**: `/api/admin/logout`
+### 2.2 Super Admin Logout
+* **URL**: `/api/auth/super-admin/logout` *(Legacy alias: `/api/admin/logout`)*
 * **Method**: `POST`
 
-### Response Example (Success - 200 OK)
-*Clears HTTP-Only cookie `admin_session`*
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
-
 ---
 
-## 3. Company (Clinic) Registration
+## 3. Company (Clinic) Authentication & Registration
 
-Registers a new clinic (Company), assigns feature access configs (Access Groups), and provisions the initial Company Admin user.
+### 3.1 Company (Clinic) Registration
+Registers a new clinic (Company), configures feature access permissions, and provisions the initial Company Admin user.
 *Restricted to: Super Admin (requires valid `admin_session` cookie).*
 
-* **URL**: `/api/admin/companies`
+* **URL**: `/api/auth/company/register` *(Legacy alias: `/api/admin/companies`)*
 * **Method**: `POST`
-* **Headers**:
-  * `Content-Type: application/json`
 
-### Request Body
+#### Request Body
 ```json
 {
   "name": "Active Life Physio",
@@ -114,62 +123,11 @@ Registers a new clinic (Company), assigns feature access configs (Access Groups)
 }
 ```
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `name` | `string` | Yes | The user-facing name of the company/clinic. |
-| `slug` | `string` | Yes | Unique URL slug (e.g. `active-life` in `/[companySlug]/dashboard`). |
-| `email` | `string` | No | General contact email for the company. |
-| `phone` | `string` | No | General contact phone number for the company. |
-| `admin` | `object` | Yes | Object containing initial clinic owner user credentials. |
-| `admin.name` | `string` | Yes | Display name of the clinic owner. |
-| `admin.email` | `string` | Yes | Work email of the clinic owner. |
-| `admin.password` | `string` | Yes | Account password for the clinic owner (Min 8 chars). |
-| `accessConfig` | `object` | No | Boolean toggles for permitted features. Defaults to `false` for omitted keys. |
-| `accessConfig.marketing` | `boolean` | No | Enables AI Ad Studio & campaigns. |
-| `accessConfig.appointments` | `boolean` | No | Enables calendar scheduling. |
-| `accessConfig.billing` | `boolean` | No | Enables invoices and payments. |
-| `accessConfig.patientManagement` | `boolean` | No | Enables patient records & exercises. |
-| `accessConfig.leadManagement` | `boolean` | No | Enables CRM lead tracking. |
-| `accessConfig.activityManagement` | `boolean` | No | Enables audit logs & system activity dashboard. |
-
-### Response Example (Success - 200 OK)
-```json
-{
-  "success": true,
-  "company": {
-    "id": "cmrx9b3z20000wgrl902j82v1",
-    "name": "Active Life Physio",
-    "slug": "active-life"
-  },
-  "admin": {
-    "id": "cmrx9b3z20001wgrly8sz1c90",
-    "name": "Dr. Sarah Connor",
-    "email": "sarah@activelife.com",
-    "role": "COMPANY_ADMIN"
-  },
-  "accessConfig": {
-    "marketing": true,
-    "appointments": true,
-    "billing": false,
-    "patientManagement": true,
-    "leadManagement": false,
-    "activityManagement": true
-  }
-}
-```
-
----
-
-## 4. Company Admin / Staff Login
-
-Authenticates a clinic's administrator or general staff user. Sets the `session` cookie on success.
-
-* **URL**: `/api/auth/login`
+### 3.2 Company Admin Login
+* **URL**: `/api/auth/company/login` *(Legacy alias: `/api/auth/login`)*
 * **Method**: `POST`
-* **Headers**:
-  * `Content-Type: application/json`
 
-### Request Body
+#### Request Body
 ```json
 {
   "email": "sarah@activelife.com",
@@ -178,58 +136,59 @@ Authenticates a clinic's administrator or general staff user. Sets the `session`
 }
 ```
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `email` | `string` | Yes | The work email of the clinic admin or staff member. |
-| `password` | `string` | Yes | Account password. |
-| `companySlug` | `string` | Yes | The slug identifier of the clinic they are logging into. |
+### 3.3 Company Logout
+* **URL**: `/api/auth/company/logout` *(Legacy alias: `/api/auth/logout`)*
+* **Method**: `POST`
 
-### Response Example (Success - 200 OK)
-*Sets HTTP-Only cookie `session` (Expiry: 7 Days, Path: `/`, SameSite: `Lax`)*
+---
+
+## 4. Staff Authentication & Management
+
+### 4.1 Staff Login
+Authenticates clinic staff members (e.g. physiotherapists, front-desk operators).
+
+* **URL**: `/api/auth/staff/login`
+* **Method**: `POST`
+
+#### Request Body
 ```json
 {
-  "success": true,
-  "user": {
-    "id": "cmrx9b3z20001wgrly8sz1c90",
-    "name": "Dr. Sarah Connor",
-    "email": "sarah@activelife.com",
-    "role": "COMPANY_ADMIN",
-    "companyId": "cmrx9b3z20000wgrl902j82v1",
-    "companySlug": "active-life"
-  }
+  "email": "therapist@activelife.com",
+  "password": "staffpassword123",
+  "companySlug": "active-life"
+}
+```
+
+### 4.2 Staff Logout
+* **URL**: `/api/auth/staff/logout`
+* **Method**: `POST`
+
+### 4.3 Staff Role Assignment
+Promotes or updates a staff member's role within their clinic.
+*Restricted to: Company Admin of the same clinic (requires `session` cookie) or Super Admin.*
+
+* **URL**: `/api/auth/staff/assign-role` *(Legacy alias: `/api/auth/assign-role`)*
+* **Method**: `POST`
+
+#### Request Body
+```json
+{
+  "targetUserId": "cmrx9d4r20004wgrly1sz9c04",
+  "newRole": "COMPANY_ADMIN"
 }
 ```
 
 ---
 
-## 5. Company Admin / Staff Logout
+## 5. Patient Authentication
 
-Logs out a company user by clearing the `session` cookie.
+### 5.1 Patient Login
+Authenticates a patient to access the clinic patient portal using either email or phone number.
 
-* **URL**: `/api/auth/logout`
+* **URL**: `/api/auth/patient/login` *(Legacy alias: `/api/auth/patient-login`)*
 * **Method**: `POST`
 
-### Response Example (Success - 200 OK)
-*Clears HTTP-Only cookie `session`*
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
-
----
-
-## 6. Patient Login
-
-Authenticates a patient to access the patient portal. Supports logging in with either email or mobile number. Sets the `patient_session` cookie on success.
-
-* **URL**: `/api/auth/patient-login`
-* **Method**: `POST`
-* **Headers**:
-  * `Content-Type: application/json`
-
-### Request Body (Using Mobile)
+#### Request Body (Mobile)
 ```json
 {
   "emailOrMobile": "9876543210",
@@ -238,7 +197,7 @@ Authenticates a patient to access the patient portal. Supports logging in with e
 }
 ```
 
-### Request Body (Using Email)
+#### Request Body (Email)
 ```json
 {
   "emailOrMobile": "patient@example.com",
@@ -247,89 +206,23 @@ Authenticates a patient to access the patient portal. Supports logging in with e
 }
 ```
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `emailOrMobile`| `string` | Yes | The email address or the mobile number of the patient. |
-| `password` | `string` | Yes | Account password. |
-| `companySlug` | `string` | Yes | The slug of the clinic the patient belongs to. |
-
-### Response Example (Success - 200 OK)
-*Sets HTTP-Only cookie `patient_session` (Expiry: 30 Days, Path: `/`, SameSite: `Lax`)*
-```json
-{
-  "success": true,
-  "patient": {
-    "id": "cmrx9c5v20002wgrlx7sz0c02",
-    "name": "John Doe",
-    "email": "patient@example.com",
-    "mobile": "9876543210",
-    "companyId": "cmrx9b3z20000wgrl902j82v1",
-    "companySlug": "active-life"
-  }
-}
-```
+### 5.2 Patient Logout
+* **URL**: `/api/auth/patient/logout` *(Legacy alias: `/api/auth/patient-logout`)*
+* **Method**: `POST`
 
 ---
 
-## 7. Patient Logout
+## 6. Legacy Endpoint Compatibility
 
-Logs out a patient by clearing the `patient_session` cookie.
+For seamless backward compatibility with older clients or automated scripts, the following legacy routes are aliased:
 
-* **URL**: `/api/auth/patient-logout`
-* **Method**: `POST`
-
-### Response Example (Success - 200 OK)
-*Clears HTTP-Only cookie `patient_session`*
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
-
----
-
-## 8. Role Assignment
-
-Assigns or updates a staff member's role within their clinic.
-*Restricted to: Company Admin of the same clinic (requires valid `session` cookie) or Super Admin.*
-
-* **URL**: `/api/auth/assign-role`
-* **Method**: `POST`
-* **Headers**:
-  * `Content-Type: application/json`
-
-### Request Body
-```json
-{
-  "targetUserId": "cmrx9d4r20004wgrly1sz9c04",
-  "newRole": "COMPANY_ADMIN"
-}
-```
-
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `targetUserId` | `string` | Yes | The unique ID of the staff user whose role is being changed. |
-| `newRole` | `string` | Yes | The new role to assign. Accepted values: `COMPANY_ADMIN` or `STAFF`. |
-
-### Response Example (Success - 200 OK)
-```json
-{
-  "success": true,
-  "message": "Successfully assigned role \"COMPANY_ADMIN\" to user John Therapist",
-  "user": {
-    "id": "cmrx9d4r20004wgrly1sz9c04",
-    "name": "John Therapist",
-    "email": "therapist@activelife.com",
-    "role": "COMPANY_ADMIN",
-    "companyId": "cmrx9b3z20000wgrl902j82v1"
-  }
-}
-```
-
-### Response Example (Error - 403 Forbidden)
-```json
-{
-  "error": "Forbidden: Cannot assign role to a user of a different company"
-}
-```
+| Legacy Route | Refactored Role Route |
+| :--- | :--- |
+| `/api/admin/login` | `/api/auth/super-admin/login` |
+| `/api/admin/logout` | `/api/auth/super-admin/logout` |
+| `/api/admin/companies` | `/api/auth/company/register` |
+| `/api/auth/login` | `/api/auth/company/login` |
+| `/api/auth/logout` | `/api/auth/company/logout` |
+| `/api/auth/patient-login` | `/api/auth/patient/login` |
+| `/api/auth/patient-logout` | `/api/auth/patient/logout` |
+| `/api/auth/assign-role` | `/api/auth/staff/assign-role` |
