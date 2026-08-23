@@ -225,51 +225,63 @@ export async function getCompanyBySlug(slug: string) {
   const normalizedSlug = slug.toLowerCase().trim();
 
   // 1. Try resolving slug as a Project Slug -> Company
-  const project = await db.project.findUnique({
-    where: { slug: normalizedSlug },
-    include: {
-      company: {
-        include: {
-          subscriptionPlan: true,
-          accessConfig: true,
+  try {
+    const project = await db.project.findUnique({
+      where: { slug: normalizedSlug },
+      include: {
+        company: {
+          include: {
+            subscriptionPlan: true,
+            accessConfig: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (project?.company) {
-    return {
-      ...project.company,
-      projectId: project.id,
-      projectName: project.name,
-      projectSlug: project.slug,
-    };
+    if (project?.company) {
+      return {
+        ...project.company,
+        projectId: project.id,
+        projectName: project.name,
+        projectSlug: project.slug,
+      };
+    }
+  } catch (error) {
+    console.warn("Database offline or query failed while resolving project slug:", error);
   }
 
   // 2. Direct Company Slug lookup
-  let company = await db.company.findUnique({
-    where: { slug: normalizedSlug },
-    include: {
-      subscriptionPlan: true,
-      accessConfig: true,
-    },
-  });
+  try {
+    let company = await db.company.findUnique({
+      where: { slug: normalizedSlug },
+      include: {
+        subscriptionPlan: true,
+        accessConfig: true,
+      },
+    });
 
-  if (company) {
-    return company;
+    if (company) {
+      return company;
+    }
+  } catch (error) {
+    console.warn("Database offline or query failed while resolving company slug:", error);
   }
 
   // 3. Fallback to static mock companies for development/seeded templates
-  const staticCompany = await getStaticCompanyBySlug(normalizedSlug);
-  if (staticCompany) {
-    return {
-      id: staticCompany.id,
-      name: staticCompany.name,
-      slug: staticCompany.slug,
-      email: staticCompany.email || null,
-      phone: staticCompany.phone || null,
-      status: "Active",
-    };
+  try {
+    const staticCompany = await getStaticCompanyBySlug(normalizedSlug);
+    if (staticCompany) {
+      return {
+        id: staticCompany.id,
+        name: staticCompany.name,
+        slug: staticCompany.slug,
+        email: staticCompany.email || null,
+        phone: staticCompany.phone || null,
+        status: "Active",
+      };
+    }
+  } catch (error) {
+    console.error("Error retrieving static company fallback:", error);
   }
 
   return null;

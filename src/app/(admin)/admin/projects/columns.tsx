@@ -35,7 +35,7 @@ export const columns: ColumnDef<Project>[] = [
             const slug = row.original.slug || getProjectSlug(projectName, row.original.company_name)
             return (
                 <Link
-                    href={`/c/${slug}/`}
+                    href={`/c/${slug}/dashboard`}
                     className="font-semibold text-primary hover:underline"
                 >
                     {projectName}

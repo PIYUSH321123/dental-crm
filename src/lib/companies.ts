@@ -122,8 +122,16 @@ export function getCompanyConfig(slug?: string | null): CompanyConfig {
   }
 
   // Check aliases/common names
-  if (normalizedSlug === "phyiso" || normalizedSlug === "physio" || normalizedSlug === "physioyoga") {
-    return COMPANIES.yogaplus;
+  if (
+    normalizedSlug === "phyiso" || 
+    normalizedSlug === "physio" || 
+    normalizedSlug === "physioyoga" || 
+    normalizedSlug === "dashboard" || 
+    normalizedSlug === "admin" ||
+    normalizedSlug.includes("yogaplus") ||
+    normalizedSlug.includes("physio")
+  ) {
+    return DEFAULT_COMPANY;
   }
 
   // If not found, return default with active slug and name overrides to preserve navigation links

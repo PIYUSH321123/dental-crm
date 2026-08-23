@@ -37,7 +37,7 @@ export default function HowWeHelp() {
             desc: "Personalized treatment plans with progress tracking through your patient dashboard.",
           },
         ].map(({ icon: Icon, title, desc }) => (
-          <Card key={title} className="p-6 border border-zinc-100 hover:shadow-md transition-shadow">
+          <Card key={title} className="p-6 bg-white text-zinc-950 border border-zinc-200 hover:shadow-md transition-shadow">
             <CardHeader className="gap-3 p-0">
               <div className="flex size-11 items-center justify-center rounded-xl bg-brand-bg-light">
                 <Icon className="size-5 text-brand-primary" />

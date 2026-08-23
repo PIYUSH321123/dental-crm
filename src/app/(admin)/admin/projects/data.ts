@@ -16,7 +16,7 @@ export const mockProjects: Project[] = [
     {
         id: "proj-1",
         project_name: "Physio",
-        company_name: "XYZ Hospital",
+        company_name: "YogaPlus",
         status: "Active",
         subscription_plan: "Enterprise",
         renewal_date: "2026-11-20",

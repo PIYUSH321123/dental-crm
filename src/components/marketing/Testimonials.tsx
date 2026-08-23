@@ -39,7 +39,7 @@ export default function Testimonials() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {testimonials.map(({ name, role, img, quote }) => (
-          <Card key={name} className="p-6 border border-zinc-100 shadow-xs">
+          <Card key={name} className="p-6 bg-white text-zinc-950 border border-zinc-200 shadow-xs">
             <CardHeader className="flex-row items-center gap-3 p-0">
               <div className="size-12 overflow-hidden rounded-full">
                 <img src={img} alt={name} className="size-full object-cover" />

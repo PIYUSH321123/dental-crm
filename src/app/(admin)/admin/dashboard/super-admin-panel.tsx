@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useState, useTransition } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -288,7 +289,12 @@ export default function SuperAdminPanel({ initialClinics }: SuperAdminPanelProps
                                         </div>
                                         <div>
                                             <p className="font-bold text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
-                                                {clinic.name}
+                                                <Link 
+                                                    href={`/c/${clinic.slug}/dashboard`}
+                                                    className="hover:underline hover:text-primary transition-colors duration-150"
+                                                >
+                                                    {clinic.name}
+                                                </Link>
                                                 <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-normal">/{clinic.slug}</span>
                                             </p>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

@@ -21,26 +21,31 @@ const DB_PROVIDER_MAP: Record<IntegrationProvider, string> = {
  * Fetches all integrations for a company slug.
  */
 export async function getIntegrations(companySlug: string) {
-  const company = await ensureCompanyExists(companySlug);
+  try {
+    const company = await ensureCompanyExists(companySlug);
 
-  const dbIntegrations = await db.integration.findMany({
-    where: { companyId: company.id },
-  });
+    const dbIntegrations = await db.integration.findMany({
+      where: { companyId: company.id },
+    });
 
-  return dbIntegrations.map((integration) => {
-    const config = (integration.config as any) || {};
-    const providerId = DB_PROVIDER_MAP[integration.provider] || integration.provider.toLowerCase();
+    return dbIntegrations.map((integration) => {
+      const config = (integration.config as any) || {};
+      const providerId = DB_PROVIDER_MAP[integration.provider] || integration.provider.toLowerCase();
 
-    return {
-      id: providerId,
-      accountId: config.accountId || "",
-      accountName: config.accountName || "",
-      connectedAt: config.connectedAt || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-      syncEnabled: integration.isEnabled,
-      leadsSyncedCount: config.leadsSyncedCount || 0,
-      spendTracked: config.spendTracked || "₹0",
-    };
-  });
+      return {
+        id: providerId,
+        accountId: config.accountId || "",
+        accountName: config.accountName || "",
+        connectedAt: config.connectedAt || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        syncEnabled: integration.isEnabled,
+        leadsSyncedCount: config.leadsSyncedCount || 0,
+        spendTracked: config.spendTracked || "₹0",
+      };
+    });
+  } catch (error) {
+    console.warn("Database offline or query failed while retrieving integrations, returning empty list:", error);
+    return [];
+  }
 }
 
 /**

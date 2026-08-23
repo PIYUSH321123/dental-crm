@@ -12,7 +12,7 @@ export default function Navbar() {
     const { company, getLinkWithCompany } = useCompany()
 
     const navLinks = [
-        { name: company.name, href: `/c/${company.slug}/home` },
+        { name: "Home", href: `/c/${company.slug}/home` },
         { name: "Dashboard", href: `/c/${company.slug}/dashboard` },
         { name: "Online Sessions", href: `/c/${company.slug}/home/sessions` },
         { name: "Blogs", href: `/c/${company.slug}/home/blogs` },

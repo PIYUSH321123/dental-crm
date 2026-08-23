@@ -13,7 +13,13 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyConfig | nu
     return COMPANIES[normalizedSlug];
   }
 
-  if (normalizedSlug === "phyiso" || normalizedSlug === "physio" || normalizedSlug === "physioyoga") {
+  if (
+    normalizedSlug === "phyiso" || 
+    normalizedSlug === "physio" || 
+    normalizedSlug === "physioyoga" ||
+    normalizedSlug.includes("yogaplus") ||
+    normalizedSlug.includes("physio")
+  ) {
     return COMPANIES.yogaplus;
   }
 
