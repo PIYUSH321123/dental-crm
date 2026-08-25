@@ -144,15 +144,15 @@ const data = {
             items: [
                 {
                     title: "Products",
-                    url: "#",
+                    url: "/c/[company]/dashboard/product-services/products",
                 },
                 {
                     title: "Services",
-                    url: "#",
+                    url: "/c/[company]/dashboard/product-services/services",
                 },
                 {
                     title: "Packages",
-                    url: "#",
+                    url: "/c/[company]/dashboard/product-services/packages",
                 },
                 {
                     title: "Reports",
