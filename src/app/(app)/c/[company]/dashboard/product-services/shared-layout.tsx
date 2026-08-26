@@ -1,22 +1,23 @@
+
 "use client"
 
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
-import { 
-    Search, 
-    Plus, 
-    LayoutGrid, 
-    List, 
-    Edit, 
-    Trash2, 
-    MoreVertical, 
-    SlidersHorizontal, 
-    ChevronLeft, 
-    ChevronRight, 
-    Sparkles, 
-    Package, 
-    Layers, 
-    Activity, 
+import {
+    Search,
+    Plus,
+    LayoutGrid,
+    List,
+    Edit,
+    Trash2,
+    MoreVertical,
+    SlidersHorizontal,
+    ChevronLeft,
+    ChevronRight,
+    Sparkles,
+    Package,
+    Layers,
+    Activity,
     DollarSign,
     Clock,
     ClipboardList,
@@ -54,6 +55,7 @@ export interface Product {
     stock: number
     status: "Active" | "Inactive"
     description: string
+    image?: string
 }
 
 export interface ClinicService {
@@ -64,6 +66,7 @@ export interface ClinicService {
     duration: number // in minutes
     status: "Active" | "Inactive"
     description: string
+    image?: string
 }
 
 export interface TherapyPackage {
@@ -74,29 +77,30 @@ export interface TherapyPackage {
     sessions: number // number of sessions
     status: "Active" | "Inactive"
     description: string
+    image?: string
 }
 
 // Seed Data
 const defaultProducts: Product[] = [
-    { id: "PROD-001", name: "Ortho Support Brace", price: 1200, category: "Orthotics", stock: 45, status: "Active", description: "Medical-grade knee compression sleeve providing premium patellar tracking support." },
-    { id: "PROD-002", name: "Pain Relief Gel", price: 850, category: "Topical", stock: 3, status: "Active", description: "Fast-acting topical gel for cooling relief from muscular aches and joint stiffness." },
-    { id: "PROD-003", name: "Post-Surgery Recovery Kit", price: 2500, category: "Bundle", stock: 0, status: "Active", description: "Comprehensive home recovery package with cold packs, resistance bands, and instructions." },
-    { id: "PROD-004", name: "Vitamin D3 Capsules", price: 600, category: "Supplements", stock: 120, status: "Active", description: "High-potency Vitamin D3 capsules essential for bone density and calcium absorption." },
-    { id: "PROD-005", name: "Premium Therapy Yoga Mat", price: 1800, category: "Devices", stock: 15, status: "Active", description: "Eco-friendly, non-slip high density rubber mat customized for clinical rehab." },
-    { id: "PROD-006", name: "Skin Recovery Lotion", price: 1100, category: "Skincare", stock: 8, status: "Active", description: "Soothing dermatologist-tested lotion designed for post-treatment skin rejuvenation." }
+    { id: "PROD-001", name: "Ortho Support Brace", price: 1200, category: "Orthotics", stock: 45, status: "Active", description: "Medical-grade knee compression sleeve providing premium patellar tracking support.", image: "/images/ortho-brace.jpg" },
+    { id: "PROD-002", name: "Pain Relief Gel", price: 850, category: "Topical", stock: 3, status: "Active", description: "Fast-acting topical gel for cooling relief from muscular aches and joint stiffness.", image: "/images/pain-gel.jpg" },
+    { id: "PROD-003", name: "Post-Surgery Recovery Kit", price: 2500, category: "Bundle", stock: 0, status: "Active", description: "Comprehensive home recovery package with cold packs, resistance bands, and instructions.", image: "/images/recovery-kit.jpg" },
+    { id: "PROD-004", name: "Vitamin D3 Capsules", price: 600, category: "Supplements", stock: 120, status: "Active", description: "High-potency Vitamin D3 capsules essential for bone density and calcium absorption.", image: "/images/vitamin-d3.jpg" },
+    { id: "PROD-005", name: "Premium Therapy Yoga Mat", price: 1800, category: "Devices", stock: 15, status: "Active", description: "Eco-friendly, non-slip high density rubber mat customized for clinical rehab.", image: "/images/yoga-mat.jpg" },
+    { id: "PROD-006", name: "Skin Recovery Lotion", price: 1100, category: "Skincare", stock: 8, status: "Active", description: "Soothing dermatologist-tested lotion designed for post-treatment skin rejuvenation.", image: "/images/recovery-lotion.jpg" }
 ]
 
 const defaultServices: ClinicService[] = [
-    { id: "SERV-001", name: "Initial Assessment Consultation", price: 1200, category: "Consultation", duration: 60, status: "Active", description: "Comprehensive physical diagnostic consultation and custom recovery plan mapping." },
-    { id: "SERV-002", name: "Spine Alignment Therapy", price: 2000, category: "Chiropractic", duration: 45, status: "Active", description: "Targeted spinal adjustments and posture corrections for chronic lower-back relief." },
-    { id: "SERV-003", name: "Core Strengthening Session", price: 1500, category: "Yoga Therapy", duration: 60, status: "Active", description: "Therapist-supervised clinical yoga focused on stability muscle groups." },
-    { id: "SERV-004", name: "Deep Tissue Laser Therapy", price: 2500, category: "Physiotherapy", duration: 30, status: "Active", description: "Non-invasive laser therapy targeting cellular repair in deep tissue injuries." }
+    { id: "SERV-001", name: "Initial Assessment Consultation", price: 1200, category: "Consultation", duration: 60, status: "Active", description: "Comprehensive physical diagnostic consultation and custom recovery plan mapping.", image: "/physio-ad-1.png" },
+    { id: "SERV-002", name: "Spine Alignment Therapy", price: 2000, category: "Chiropractic", duration: 45, status: "Active", description: "Targeted spinal adjustments and posture corrections for chronic lower-back relief.", image: "/physio-ad-2.png" },
+    { id: "SERV-003", name: "Core Strengthening Session", price: 1500, category: "Yoga Therapy", duration: 60, status: "Active", description: "Therapist-supervised clinical yoga focused on stability muscle groups.", image: "/physio-ad-1.png" },
+    { id: "SERV-004", name: "Deep Tissue Laser Therapy", price: 2500, category: "Physiotherapy", duration: 30, status: "Active", description: "Non-invasive laser therapy targeting cellular repair in deep tissue injuries.", image: "/physio-ad-2.png" }
 ]
 
 const defaultPackages: TherapyPackage[] = [
-    { id: "PKG-001", name: "ACL Post-Op Recovery Bundle", price: 15000, category: "Post-Op Recovery", sessions: 10, status: "Active", description: "Full rehabilitation package including 10 post-surgical physiotherapy sessions." },
-    { id: "PKG-002", name: "8-Session Knee Mobilization Package", price: 10500, category: "Chronic Care", sessions: 8, status: "Active", description: "Clinical manipulation package targeting osteoarthritis knee joints." },
-    { id: "PKG-003", name: "Spine & Back Strengthening Course", price: 7500, category: "Wellness", sessions: 5, status: "Active", description: "5 mixed therapy sessions for chronic back support and flexibility improvement." }
+    { id: "PKG-001", name: "ACL Post-Op Recovery Bundle", price: 15000, category: "Post-Op Recovery", sessions: 10, status: "Active", description: "Full rehabilitation package including 10 post-surgical physiotherapy sessions.", image: "/physio-ad-1.png" },
+    { id: "PKG-002", name: "8-Session Knee Mobilization Package", price: 10500, category: "Chronic Care", sessions: 8, status: "Active", description: "Clinical manipulation package targeting osteoarthritis knee joints.", image: "/physio-ad-2.png" },
+    { id: "PKG-003", name: "Spine & Back Strengthening Course", price: 7500, category: "Wellness", sessions: 5, status: "Active", description: "5 mixed therapy sessions for chronic back support and flexibility improvement.", image: "/physio-ad-1.png" }
 ]
 
 interface SharedLayoutProps {
@@ -135,13 +139,20 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
     const [formDuration, setFormDuration] = React.useState("45") // Services only
     const [formSessions, setFormSessions] = React.useState("5") // Packages only
     const [formStatus, setFormStatus] = React.useState<"Active" | "Inactive">("Active")
+    const [formImage, setFormImage] = React.useState("")
 
     // Load and seed data from localStorage
     React.useEffect(() => {
         // Products
         const savedProds = localStorage.getItem("sg-products")
         if (savedProds) {
-            setProducts(JSON.parse(savedProds))
+            const parsed = JSON.parse(savedProds)
+            const migrated = parsed.map((p: any) => {
+                const def = defaultProducts.find(d => d.id === p.id)
+                return def && !p.image ? { ...p, image: def.image } : p
+            })
+            setProducts(migrated)
+            localStorage.setItem("sg-products", JSON.stringify(migrated))
         } else {
             localStorage.setItem("sg-products", JSON.stringify(defaultProducts))
             setProducts(defaultProducts)
@@ -150,7 +161,13 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
         // Services
         const savedServs = localStorage.getItem("sg-services")
         if (savedServs) {
-            setServices(JSON.parse(savedServs))
+            const parsed = JSON.parse(savedServs)
+            const migrated = parsed.map((s: any) => {
+                const def = defaultServices.find(d => d.id === s.id)
+                return def && !s.image ? { ...s, image: def.image } : s
+            })
+            setServices(migrated)
+            localStorage.setItem("sg-services", JSON.stringify(migrated))
         } else {
             localStorage.setItem("sg-services", JSON.stringify(defaultServices))
             setServices(defaultServices)
@@ -159,7 +176,13 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
         // Packages
         const savedPkgs = localStorage.getItem("sg-packages")
         if (savedPkgs) {
-            setPackages(JSON.parse(savedPkgs))
+            const parsed = JSON.parse(savedPkgs)
+            const migrated = parsed.map((pkg: any) => {
+                const def = defaultPackages.find(d => d.id === pkg.id)
+                return def && !pkg.image ? { ...pkg, image: def.image } : pkg
+            })
+            setPackages(migrated)
+            localStorage.setItem("sg-packages", JSON.stringify(migrated))
         } else {
             localStorage.setItem("sg-packages", JSON.stringify(defaultPackages))
             setPackages(defaultPackages)
@@ -217,10 +240,10 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
     const filteredItems = React.useMemo(() => {
         if (activeTab === "products") {
             let result = products.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                     p.description.toLowerCase().includes(searchQuery.toLowerCase())
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.description.toLowerCase().includes(searchQuery.toLowerCase())
                 const matchesCategory = selectedCategory === "All" || p.category === selectedCategory
-                
+
                 let matchesStock = true
                 if (selectedStockStatus === "In Stock") matchesStock = p.stock > 10
                 else if (selectedStockStatus === "Low Stock") matchesStock = p.stock > 0 && p.stock <= 10
@@ -242,8 +265,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
             return result
         } else if (activeTab === "services") {
             let result = services.filter(s => {
-                const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                     s.description.toLowerCase().includes(searchQuery.toLowerCase())
+                const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    s.description.toLowerCase().includes(searchQuery.toLowerCase())
                 const matchesCategory = selectedCategory === "All" || s.category === selectedCategory
                 return matchesSearch && matchesCategory
             })
@@ -261,8 +284,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
             return result
         } else {
             let result = packages.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                     p.description.toLowerCase().includes(searchQuery.toLowerCase())
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.description.toLowerCase().includes(searchQuery.toLowerCase())
                 const matchesCategory = selectedCategory === "All" || p.category === selectedCategory
                 return matchesSearch && matchesCategory
             })
@@ -299,6 +322,7 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
         setFormDuration("45")
         setFormSessions("5")
         setFormStatus("Active")
+        setFormImage("")
         setEditingItem(null)
     }
 
@@ -314,6 +338,7 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
         setFormCategory(item.category)
         setFormDescription(item.description)
         setFormStatus(item.status)
+        setFormImage(item.image || "")
         if (activeTab === "products") {
             setFormStock(item.stock.toString())
         } else if (activeTab === "services") {
@@ -342,9 +367,9 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
             let updatedList: Product[] = []
             if (editingItem) {
-                updatedList = products.map(p => 
-                    p.id === editingItem.id 
-                        ? { ...p, name: formName, price: priceNum, category: formCategory, stock: stockNum, status: formStatus, description: formDescription }
+                updatedList = products.map(p =>
+                    p.id === editingItem.id
+                        ? { ...p, name: formName, price: priceNum, category: formCategory, stock: stockNum, status: formStatus, description: formDescription, image: formImage }
                         : p
                 )
                 toast.success("Product updated successfully.")
@@ -357,7 +382,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     category: formCategory,
                     stock: stockNum,
                     status: formStatus,
-                    description: formDescription
+                    description: formDescription,
+                    image: formImage
                 }
                 updatedList = [newItem, ...products]
                 toast.success("New product created.")
@@ -373,9 +399,9 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
             let updatedList: ClinicService[] = []
             if (editingItem) {
-                updatedList = services.map(s => 
-                    s.id === editingItem.id 
-                        ? { ...s, name: formName, price: priceNum, category: formCategory, duration: durNum, status: formStatus, description: formDescription }
+                updatedList = services.map(s =>
+                    s.id === editingItem.id
+                        ? { ...s, name: formName, price: priceNum, category: formCategory, duration: durNum, status: formStatus, description: formDescription, image: formImage }
                         : s
                 )
                 toast.success("Service updated successfully.")
@@ -388,7 +414,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     category: formCategory,
                     duration: durNum,
                     status: formStatus,
-                    description: formDescription
+                    description: formDescription,
+                    image: formImage
                 }
                 updatedList = [newItem, ...services]
                 toast.success("New service created.")
@@ -404,9 +431,9 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
             let updatedList: TherapyPackage[] = []
             if (editingItem) {
-                updatedList = packages.map(p => 
-                    p.id === editingItem.id 
-                        ? { ...p, name: formName, price: priceNum, category: formCategory, sessions: sessNum, status: formStatus, description: formDescription }
+                updatedList = packages.map(p =>
+                    p.id === editingItem.id
+                        ? { ...p, name: formName, price: priceNum, category: formCategory, sessions: sessNum, status: formStatus, description: formDescription, image: formImage }
                         : p
                 )
                 toast.success("Package updated successfully.")
@@ -419,7 +446,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     category: formCategory,
                     sessions: sessNum,
                     status: formStatus,
-                    description: formDescription
+                    description: formDescription,
+                    image: formImage
                 }
                 updatedList = [newItem, ...packages]
                 toast.success("New package created.")
@@ -476,11 +504,10 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     <button
                         key={tab}
                         onClick={() => handleTabClick(tab)}
-                        className={`pb-3 text-sm font-semibold transition-all border-b-2 hover:text-foreground cursor-pointer ${
-                            activeTab === tab 
-                                ? "border-primary text-foreground" 
+                        className={`pb-3 text-sm font-semibold transition-all border-b-2 hover:text-foreground cursor-pointer ${activeTab === tab
+                                ? "border-primary text-foreground"
                                 : "border-transparent text-muted-foreground"
-                        }`}
+                            }`}
                     >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -505,11 +532,11 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     </p>
                 </div>
                 <div>
-                    <Button 
+                    <Button
                         onClick={openAddDialog}
                         className="h-8.5 text-xs font-semibold bg-[#1a6eb5] hover:bg-[#1d7ccb] text-white rounded-lg shadow-sm cursor-pointer gap-1.5 px-4"
                     >
-                        <Plus className="h-4 w-4" /> 
+                        <Plus className="h-4 w-4" />
                         {activeTab === "products" && "Add Product"}
                         {activeTab === "services" && "Add Service"}
                         {activeTab === "packages" && "Add Package"}
@@ -725,7 +752,7 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                             <option value="name-desc">Name (Z - A)</option>
                             <option value="price-asc">Price (Low to High)</option>
                             <option value="price-desc">Price (High to Low)</option>
-                            
+
                             {activeTab === "products" && (
                                 <>
                                     <option value="stock-asc">Stock (Low to High)</option>
@@ -793,25 +820,36 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                             <Card key={item.id} className="bg-card border border-border rounded-xl shadow-xs overflow-hidden flex flex-col justify-between hover:shadow-md transition-all duration-150 group">
                                 <div>
                                     {/* Image placeholder container */}
-                                    <div className={`h-40 bg-gradient-to-br ${gradient} flex items-center justify-center relative border-b border-border`}>
-                                        {activeTab === "products" && <Package className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
-                                        {activeTab === "services" && <Activity className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
-                                        {activeTab === "packages" && <Layers className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
-                                        
-                                        <Badge className="absolute top-3 left-3 bg-background/90 dark:bg-background/80 text-foreground border border-border shadow-xs hover:bg-background/90 text-[10px] font-bold rounded-full py-0.5 px-2.5">
+                                    <div className="h-56 w-full relative border-b border-border overflow-hidden bg-muted">
+                                        {item.image ? (
+                                            <img
+                                                src={item.image}
+                                                alt={item.name}
+                                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 w-full h-full bg-gradient-to-br flex items-center justify-center">
+                                                <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                                                    {activeTab === "products" && <Package className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
+                                                    {activeTab === "services" && <Activity className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
+                                                    {activeTab === "packages" && <Layers className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform duration-250" />}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <Badge className="absolute top-3 left-3 bg-background/90 dark:bg-background/80 text-foreground border border-border shadow-xs hover:bg-background/90 text-[10px] font-bold rounded-full py-0.5 px-2.5 z-10">
                                             {item.category}
                                         </Badge>
-                                        
+
                                         {/* Status Badge */}
-                                        <Badge className={`absolute top-3 right-3 text-[9px] font-extrabold rounded-md uppercase border ${
-                                            item.status === "Active" 
-                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                                        <Badge className={`absolute top-3 right-3 text-[9px] font-extrabold rounded-md uppercase border z-10 ${item.status === "Active"
+                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                                                 : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
-                                        }`}>
+                                            }`}>
                                             {item.status}
                                         </Badge>
                                     </div>
-                                    
+
                                     <div className="p-5 space-y-2">
                                         <h3 className="font-bold text-foreground text-sm leading-snug tracking-tight hover:text-primary transition-colors cursor-pointer">
                                             {item.name}
@@ -833,13 +871,12 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                         {activeTab === "products" && (
                                             <div className="text-right space-y-0.5">
                                                 <span className="text-[10px] text-muted-foreground font-semibold uppercase block">Stock Status</span>
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                                    (item as Product).stock > 10 
-                                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-                                                        : (item as Product).stock > 0 
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${(item as Product).stock > 10
+                                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                        : (item as Product).stock > 0
                                                             ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                                             : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                                                }`}>
+                                                    }`}>
                                                     stock: {(item as Product).stock}
                                                 </span>
                                             </div>
@@ -868,8 +905,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
                                     {/* Action Buttons */}
                                     <div className="flex gap-2">
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             size="sm"
                                             onClick={() => openEditDialog(item)}
                                             className="h-8 text-[11px] font-semibold flex-1 border-border bg-background hover:bg-muted text-foreground rounded-lg cursor-pointer gap-1.5"
@@ -878,8 +915,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                         </Button>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button 
-                                                    variant="outline" 
+                                                <Button
+                                                    variant="outline"
                                                     size="icon"
                                                     className="h-8 w-8 border-border bg-background hover:bg-muted rounded-lg cursor-pointer"
                                                 >
@@ -887,13 +924,13 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="rounded-xl border border-border p-1 bg-card">
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={() => openEditDialog(item)}
                                                     className="text-xs font-semibold rounded-lg cursor-pointer gap-2 p-2 focus:bg-muted focus:text-foreground"
                                                 >
                                                     <Edit className="h-3.5 w-3.5 text-muted-foreground" /> Modify Details
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={() => handleDeleteItem(item.id)}
                                                     className="text-xs font-semibold rounded-lg cursor-pointer gap-2 p-2 text-rose-600 focus:bg-rose-50/50 dark:focus:bg-rose-950/20 focus:text-rose-600 dark:text-rose-400"
                                                 >
@@ -917,11 +954,11 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                 <TableHead className="font-bold text-foreground h-11 text-xs">Name</TableHead>
                                 <TableHead className="font-bold text-foreground h-11 text-xs">Category</TableHead>
                                 <TableHead className="font-bold text-foreground h-11 text-xs">Price</TableHead>
-                                
+
                                 {activeTab === "products" && <TableHead className="font-bold text-foreground h-11 text-xs">Stock Level</TableHead>}
                                 {activeTab === "services" && <TableHead className="font-bold text-foreground h-11 text-xs">Duration</TableHead>}
                                 {activeTab === "packages" && <TableHead className="font-bold text-foreground h-11 text-xs">Sessions</TableHead>}
-                                
+
                                 <TableHead className="font-bold text-foreground h-11 text-xs">Status</TableHead>
                                 <TableHead className="font-bold text-foreground h-11 text-xs text-right pr-5">Actions</TableHead>
                             </TableRow>
@@ -933,16 +970,15 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                     <TableCell className="font-bold text-foreground">{item.name}</TableCell>
                                     <TableCell className="text-muted-foreground font-semibold">{item.category}</TableCell>
                                     <TableCell className="font-bold text-foreground">₹{item.price.toLocaleString("en-IN")}</TableCell>
-                                    
+
                                     {activeTab === "products" && (
                                         <TableCell>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                                (item as Product).stock > 10 
-                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-                                                    : (item as Product).stock > 0 
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${(item as Product).stock > 10
+                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                    : (item as Product).stock > 0
                                                         ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                                         : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                                            }`}>
+                                                }`}>
                                                 {(item as Product).stock} units
                                             </span>
                                         </TableCell>
@@ -957,27 +993,26 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                     )}
 
                                     <TableCell>
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                                            item.status === "Active" 
-                                                ? "bg-emerald-50/50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800" 
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${item.status === "Active"
+                                                ? "bg-emerald-50/50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
                                                 : "bg-slate-50/50 text-slate-700 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800"
-                                        }`}>
+                                            }`}>
                                             <span className={`h-1.5 w-1.5 rounded-full ${item.status === "Active" ? "bg-emerald-500" : "bg-slate-400"}`} />
                                             {item.status}
                                         </span>
                                     </TableCell>
-                                    
+
                                     <TableCell className="text-right space-x-1 pr-5">
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             size="sm"
                                             onClick={() => openEditDialog(item)}
                                             className="h-7 text-[10px] font-semibold border-border bg-background hover:bg-muted text-foreground rounded-lg cursor-pointer gap-1 px-2.5"
                                         >
                                             <Edit className="h-3 w-3" /> Edit
                                         </Button>
-                                        <Button 
-                                            variant="outline" 
+                                        <Button
+                                            variant="outline"
                                             size="sm"
                                             onClick={() => handleDeleteItem(item.id)}
                                             className="h-7 text-[10px] font-semibold border-border bg-background hover:bg-rose-50/50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:text-rose-600 rounded-lg cursor-pointer gap-1 px-2.5"
@@ -997,7 +1032,7 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                 <span>
                     Showing {filteredItems.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredItems.length)} of {filteredItems.length} items
                 </span>
-                
+
                 <div className="flex items-center space-x-1">
                     <Button
                         variant="outline"
@@ -1008,7 +1043,7 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                     >
                         <ChevronLeft className="h-4 w-4 text-foreground" />
                     </Button>
-                    
+
                     {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
                         <Button
                             key={page}
@@ -1148,6 +1183,17 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                             </div>
                         </div>
 
+                        {/* Image URL */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Image URL</label>
+                            <Input
+                                placeholder="e.g. /images/ortho-brace.jpg or /physio-ad-1.png"
+                                value={formImage}
+                                onChange={(e) => setFormImage(e.target.value)}
+                                className="h-9 bg-background border-border text-foreground text-xs rounded-lg"
+                            />
+                        </div>
+
                         {/* Description */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Description</label>
@@ -1163,17 +1209,17 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                         {/* Dialog Actions */}
                         <DialogFooter className="pt-2 gap-2 flex justify-end">
                             <DialogClose asChild>
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
+                                <Button
+                                    type="button"
+                                    variant="outline"
                                     className="h-8.5 text-xs font-semibold border-border bg-background hover:bg-muted text-foreground rounded-lg cursor-pointer"
                                     onClick={resetForm}
                                 >
                                     Cancel
                                 </Button>
                             </DialogClose>
-                            <Button 
-                                type="submit" 
+                            <Button
+                                type="submit"
                                 className="h-8.5 text-xs font-semibold bg-[#1a6eb5] hover:bg-[#1d7ccb] text-white rounded-lg cursor-pointer px-4"
                             >
                                 {editingItem ? "Save Changes" : "Create Item"}
