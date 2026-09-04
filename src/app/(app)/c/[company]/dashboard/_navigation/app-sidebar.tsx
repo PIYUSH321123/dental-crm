@@ -79,6 +79,10 @@ const data = {
                     url: "/c/[company]/dashboard/lead-management/leads",
                 },
                 {
+                    title: "Unified Inbox",
+                    url: "/c/[company]/dashboard/inbox",
+                },
+                {
                     title: "Follow Ups",
                     url: "/c/[company]/dashboard/lead-management/follow-up",
                 },
@@ -134,6 +138,10 @@ const data = {
                 {
                     title: "Session Management",
                     url: "/c/[company]/dashboard/appointments/sessions",
+                },
+                {
+                    title: "Record Management",
+                    url: "/c/[company]/dashboard/appointments/record-management",
                 },
             ],
         },

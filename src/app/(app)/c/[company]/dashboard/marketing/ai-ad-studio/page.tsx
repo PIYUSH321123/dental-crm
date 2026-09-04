@@ -110,11 +110,11 @@ export default function AiAdStudioDashboardPage() {
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    {/* Header */}
-                    <div className={`pr-4 lg:pr-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-[padding] duration-200 ${isCollapsed ? "pl-16 md:pl-20" : "pl-4 lg:pl-6"}`}>
+                    {/* Header Title Card with Gray Gradient Shades */}
+                    <div className="mx-4 lg:mx-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ad Sets</h1>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Ad Sets</h1>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Manage and launch your health marketing campaigns
                             </p>
                         </div>
@@ -123,12 +123,12 @@ export default function AiAdStudioDashboardPage() {
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Search ad sets..."
-                                    className="pl-9 h-9 text-xs rounded-xl border-slate-200 dark:border-slate-800"
+                                    className="pl-9 h-9 text-xs rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 shadow-2xs"
                                 />
                             </div>
                             <Button
                                 onClick={handleCreateClick}
-                                className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer font-bold px-4 py-2 gap-1.5"
+                                className="h-9 text-xs bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-xs cursor-pointer font-bold px-4 py-2 gap-1.5"
                             >
                                 <Plus className="h-3.5 w-3.5" /> Create New Ad
                             </Button>

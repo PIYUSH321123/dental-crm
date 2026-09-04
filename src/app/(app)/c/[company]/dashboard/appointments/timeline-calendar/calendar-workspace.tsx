@@ -27,7 +27,8 @@ import {
     Menu,
     ChevronDown,
     DollarSign,
-    Check
+    Check,
+    Video
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -403,14 +404,14 @@ export default function CalendarWorkspace() {
 
     return (
         <div className="flex-1 flex flex-col h-[calc(100vh-var(--header-height))] min-h-0 bg-background/40 font-sans overflow-hidden">
-            {/* Sticky Header */}
-            <header className="sticky top-0 z-10 bg-card border-b border-border p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+            {/* Sticky Header with Gray Gradient Shades */}
+            <header className="sticky top-0 z-10 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
                 <div className="flex items-center gap-3.5">
-                    <div className="h-9 w-9 bg-primary/10 text-primary flex items-center justify-center rounded-lg">
+                    <div className="h-9 w-9 bg-primary/10 text-primary flex items-center justify-center rounded-lg border border-primary/20">
                         <CalendarIcon className="h-5 w-5" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-foreground leading-none">Appointments</h2>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-none">Appointments</h2>
                         <p className="text-xxs text-muted-foreground mt-0.5 font-medium uppercase tracking-wider">Timeline Scheduler</p>
                     </div>
                 </div>
@@ -616,6 +617,19 @@ export default function CalendarWorkspace() {
                                     </div>
                                 )}
                             </div>
+
+                            <div className="border-t border-dashed" />
+
+                            {/* Meeting Recordings Quick Link */}
+                            <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="w-full text-xs h-8.5 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer gap-1.5"
+                                onClick={() => router.push(`/c/${company}/dashboard/appointments/record-management`)}
+                            >
+                                <Video className="h-3.5 w-3.5" />
+                                Meeting Recordings & Links
+                            </Button>
 
                             <div className="border-t border-dashed" />
 

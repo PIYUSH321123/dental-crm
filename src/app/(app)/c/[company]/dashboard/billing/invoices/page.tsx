@@ -349,20 +349,33 @@ export default function BillingInvoicesPage() {
 
     return (
         <div className="flex-1 p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Billing & Invoices</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Create invoices, record payments, and manage clinical billing dues.
+            {/* Header Title Card with Gray Gradient Shades */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                <div className="space-y-1">
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                        <CreditCard className="h-6 w-6 text-primary shrink-0" />
+                        Billing & Invoices
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                        Manage clinical invoices, record payments, and track outstanding patient balances.
                     </p>
+                </div>
+                <div>
+                    <Button 
+                        onClick={() => setIsCreateOpen(true)}
+                        size="sm"
+                        className="h-9 px-4 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl cursor-pointer gap-2 shadow-xs transition-all"
+                    >
+                        <Plus className="h-4 w-4" /> Create Invoice
+                    </Button>
                 </div>
             </div>
 
-            {/* Metrics cards */}
+            {/* Metrics cards with Gray Shades */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-card border-border shadow-xs rounded-xl">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase">Total Revenue</span>
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Revenue</span>
                         <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
@@ -372,9 +385,9 @@ export default function BillingInvoicesPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border shadow-xs rounded-xl">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase">Pending Dues</span>
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Dues</span>
                         <AlertCircle className="h-4.5 w-4.5 text-[#e74c3c]" />
                     </CardHeader>
                     <CardContent>
@@ -384,25 +397,25 @@ export default function BillingInvoicesPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border shadow-xs rounded-xl">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase">Invoices Created</span>
-                        <ClipboardList className="h-4.5 w-4.5 text-sky-500" />
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Invoices Created</span>
+                        <ClipboardList className="h-4.5 w-4.5 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-extrabold text-foreground">{stats.totalCount}</div>
+                        <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{stats.totalCount}</div>
                         <p className="text-[10px] text-muted-foreground mt-1">Total billing records generated</p>
                         <p className="text-[10px] font-bold text-emerald-500 mt-0.5">↑ 10% vs last month</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border shadow-xs rounded-xl">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase">Collection Rate</span>
-                        <CreditCard className="h-4.5 w-4.5 text-sky-500" />
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Collection Rate</span>
+                        <CreditCard className="h-4.5 w-4.5 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-extrabold text-sky-600 dark:text-sky-400">{stats.successRate}%</div>
+                        <div className="text-2xl font-extrabold text-primary">{stats.successRate}%</div>
                         <p className="text-[10px] text-muted-foreground mt-1">Percentage of paid invoices</p>
                         <p className="text-[10px] font-bold text-emerald-500 mt-0.5">↑ 4.3% vs last month</p>
                     </CardContent>

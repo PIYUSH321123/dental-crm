@@ -11,9 +11,9 @@ export function SiteHeader() {
   const companyStr = (Array.isArray(company) ? company[0] : company) || ""
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="sticky top-0 z-30 flex h-12 md:h-14 shrink-0 items-center gap-2 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950 backdrop-blur-md shadow-xs transition-all">
       <div className="flex w-full items-center gap-3 px-4 lg:px-6">
-        <SidebarTrigger className="-ml-1 rounded-full h-8 w-8 hover:bg-slate-105 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0" />
+        <SidebarTrigger className="-ml-1 rounded-full h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0" />
         <Link 
           href={companyStr ? `/c/${companyStr}/dashboard` : `/admin/dashboard`} 
           className="hover:underline flex items-center gap-2"

@@ -66,10 +66,13 @@ export default function BillingPaymentsPage() {
 
     return (
         <div className="flex-1 p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Payments Ledger</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                <div className="space-y-1">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                        <Receipt className="h-6 w-6 text-primary shrink-0" />
+                        Payments Ledger
+                    </h1>
+                    <p className="text-xs text-muted-foreground">
                         Track clearing status, payment transactions, and payment methods.
                     </p>
                 </div>

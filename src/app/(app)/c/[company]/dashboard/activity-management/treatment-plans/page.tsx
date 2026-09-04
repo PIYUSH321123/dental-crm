@@ -291,18 +291,17 @@ export default function TreatmentPlansPage({ isEmbedded = false }: { isEmbedded?
                     </Button>
                 </div>
 
-                {/* Page Header Banner */}
-                <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-950/30 rounded-full blur-2xl -mr-10 -mt-10" />
+                {/* Page Header Banner with Gray Gradient Shades */}
+                <div className="relative overflow-hidden border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm">
                     <div className={`relative flex items-center gap-4 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
-                        <div className="p-3 bg-emerald-500 dark:bg-emerald-900 rounded-xl text-white shadow-sm">
+                        <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl text-primary shadow-xs border border-primary/20">
                             <ClipboardList className="h-5 w-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-950 to-slate-750 dark:from-slate-550 dark:to-slate-200 bg-clip-text text-transparent">
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                                 Treatment Plans
                             </h1>
-                            <p className="text-xs md:text-sm text-slate-500 mt-0.5">
+                            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                                 Goal setting, therapy types, session planning, and recovery tracking.
                             </p>
                         </div>

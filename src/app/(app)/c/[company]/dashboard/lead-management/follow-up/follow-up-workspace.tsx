@@ -402,67 +402,56 @@ export default function FollowUpWorkspace() {
 
     return (
         <div className="flex-1 space-y-6 p-4 md:p-8 bg-background min-h-screen">
-            {/* Header section */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {/* Header Title Card with Gray Gradient Shades */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                         Lead Follow-up System
                     </h1>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <p className="text-muted-foreground text-xs mt-0.5">
                         Manage task queues, logging callbacks, and simulated WhatsApp integrations.
                     </p>
                 </div>
             </div>
 
-            {/* Metrics cards grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <Card className="shadow-xs border-border bg-card">
+            {/* Metrics cards grid with Gray Shades */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Follow-ups Due Today</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Follow-ups Due Today</CardTitle>
                         <Clock className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-foreground">{metrics.today}</div>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{metrics.today}</div>
                         <p className="text-xs text-primary font-medium mt-1">Actions scheduled for today</p>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-xs border-destructive/20 bg-destructive/5">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xs font-semibold text-destructive uppercase tracking-wider">Overdue Actions</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-destructive" />
+                        <CardTitle className="text-xs font-semibold text-rose-500 uppercase tracking-wider">Overdue Actions</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-rose-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-destructive">{metrics.overdue}</div>
-                        <p className="text-xs text-destructive font-medium mt-1">Require immediate attention</p>
+                        <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">{metrics.overdue}</div>
+                        <p className="text-xs text-rose-500 font-medium mt-1">Requires attention</p>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-xs border-border bg-card">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Upcoming Tasks</CardTitle>
-                        <CalendarRange className="h-4 w-4 text-sky-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-foreground">{metrics.upcoming}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Scheduled for future dates</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="shadow-xs border-border bg-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Completed Follow-ups</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed Follow-ups</CardTitle>
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-foreground">{metrics.completed}</div>
+                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{metrics.completed}</div>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">Successfully handled</p>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-xs border-emerald-500/10 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xs font-semibold uppercase tracking-wider">WhatsApp Status</CardTitle>
+                        <CardTitle className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">WhatsApp Status</CardTitle>
                         <MessageSquare className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
@@ -471,9 +460,9 @@ export default function FollowUpWorkspace() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                             </span>
-                            <div className="text-lg font-bold">Ready</div>
+                            <div className="text-lg font-bold text-slate-900 dark:text-slate-100">Ready</div>
                         </div>
-                        <p className="text-xs font-medium mt-1.5 opacity-80">SDK Interface Active</p>
+                        <p className="text-xs font-medium mt-1.5 text-muted-foreground">SDK Interface Active</p>
                     </CardContent>
                 </Card>
             </div>

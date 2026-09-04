@@ -475,34 +475,33 @@ export default function PatientsWorkspace() {
 
     return (
         <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 bg-background/50">
-            {/* Header Title Banner */}
-            <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm mt-2">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-950/30 rounded-full blur-2xl -mr-10 -mt-10" />
+            {/* Header Title Banner with Gray Gradient Shades */}
+            <div className="relative overflow-hidden border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 p-4 md:px-6 md:py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300">
                 <div className={`relative flex items-center gap-4 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
-                    <div className="p-3 bg-emerald-500 dark:bg-emerald-900 rounded-xl text-white shadow-sm">
-                        <Users className="h-5 w-5" />
+                    <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-xs shrink-0 border border-primary/20">
+                        <Users className="h-6 w-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-950 to-slate-750 dark:from-slate-550 dark:to-slate-200 bg-clip-text text-transparent">
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                             Patient Management
                         </h1>
-                        <p className="text-xs md:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             Manage clinical patient registers, demographical sheets, emergency records, payments, and files.
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Metrics cards (Visible in List mode) */}
+            {/* Metrics cards (Visible in List mode) with Gray Shades */}
             {viewMode === "list" && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="bg-card border-border shadow-xs">
+                    <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Total Patients</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Patients</span>
                             <Users className="h-4.5 w-4.5 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-extrabold">{stats.total}</div>
+                            <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{stats.total}</div>
                             <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
                                 <TrendingUp className="h-3 w-3 text-emerald-500" />
                                 Registered clinical cases
@@ -510,41 +509,42 @@ export default function PatientsWorkspace() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-card border-border shadow-xs">
+                    <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Active Cases</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Cases</span>
                             <Activity className="h-4.5 w-4.5 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-extrabold">{stats.active}</div>
+                            <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{stats.active}</div>
                             <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
                                 Under ongoing therapy plans
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-card border-border shadow-xs">
+                    <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Completed Rehab</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed Rehab</span>
                             <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-extrabold">{stats.completed}</div>
+                            <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{stats.completed}</div>
                             <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3 text-emerald-500" />
                                 Discharged / Fully recovered
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-card border-border shadow-xs">
+                    <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Outstanding Dues</span>
-                            <DollarSign className="h-4.5 w-4.5 text-destructive" />
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Outstanding Dues</span>
+                            <span className="text-xs font-bold text-amber-500">₹</span>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-extrabold text-destructive">₹{stats.totalDue.toLocaleString()}</div>
+                            <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-400">₹{stats.totalDue.toLocaleString()}</div>
                             <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                                Pending billing collectibles
+                                Pending billing balances
                             </p>
                         </CardContent>
                     </Card>

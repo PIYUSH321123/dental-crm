@@ -505,8 +505,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                         key={tab}
                         onClick={() => handleTabClick(tab)}
                         className={`pb-3 text-sm font-semibold transition-all border-b-2 hover:text-foreground cursor-pointer ${activeTab === tab
-                                ? "border-primary text-foreground"
-                                : "border-transparent text-muted-foreground"
+                            ? "border-primary text-foreground"
+                            : "border-transparent text-muted-foreground"
                             }`}
                     >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -515,12 +515,12 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
             </div>
 
             {/* Header Layout */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-1">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
                 <div className="space-y-1">
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                        {activeTab === "products" && <Package className="h-6 w-6 text-primary" />}
-                        {activeTab === "services" && <Activity className="h-6 w-6 text-primary" />}
-                        {activeTab === "packages" && <Layers className="h-6 w-6 text-primary" />}
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                        {activeTab === "products" && <Package className="h-6 w-6 text-primary shrink-0" />}
+                        {activeTab === "services" && <Activity className="h-6 w-6 text-primary shrink-0" />}
+                        {activeTab === "packages" && <Layers className="h-6 w-6 text-primary shrink-0" />}
                         {activeTab === "products" && "Products Register"}
                         {activeTab === "services" && "Clinic Services"}
                         {activeTab === "packages" && "Treatment Packages"}
@@ -534,7 +534,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                 <div>
                     <Button
                         onClick={openAddDialog}
-                        className="h-8.5 text-xs font-semibold bg-[#1a6eb5] hover:bg-[#1d7ccb] text-white rounded-lg shadow-sm cursor-pointer gap-1.5 px-4"
+                        size="sm"
+                        className="h-9 px-4 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-xs cursor-pointer gap-2 transition-all"
                     >
                         <Plus className="h-4 w-4" />
                         {activeTab === "products" && "Add Product"}
@@ -843,8 +844,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
                                         {/* Status Badge */}
                                         <Badge className={`absolute top-3 right-3 text-[9px] font-extrabold rounded-md uppercase border z-10 ${item.status === "Active"
-                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                                : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
+                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                            : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
                                             }`}>
                                             {item.status}
                                         </Badge>
@@ -872,10 +873,10 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                             <div className="text-right space-y-0.5">
                                                 <span className="text-[10px] text-muted-foreground font-semibold uppercase block">Stock Status</span>
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${(item as Product).stock > 10
-                                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                                        : (item as Product).stock > 0
-                                                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                                                            : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                    : (item as Product).stock > 0
+                                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                                                     }`}>
                                                     stock: {(item as Product).stock}
                                                 </span>
@@ -974,10 +975,10 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
                                     {activeTab === "products" && (
                                         <TableCell>
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${(item as Product).stock > 10
-                                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                                    : (item as Product).stock > 0
-                                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                : (item as Product).stock > 0
+                                                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                                    : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
                                                 }`}>
                                                 {(item as Product).stock} units
                                             </span>
@@ -994,8 +995,8 @@ export default function SharedLayout({ activeTab }: SharedLayoutProps) {
 
                                     <TableCell>
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${item.status === "Active"
-                                                ? "bg-emerald-50/50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
-                                                : "bg-slate-50/50 text-slate-700 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800"
+                                            ? "bg-emerald-50/50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
+                                            : "bg-slate-50/50 text-slate-700 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800"
                                             }`}>
                                             <span className={`h-1.5 w-1.5 rounded-full ${item.status === "Active" ? "bg-emerald-500" : "bg-slate-400"}`} />
                                             {item.status}

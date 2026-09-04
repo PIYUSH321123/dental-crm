@@ -115,13 +115,14 @@ export function CampaignsClient() {
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
                 <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    {/* Header */}
-                    <div className="px-4 lg:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">
+                    {/* Header Title Card with Gray Gradient Shades */}
+                    <div className="mx-4 lg:mx-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                        <div className="space-y-1">
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                                <Megaphone className="h-6 w-6 text-primary shrink-0" />
                                 {statusParam ? `${statusParam} Campaigns` : "Marketing Campaigns"}
                             </h1>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground">
                                 {statusParam 
                                     ? `Track, analyze, and optimize your currently ${statusParam.toLowerCase()} advertising campaigns.`
                                     : "Track, analyze, and optimize advertising spend, lead generation, and overall campaign ROI."}

@@ -431,8 +431,8 @@ export default function SessionManagementPage() {
 
     return (
         <div className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200">
-            {/* Topbar & Breadcrumb Container */}
-            <div className="px-4 lg:px-6 pt-4 flex flex-col gap-1 border-b border-slate-200 dark:border-slate-800 pb-3 bg-white dark:bg-slate-900 shadow-xs">
+            {/* Topbar & Breadcrumb Container with Gray Gradient Shades */}
+            <div className="px-4 lg:px-6 pt-4 flex flex-col gap-1 border-b border-slate-200 dark:border-slate-800 pb-3 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-xs">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <Button

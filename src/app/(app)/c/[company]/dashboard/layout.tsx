@@ -5,6 +5,7 @@ import { SlidersHorizontal, Menu } from "lucide-react"
 
 // UI Components
 import { SiteHeader } from "@/components/site-header"
+import { DashboardChromeTabs } from "@/components/dashboard-chrome-tabs"
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import {
@@ -51,8 +52,11 @@ export default function CompanyLayout({
                 variant="inset"
             />
             <MySidebarInset>
+                <DashboardChromeTabs />
                 <SidebarTriggerButton />
-                {children}
+                <main className="flex-1 w-full min-w-0">
+                    {children}
+                </main>
 
                 {/* Floating Navigation Controls Bubble */}
                 <div className="fixed bottom-6 right-6 z-50">
@@ -185,7 +189,7 @@ export default function CompanyLayout({
 
 function MySidebarInset({ children }: { children: React.ReactNode }) {
     return (
-        <SidebarInset>
+        <SidebarInset className="min-w-0 max-w-full overflow-x-hidden">
             {children}
         </SidebarInset>
     )

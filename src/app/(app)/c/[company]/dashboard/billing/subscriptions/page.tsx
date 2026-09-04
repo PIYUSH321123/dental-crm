@@ -155,10 +155,13 @@ export default function SubscriptionsPage() {
     return (
         <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 bg-background/50">
             {/* Header Title */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Subscriptions</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 md:px-6 md:py-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                <div className="space-y-1">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                        <CreditCard className="h-6 w-6 text-primary shrink-0" />
+                        Subscriptions
+                    </h1>
+                    <p className="text-xs text-muted-foreground">
                         Active plans, recurring billing cycles, and customer renewal status.
                     </p>
                 </div>
@@ -175,7 +178,7 @@ export default function SubscriptionsPage() {
 
             {/* Metrics cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-card border-border shadow-xs">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Active Subscriptions</span>
                         <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
@@ -188,7 +191,7 @@ export default function SubscriptionsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border shadow-xs">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Monthly Recurring Revenue</span>
                         <CreditCard className="h-4.5 w-4.5 text-brand-primary" />
@@ -201,7 +204,7 @@ export default function SubscriptionsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card border-border shadow-xs">
+                <Card className="bg-gradient-to-br from-slate-50/90 via-white to-slate-100/60 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs rounded-xl">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Past Due Subscriptions</span>
                         <ShieldAlert className="h-4.5 w-4.5 text-destructive animate-pulse" />
