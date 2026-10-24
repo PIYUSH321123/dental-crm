@@ -97,6 +97,14 @@ const data = {
                     title: "Patients",
                     url: "/c/[company]/dashboard/patient-management/patients",
                 },
+                {
+                    title: "Dental Chart",
+                    url: "/c/[company]/dashboard/patient-management/dental-chart",
+                },
+                {
+                    title: "Treatment Explainer",
+                    url: "/c/[company]/dashboard/patient-management/explainer",
+                },
             ],
         },
         {

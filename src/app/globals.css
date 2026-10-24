@@ -144,3 +144,15 @@
     @apply font-sans;
   }
 }
+
+/* Unique badge orange pill */
+.dentflow-unique-badge {
+  background: rgba(242, 166, 107, 0.2);
+  color: #F2A66B;
+  border: 1px solid rgba(242, 166, 107, 0.35);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.4;
+}

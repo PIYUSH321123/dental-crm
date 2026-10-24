@@ -54,8 +54,10 @@ import ActionButtons from "../../activity-management/assessments/components/Acti
 import PlanDetails from "../../activity-management/treatment-plans/components/PlanDetails"
 import TherapyAndPhases from "../../activity-management/treatment-plans/components/TheapyAndPhases"
 import PlanActionBtns from "../../activity-management/treatment-plans/components/PlanActionBtns"
+import { DentflowChart } from "@/components/dental/dentflow-chart"
+import { DentflowExplainer } from "@/components/dental/dentflow-explainer"
 
-export default function PatientsWorkspace() {
+export default function PatientsWorkspace({ initialSection }: { initialSection?: string } = {}) {
     const params = useParams()
     const company = params.company as string
     const router = useRouter()
@@ -63,7 +65,29 @@ export default function PatientsWorkspace() {
     const { open, openMobile, isMobile } = useSidebar()
     const isCollapsed = isMobile ? !openMobile : !open
     const searchParams = useSearchParams()
-    const activeSection = searchParams.get("tab") || "list"
+    const [activeSection, setActiveSection] = useState<string>(() => initialSection || searchParams?.get("tab") || "list")
+
+    useEffect(() => {
+        const tab = searchParams?.get("tab")
+        if (tab) {
+            setActiveSection(tab)
+        } else if (initialSection) {
+            setActiveSection(initialSection)
+        }
+    }, [searchParams, initialSection])
+
+    const handleSectionChange = (section: string) => {
+        setActiveSection(section)
+        if (section === "dental-chart") {
+            router.push(`/c/${company}/dashboard/patient-management/dental-chart`)
+        } else if (section === "explainer") {
+            router.push(`/c/${company}/dashboard/patient-management/explainer`)
+        } else if (section === "list") {
+            router.push(`/c/${company}/dashboard/patient-management/patients`)
+        } else {
+            router.push(`/c/${company}/dashboard/patient-management/patients?tab=${section}`)
+        }
+    }
 
     const [patients, setPatients] = useState<Patient[]>([])
     const [loaded, setLoaded] = useState(false)
@@ -475,8 +499,95 @@ export default function PatientsWorkspace() {
 
     return (
         <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 bg-background/50">
-            {/* Header Title Banner */}
-            <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm mt-2">
+            {/* Top Level Navigation Tabs: Patients Directory | Dental Chart & Imaging | Treatment Explainer | Treatment Plans | Billing */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-card border border-border p-1.5 rounded-xl shadow-xs">
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
+                            activeSection === "list"
+                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSectionChange("list")}
+                    >
+                        👥 Patients Directory
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
+                            activeSection === "dental-chart"
+                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSectionChange("dental-chart")}
+                    >
+                        🦷 Dental Chart &amp; Imaging
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg flex items-center gap-1.5 ${
+                            activeSection === "explainer"
+                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSectionChange("explainer")}
+                    >
+                        <span>✨ Treatment Explainer</span>
+                        <span className="dentflow-unique-badge">Unique</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
+                            activeSection === "plans"
+                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSectionChange("plans")}
+                    >
+                        📋 Treatment Plans
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
+                            activeSection === "billing"
+                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSectionChange("billing")}
+                    >
+                        💰 Billing
+                    </Button>
+                </div>
+                <div className="text-xs font-medium text-muted-foreground pr-2 hidden sm:block">
+                    Patient Management
+                </div>
+            </div>
+
+            {/* Standalone Dental Chart View */}
+            {activeSection === "dental-chart" ? (
+                <DentflowChart
+                    patientName="Priya Deshmukh"
+                    onSwitchToExplainer={() => handleSectionChange("explainer")}
+                />
+            ) : activeSection === "explainer" ? (
+                <DentflowExplainer
+                    patientName="Priya Deshmukh"
+                    patientMobile="+91 98201 54321"
+                    planId="TP-2231"
+                    toothId="36"
+                    branchName="Station Road branch"
+                    onBackToChart={() => handleSectionChange("dental-chart")}
+                />
+            ) : (
+                <>
+                    {/* Header Title Banner */}
+                    <div className="relative overflow-hidden border border-emerald-250/80 dark:border-emerald-900/30 rounded-2xl shadow-xs bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-white dark:from-emerald-950/20 dark:to-slate-900 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 hover:shadow-sm mt-2">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-950/30 rounded-full blur-2xl -mr-10 -mt-10" />
                 <div className={`relative flex items-center gap-4 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
                     <div className="p-3 bg-emerald-500 dark:bg-emerald-900 rounded-xl text-white shadow-sm">
@@ -568,9 +679,24 @@ export default function PatientsWorkspace() {
                                         ? "bg-muted/40 text-foreground font-semibold cursor-default"
                                         : "text-muted-foreground hover:text-foreground"
                                 }`}
-                                onClick={() => activeSection !== "list" && router.push(`/c/${company}/dashboard/patient-management/patients`)}
+                                onClick={() => handleSectionChange("list")}
                             >
                                 Patient List
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-xs h-8 cursor-pointer text-muted-foreground hover:text-foreground"
+                                onClick={() => handleSectionChange("dental-chart")}
+                            >
+                                🦷 Dental Chart
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-xs h-8 cursor-pointer flex items-center justify-between text-muted-foreground hover:text-foreground"
+                                onClick={() => handleSectionChange("explainer")}
+                            >
+                                <span>✨ Explainer</span>
+                                <span className="dentflow-unique-badge">Unique</span>
                             </Button>
                             <Button
                                 variant="ghost"
@@ -765,6 +891,11 @@ export default function PatientsWorkspace() {
                             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
                                 <TabsList className="bg-muted p-1 rounded-lg w-full flex overflow-x-auto justify-start border border-border h-11 shrink-0 scrollbar-none">
                                     <TabsTrigger value="profile" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">👤 Profile</TabsTrigger>
+                                    <TabsTrigger value="dental-charting" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0 font-bold bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300">🦷 Dental Charting &amp; Perio</TabsTrigger>
+                                    <TabsTrigger value="explainer" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0 font-bold flex items-center gap-1.5">
+                                        <span>✨ Treatment Explainer</span>
+                                        <span className="dentflow-unique-badge">Unique</span>
+                                    </TabsTrigger>
                                     <TabsTrigger value="assessments" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">🩺 Assessment</TabsTrigger>
 
                                     <TabsTrigger value="treatment-plans" className="text-xs px-3.5 h-8.5 cursor-pointer rounded-md shrink-0">📋 Treatment Plan</TabsTrigger>
@@ -791,6 +922,23 @@ export default function PatientsWorkspace() {
                                     <Card className="bg-card border-border p-5">
                                         <ProfileEditForm key={selectedPatient.id} patient={selectedPatient} onSave={handleSaveProfileChanges} therapists={dbTherapists} />
                                     </Card>
+                                </TabsContent>
+
+                                {/* Tabs Content - Dental Charting */}
+                                <TabsContent value="dental-charting" className="space-y-4 focus-visible:ring-0">
+                                    <DentflowChart
+                                        patientName={selectedPatient.name}
+                                        onSwitchToExplainer={() => setActiveTab("explainer")}
+                                    />
+                                </TabsContent>
+
+                                {/* Tabs Content - Treatment Explainer */}
+                                <TabsContent value="explainer" className="space-y-4 focus-visible:ring-0">
+                                    <DentflowExplainer
+                                        patientName={selectedPatient.name}
+                                        patientMobile={selectedPatient.mobile}
+                                        onBackToChart={() => setActiveTab("dental-charting")}
+                                    />
                                 </TabsContent>
 
                                 {/* Tabs Content - Assessments */}
@@ -1022,6 +1170,8 @@ export default function PatientsWorkspace() {
                         onSubmit={handleCollectPaymentSubmit}
                     />
                 </div>
+            )}
+            </>
             )}
 
             {/* Registration dialog */}
