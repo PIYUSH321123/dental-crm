@@ -41,10 +41,6 @@ export interface ClinicSetupConfig {
   whatsappConnected: boolean;
   whatsappNumber: string;
 }
-  | "Station Road branch"
-  | "Civil Lines branch"
-  | "MG Road branch"
-  | "All 3 branches";
 
 export interface DentflowPatient {
   id: string;

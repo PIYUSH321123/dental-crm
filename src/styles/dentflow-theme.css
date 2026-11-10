@@ -76,7 +76,7 @@
   --df-status-purple-text: #6D28D9;
   --df-status-purple-border: #DDD6FE;
 
-  /* Alert Callout Cards (C01 Needs Attention / O01 Owner Alerts) */
+  /* Alert Callout Cards (Today Needs Attention / Group Dashboard Owner Alerts) */
   --df-alert-red-bg: #FDF4F4;
   --df-alert-red-accent: #D92D20;
   --df-alert-amber-bg: #FEF9EE;

@@ -61,7 +61,7 @@ export const DENTFLOW_ROLES: DentflowRoleKey[] = [
   "Accounts",
 ];
 
-// Exact matrix from Screen O04 (Settings, users & roles)
+// Exact matrix from Settings, users & roles
 export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
   {
     key: "view_patient_records",

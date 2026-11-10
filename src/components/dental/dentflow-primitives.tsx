@@ -26,7 +26,6 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Smartphone,
   Stethoscope,
   TrendingUp,
   UserCheck,
@@ -458,42 +457,22 @@ export function DentflowSidebar({
         })}
       </nav>
 
-      {/* Connected Portals & Session Footer */}
+      {/* Session Footer */}
       <div className="p-2.5 border-t border-[var(--df-sidebar-border)] space-y-1.5">
-        <p className="px-2 text-[9.5px] font-bold uppercase tracking-wider text-[var(--df-sidebar-section)]">
-          Connected portals
-        </p>
-        <div className="grid grid-cols-2 gap-1 text-[11px]">
-          <Link
-            href="/patient"
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
-          >
-            <Smartphone className="h-3 w-3 text-[#F5B076]" />
-            <span>Patient app</span>
-          </Link>
-          <Link
-            href="/specialist"
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
-          >
-            <Stethoscope className="h-3 w-3 text-[#6EE7B7]" />
-            <span>Specialist</span>
-          </Link>
-          <Link
-            href="/lab"
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
-          >
-            <FlaskConical className="h-3 w-3 text-[#93C5FD]" />
-            <span>Lab portal</span>
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium cursor-pointer"
-          >
-            <LogOut className="h-3 w-3 text-[#FCA5A5]" />
-            <span>Log out</span>
-          </button>
+        <div className="px-2 py-1 rounded-lg bg-[var(--df-sidebar-hover)]/60">
+          <p className="text-[11px] font-semibold text-white truncate">Smile Studio Dental</p>
+          <p className="text-[10px] text-[var(--df-sidebar-muted)] truncate">
+            Multi-branch CRM · Live
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white text-[11px] font-semibold cursor-pointer transition-colors"
+        >
+          <LogOut className="h-3 w-3 text-[#FCA5A5]" />
+          <span>Log out</span>
+        </button>
       </div>
     </aside>
   );

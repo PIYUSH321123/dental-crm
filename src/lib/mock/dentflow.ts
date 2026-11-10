@@ -192,7 +192,7 @@ export const AI_RECEPTIONIST = {
   summary: "4 calls handed to you (implant swelling, insurance query…)",
 }
 
-// C04 Dental Chart mock data
+// Dental Chart mock data
 export interface OdontogramTooth {
   number: number
   status: "healthy" | "caries" | "filled" | "crown" | "root_canal" | "missing" | "planned"
@@ -286,7 +286,7 @@ export const DENTAL_IMAGING_ITEMS = [
   { id: "bitewing-l", title: "Bitewing L", date: "14 Mar 2026", hasAnnotation: false },
 ]
 
-// C06 Treatment Explainer mock data
+// Treatment Explainer mock data
 export interface ExplainerLanguageData {
   code: string
   label: string

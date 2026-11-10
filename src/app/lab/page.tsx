@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DentflowProvider, useDentflow } from "@/lib/dentflow-store";
 import { DentflowStatusPill } from "@/components/dental/dentflow-primitives";
 
 function LabPortalInner() {
+  const router = useRouter();
   const { state, updateState } = useDentflow();
   const [selectedId, setSelectedId] = useState<string>("lc-1");
+
+  const handleLogout = async () => {
+    await fetch("/api/dentflow/session", { method: "DELETE" }).catch(() => {});
+    router.push("/login");
+    router.refresh();
+  };
 
   const activeCase =
     state.labCases.find((c) => c.id === selectedId) || state.labCases[0];
@@ -29,7 +36,7 @@ function LabPortalInner() {
 
   return (
     <div className="min-h-screen df-canvas">
-      {/* Lab Portal Blue Header matching L01 */}
+      {/* Lab Portal Blue Header */}
       <header className="bg-[var(--df-lab-header)] text-white px-6 py-3.5">
         <div className="max-w-[1360px] mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-baseline gap-1.5">
@@ -40,12 +47,13 @@ function LabPortalInner() {
             <span className="font-semibold">
               Precision Dental Lab · 14 connected clinics
             </span>
-            <Link
-              href="/c/smile-studio/dashboard/lab-cases"
-              className="text-white/80 hover:text-white underline"
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold cursor-pointer"
             >
-              Clinic Lab Board →
-            </Link>
+              Log out
+            </button>
           </div>
         </div>
       </header>

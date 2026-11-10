@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { DentflowProvider, useDentflow } from "@/lib/dentflow-store";
 import { DentflowStatusPill } from "@/components/dental/dentflow-primitives";
@@ -67,9 +68,20 @@ const THURSDAY_PATIENTS = [
 ];
 
 function SpecialistPortalInner() {
-  const { state, updateState } = useDentflow();
+  const router = useRouter();
+  const { state, updateState, logPatientRead } = useDentflow();
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
   const [activeNav, setActiveNav] = useState("My days");
+  const [selectedPatientChart, setSelectedPatientChart] = useState<
+    (typeof THURSDAY_PATIENTS)[number] | null
+  >(null);
+  const [clinicalNote, setClinicalNote] = useState("");
+
+  const handleLogout = async () => {
+    await fetch("/api/dentflow/session", { method: "DELETE" }).catch(() => {});
+    router.push("/login");
+    router.refresh();
+  };
 
   const activeDay = SPECIALIST_DAYS[selectedDayIdx];
 
@@ -89,7 +101,7 @@ function SpecialistPortalInner() {
 
   return (
     <div className="min-h-screen df-canvas">
-      {/* Dark slate-indigo top header matching S01 */}
+      {/* Dark slate-indigo top header */}
       <header className="bg-[var(--df-specialist-header)] text-white px-6 py-3.5">
         <div className="max-w-[1360px] mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-6">
@@ -117,12 +129,13 @@ function SpecialistPortalInner() {
 
           <div className="flex items-center gap-4 text-xs">
             <span className="font-semibold">Dr. Meera Iyer · Endodontist</span>
-            <Link
-              href="/c/smile-studio/dashboard"
-              className="text-white/75 hover:text-white underline"
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold cursor-pointer"
             >
-              Clinic CRM →
-            </Link>
+              Log out
+            </button>
           </div>
         </div>
       </header>
@@ -182,12 +195,17 @@ function SpecialistPortalInner() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[11px] text-[var(--df-text-muted)]">{pt.note}</span>
-                    <Link
-                      href="/c/smile-studio/dashboard/dental-chart"
-                      className="df-btn-secondary px-2.5 py-1 text-[11px]"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPatientChart(pt);
+                        setClinicalNote("");
+                        logPatientRead(pt.patient, "Specialist portal", "Opened tooth chart & IOPA summary");
+                      }}
+                      className="df-btn-secondary px-2.5 py-1 text-[11px] cursor-pointer"
                     >
                       Open chart
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -253,6 +271,95 @@ function SpecialistPortalInner() {
           </div>
         </div>
       </main>
+
+      {selectedPatientChart && (
+        <div
+          className="fixed inset-0 z-50 bg-black/35 flex justify-end"
+          onClick={() => setSelectedPatientChart(null)}
+        >
+          <aside
+            className="w-full max-w-md bg-[var(--df-surface)] h-full p-5 sm:p-6 overflow-y-auto shadow-2xl border-l border-[var(--df-border)] flex flex-col justify-between gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[11px] text-[var(--df-text-muted)]">
+                    Visiting specialist chart preview · {activeDay.clinic}
+                  </p>
+                  <h2 className="df-serif text-xl font-semibold text-[var(--df-text)] mt-0.5">
+                    {selectedPatientChart.patient}
+                  </h2>
+                  <p className="text-xs text-[var(--df-teal)] font-semibold">
+                    {selectedPatientChart.procedure} · {selectedPatientChart.time}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatientChart(null)}
+                  className="p-1.5 rounded-lg hover:bg-[var(--df-surface-muted)] cursor-pointer"
+                  aria-label="Close chart preview"
+                >
+                  <X className="h-4 w-4 text-[var(--df-text-muted)]" />
+                </button>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[var(--df-alert-amber-bg)] border border-[var(--df-status-amber-border)] text-xs">
+                <p className="font-bold text-[var(--df-text)]">Chairside note</p>
+                <p className="text-[var(--df-text-secondary)] mt-0.5">
+                  {selectedPatientChart.note}
+                </p>
+              </div>
+
+              <div className="df-card p-3.5 space-y-2 text-xs">
+                <p className="font-bold text-[var(--df-text)]">Linked IOPA &amp; working length</p>
+                <div className="h-28 rounded-xl bg-[#0B161C] flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full border-2 border-[#F5B076] flex items-center justify-center text-[10px] font-bold text-[#F5B076]">
+                    Apex WL
+                  </div>
+                </div>
+                <p className="text-[11px] text-[var(--df-text-muted)]">
+                  MB1 20.5 mm · DB 20.0 mm · Palatal 21.5 mm · rotary file protocol ready on{" "}
+                  {activeDay.chair}.
+                </p>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <label className="font-bold text-[var(--df-text)] block">
+                  Add endodontic progress note
+                </label>
+                <textarea
+                  rows={3}
+                  value={clinicalNote}
+                  onChange={(e) => setClinicalNote(e.target.value)}
+                  placeholder="Enter obturation / dressing / recall instruction for clinic dentist..."
+                  className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--df-teal)]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[var(--df-border)]">
+              <button
+                type="button"
+                onClick={() => setSelectedPatientChart(null)}
+                className="df-btn-secondary py-2 text-xs cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toast.success(`Saved specialist note for ${selectedPatientChart.patient}`);
+                  setSelectedPatientChart(null);
+                }}
+                className="df-btn-primary py-2 text-xs cursor-pointer"
+              >
+                Save note to chart
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
