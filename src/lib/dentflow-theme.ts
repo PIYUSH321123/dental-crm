@@ -1,4 +1,4 @@
-// DentFlow Design System Tokens & O04 Role Permission Matrix
+// DentFlow Design System Tokens & Role Permission Matrix
 
 export type StatusTone = "green" | "amber" | "red" | "blue" | "grey" | "purple" | "teal";
 
@@ -223,9 +223,8 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
 
 export interface SidebarNavItem {
   id: string;
-  screenId: string;
   label: string;
-  slug: string; // relative to /c/[company]/dashboard
+  slug: string; // relative to /app
   badgeType?: "unique" | "new" | "count";
   badgeText?: string;
   requiredPermission?: PermissionRowKey;
@@ -241,24 +240,21 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
   {
     title: "FRONT DESK",
     items: [
-      { id: "today", screenId: "C01", label: "Today", slug: "" },
+      { id: "today", label: "Today", slug: "today" },
       {
         id: "calendar",
-        screenId: "C02",
         label: "Calendar",
         slug: "calendar",
         requiredPermission: "book_move_appointments",
       },
       {
         id: "patients",
-        screenId: "C03",
         label: "Patients",
         slug: "patients",
         requiredPermission: "view_patient_records",
       },
       {
         id: "gap-filler",
-        screenId: "C11",
         label: "Gap filler",
         slug: "gap-filler",
         badgeType: "unique",
@@ -267,7 +263,6 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
       },
       {
         id: "ai-receptionist",
-        screenId: "C17",
         label: "AI receptionist",
         slug: "ai-receptionist",
         badgeType: "unique",
@@ -281,21 +276,18 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     items: [
       {
         id: "dental-chart",
-        screenId: "C04",
         label: "Dental chart",
         slug: "dental-chart",
         requiredPermission: "view_patient_records",
       },
       {
         id: "treatment-plans",
-        screenId: "C05",
         label: "Treatment plans",
         slug: "treatment-plans",
         requiredPermission: "view_patient_records",
       },
       {
         id: "explainers",
-        screenId: "C06",
         label: "Explainers",
         slug: "explainers",
         badgeType: "unique",
@@ -304,14 +296,12 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
       },
       {
         id: "prescriptions",
-        screenId: "C07",
         label: "Prescriptions",
         slug: "prescriptions",
         requiredPermission: "write_prescriptions",
       },
       {
         id: "post-op",
-        screenId: "C08",
         label: "Post-op check-ins",
         slug: "post-op",
         badgeType: "count",
@@ -325,25 +315,22 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     items: [
       {
         id: "billing",
-        screenId: "C09",
         label: "Billing",
         slug: "billing",
         requiredPermission: "collect_payments_refunds",
       },
       {
-        id: "recovery",
-        screenId: "C10",
+        id: "treatment-recovery",
         label: "Treatment recovery",
-        slug: "recovery",
+        slug: "treatment-recovery",
         badgeType: "unique",
         badgeText: "Unique",
         requiredPermission: "send_campaigns",
       },
       {
-        id: "campaigns",
-        screenId: "C12",
+        id: "recall-campaigns",
         label: "Recall & campaigns",
-        slug: "campaigns",
+        slug: "recall-campaigns",
         requiredPermission: "send_campaigns",
       },
     ],
@@ -353,30 +340,26 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     items: [
       {
         id: "inventory",
-        screenId: "C13",
         label: "Inventory & costing",
         slug: "inventory",
         requiredPermission: "inventory_po",
       },
       {
         id: "lab-cases",
-        screenId: "C14",
         label: "Lab cases",
         slug: "lab-cases",
         requiredPermission: "view_patient_records",
       },
       {
         id: "sterilisation",
-        screenId: "C15",
         label: "Sterilisation",
         slug: "sterilisation",
         requiredPermission: "sterilisation_log",
       },
       {
-        id: "staff",
-        screenId: "C16",
+        id: "staff-commission",
         label: "Staff & commission",
-        slug: "staff",
+        slug: "staff-commission",
         requiredPermission: "commission_payroll",
       },
     ],
@@ -385,15 +368,13 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     title: "GROUP (OWNER)",
     items: [
       {
-        id: "all-branches",
-        screenId: "O01",
+        id: "group-dashboard",
         label: "All branches",
-        slug: "all-branches",
+        slug: "group-dashboard",
         requiredPermission: "see_all_branch_revenue",
       },
       {
         id: "patient-insights",
-        screenId: "O05",
         label: "Patient insights",
         slug: "patient-insights",
         badgeType: "new",
@@ -402,21 +383,18 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
       },
       {
         id: "visiting-specialists",
-        screenId: "O02",
         label: "Visiting specialists",
         slug: "visiting-specialists",
         requiredPermission: "see_all_branch_revenue",
       },
       {
         id: "reports",
-        screenId: "O03",
         label: "Reports & P&L",
         slug: "reports",
         requiredPermission: "see_all_branch_revenue",
       },
       {
         id: "settings",
-        screenId: "O04",
         label: "Settings",
         slug: "settings",
         ownerGroupOnly: true,
@@ -436,6 +414,21 @@ export function canRoleAccessNavItem(
   const row = matrix.find((r) => r.key === item.requiredPermission);
   if (!row) return true;
   return row.levels[role] !== "-";
+}
+
+export function canRoleAccessAppSlug(
+  role: DentflowRoleKey,
+  slug: string,
+  matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
+): boolean {
+  const cleanSlug = slug.replace(/^\/app\/?/, "").split("/")[0] || "today";
+  for (const section of DENTFLOW_SIDEBAR_SECTIONS) {
+    const found = section.items.find((i) => i.slug === cleanSlug);
+    if (found) {
+      return canRoleAccessNavItem(role, found, matrix);
+    }
+  }
+  return true;
 }
 
 export const ROLE_USER_PROFILES: Record<

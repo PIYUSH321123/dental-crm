@@ -14,7 +14,7 @@ interface DentflowContextValue {
   setActiveRole: (role: DentflowRoleKey) => void;
   setActiveBranch: (branch: BranchName) => void;
   updateState: (updater: (prev: DentflowAppState) => DentflowAppState) => void;
-  logPatientRead: (patientName: string, screenId: string, readAction?: string) => void;
+  logPatientRead: (patientName: string, screenName: string, readAction?: string) => void;
   resetDemoState: () => Promise<void>;
 }
 
@@ -80,14 +80,14 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logPatientRead = useCallback(
-    (patientName: string, screenId: string, readAction = "READ") => {
+    (patientName: string, screenName: string, readAction = "READ") => {
       setState((prev) => {
         const profile = ROLE_USER_PROFILES[prev.activeRole];
         const latest = prev.dpdpAccessLogs[0];
         if (
           latest &&
           latest.patientName === patientName &&
-          latest.screenId === screenId &&
+          latest.screenName === screenName &&
           latest.actor === profile.name
         ) {
           return prev;
@@ -101,7 +101,7 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
           actor: profile.name,
           role: prev.activeRole,
           patientName,
-          screenId,
+          screenName,
           action: readAction,
         };
         const next = {

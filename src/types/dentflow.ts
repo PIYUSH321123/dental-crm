@@ -1,4 +1,4 @@
-// Complete TypeScript interfaces for all 38 DentFlow screens (C01-C17, O01-O05, P01-P13, S01, L01, A01)
+// Complete TypeScript interfaces for DentFlow Clinic, Owner, Patient, Specialist, Lab & Admin views
 
 import {
   DentflowRoleKey,
@@ -7,6 +7,40 @@ import {
 } from "@/lib/dentflow-theme";
 
 export type BranchName =
+  | "Station Road branch"
+  | "Civil Lines branch"
+  | "MG Road branch"
+  | "All 3 branches";
+
+export type PatientAppView =
+  | "book"
+  | "whatsapp-bot"
+  | "home"
+  | "before-visit"
+  | "self-check"
+  | "photo-check"
+  | "result"
+  | "explainer"
+  | "payments"
+  | "records"
+  | "family"
+  | "recovery"
+  | "aligner";
+
+export interface ClinicSetupConfig {
+  completed: boolean;
+  clinicGroupName: string;
+  gstin: string;
+  city: string;
+  phone: string;
+  branches: { id: string; name: string; chairs: number; address: string }[];
+  chairsAndRooms: string[];
+  workingHours: string;
+  staffRoster: { id: string; name: string; role: DentflowRoleKey }[];
+  procedureFees: { id: string; name: string; fee: number; gstPct: number }[];
+  whatsappConnected: boolean;
+  whatsappNumber: string;
+}
   | "Station Road branch"
   | "Civil Lines branch"
   | "MG Road branch"
@@ -418,25 +452,13 @@ export interface DentflowAppState {
     actor: string;
     role: string;
     patientName: string;
-    screenId: string;
+    screenName: string;
     action: string;
   }[];
+  clinicSetup: ClinicSetupConfig;
   patientApp: {
     selectedPatientId: string;
-    activeScreen:
-      | "P01"
-      | "P02"
-      | "P03"
-      | "P04"
-      | "P05"
-      | "P06"
-      | "P07"
-      | "P08"
-      | "P09"
-      | "P10"
-      | "P11"
-      | "P12"
-      | "P13";
+    activeScreen: PatientAppView;
     alignerWornMinutesToday: number;
     alignerTimerRunning: boolean;
     alignerConsentPublic: boolean;

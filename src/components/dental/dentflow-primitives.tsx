@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BarChart3,
@@ -16,6 +16,7 @@ import {
   FileText,
   FlaskConical,
   Home,
+  LogOut,
   Megaphone,
   Menu,
   Package,
@@ -56,13 +57,13 @@ const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   prescriptions: FileText,
   "post-op": Activity,
   billing: Receipt,
-  recovery: RefreshCw,
-  campaigns: Megaphone,
+  "treatment-recovery": RefreshCw,
+  "recall-campaigns": Megaphone,
   inventory: Package,
   "lab-cases": FlaskConical,
   sterilisation: ShieldCheck,
-  staff: UserCheck,
-  "all-branches": Building2,
+  "staff-commission": UserCheck,
+  "group-dashboard": Building2,
   "patient-insights": TrendingUp,
   "visiting-specialists": Stethoscope,
   reports: BarChart3,
@@ -167,9 +168,7 @@ export function DentflowPageHeader({
   defaultBranch?: BranchName;
   defaultUserOverride?: { name: string; subtitle: string; initials: string };
 }) {
-  const params = useParams();
   const router = useRouter();
-  const company = (Array.isArray(params?.company) ? params.company[0] : params?.company) || "smile-studio";
   const {
     state,
     backendConnected,
@@ -199,7 +198,7 @@ export function DentflowPageHeader({
         id: p.id,
         title: p.name,
         meta: `${p.code} · ${p.phone} · ${p.homeBranch}`,
-        href: `/c/${company}/dashboard/patients?patientId=${p.id}`,
+        href: `/app/patients?patientId=${p.id}`,
       }));
     const invs = state.invoices
       .filter(
@@ -211,10 +210,10 @@ export function DentflowPageHeader({
         id: i.id,
         title: `${i.invoiceNumber} · ${i.patientName}`,
         meta: `₹${Math.abs(i.amount).toLocaleString("en-IN")} · ${i.status}`,
-        href: `/c/${company}/dashboard/billing`,
+        href: `/app/billing`,
       }));
     return [...pats, ...invs].slice(0, 6);
-  }, [searchQuery, state.patients, state.invoices, company]);
+  }, [searchQuery, state.patients, state.invoices]);
 
   const activeAlertsCount = state.needsAttention.filter((n) => !n.resolved).length;
 
@@ -313,7 +312,7 @@ export function DentflowPageHeader({
                     type="button"
                     onClick={() => {
                       setNotifOpen(false);
-                      router.push(`/c/${company}/dashboard/${item.targetRoute}`);
+                      router.push(`/app/${item.targetRoute}`);
                     }}
                     className="w-full text-left p-2 rounded-lg bg-[var(--df-surface-muted)] hover:bg-[var(--df-surface-hover)] border border-[var(--df-border)]"
                   >
@@ -326,13 +325,13 @@ export function DentflowPageHeader({
           )}
         </div>
 
-        {/* Role Switcher (enforces O04 RBAC matrix live) */}
+        {/* Role Switcher (enforces Settings > Users & roles matrix live) */}
         <div className="relative hidden lg:block">
           <select
             aria-label="Active role"
             value={state.activeRole}
             onChange={(e) => setActiveRole(e.target.value as DentflowRoleKey)}
-            title="Switch active staff role (enforces O04 permission matrix)"
+            title="Switch active staff role (controlled by Settings > Users & roles)"
             className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-2.5 pr-6 py-1.5 text-[11px] font-semibold text-[var(--df-teal)] hover:border-[var(--df-teal-border)] focus:outline-none cursor-pointer"
           >
             {DENTFLOW_ROLES.map((r) => (
@@ -366,19 +365,24 @@ export function DentflowSidebar({
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }) {
-  const params = useParams();
   const pathname = usePathname();
-  const company = (Array.isArray(params?.company) ? params.company[0] : params?.company) || "smile-studio";
+  const router = useRouter();
   const { state } = useDentflow();
 
   const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
+
+  const handleLogout = async () => {
+    await fetch("/api/dentflow/session", { method: "DELETE" }).catch(() => {});
+    router.push("/login");
+    router.refresh();
+  };
 
   const sidebarContent = (
     <aside className="w-[224px] shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none">
       {/* Brand Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[var(--df-sidebar-border)]">
         <Link
-          href={`/c/${company}/dashboard`}
+          href={state.activeRole === "Owner" ? "/app/group-dashboard" : "/app/today"}
           onClick={onCloseMobile}
           className="flex items-center gap-2.5"
         >
@@ -414,13 +418,8 @@ export function DentflowSidebar({
               </p>
               <ul className="space-y-0.5">
                 {visibleItems.map((item) => {
-                  const href = item.slug
-                    ? `/c/${company}/dashboard/${item.slug}`
-                    : `/c/${company}/dashboard`;
-                  const isActive =
-                    item.slug === ""
-                      ? pathname === `/c/${company}/dashboard`
-                      : pathname?.startsWith(href);
+                  const href = `/app/${item.slug}`;
+                  const isActive = pathname === href || pathname?.startsWith(`${href}/`);
                   const Icon = NAV_ICONS[item.id] || Home;
 
                   return (
@@ -459,18 +458,18 @@ export function DentflowSidebar({
         })}
       </nav>
 
-      {/* Partner & Patient Portals Switcher */}
-      <div className="p-2.5 border-t border-[var(--df-sidebar-border)] space-y-1">
+      {/* Connected Portals & Session Footer */}
+      <div className="p-2.5 border-t border-[var(--df-sidebar-border)] space-y-1.5">
         <p className="px-2 text-[9.5px] font-bold uppercase tracking-wider text-[var(--df-sidebar-section)]">
-          Portals (P01–P13 · S01 · L01 · A01)
+          Connected portals
         </p>
         <div className="grid grid-cols-2 gap-1 text-[11px]">
           <Link
-            href={`/${company}/patient-portal`}
+            href="/patient"
             className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
           >
             <Smartphone className="h-3 w-3 text-[#F5B076]" />
-            <span>Patient App</span>
+            <span>Patient app</span>
           </Link>
           <Link
             href="/specialist"
@@ -484,15 +483,16 @@ export function DentflowSidebar({
             className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
           >
             <FlaskConical className="h-3 w-3 text-[#93C5FD]" />
-            <span>Lab Portal</span>
+            <span>Lab portal</span>
           </Link>
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white font-medium cursor-pointer"
           >
-            <ShieldCheck className="h-3 w-3 text-[#FCD34D]" />
-            <span>Super-Admin</span>
-          </Link>
+            <LogOut className="h-3 w-3 text-[#FCA5A5]" />
+            <span>Log out</span>
+          </button>
         </div>
       </div>
     </aside>
