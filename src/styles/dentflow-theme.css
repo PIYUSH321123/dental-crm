@@ -1,0 +1,139 @@
+/* DentFlow Design System Tokens — Single Source of Truth */
+
+:root {
+  /* Core Surfaces */
+  --df-canvas: #F6F5F0;
+  --df-canvas-subtle: #EFECE4;
+  --df-surface: #FFFFFF;
+  --df-surface-muted: #FAF9F6;
+  --df-surface-hover: #F3F1EA;
+
+  /* Borders */
+  --df-border: #E5E2D9;
+  --df-border-strong: #D3CFC3;
+
+  /* Typography Colors */
+  --df-text: #18221E;
+  --df-text-secondary: #4C5752;
+  --df-text-muted: #76807B;
+
+  /* Dark Forest Green Sidebar (C01-C17, O01-O05) */
+  --df-sidebar-bg: #12352C;
+  --df-sidebar-hover: #1A463B;
+  --df-sidebar-active: #1F5648;
+  --df-sidebar-border: #1E493E;
+  --df-sidebar-text: #E9F1EE;
+  --df-sidebar-muted: #86A89D;
+  --df-sidebar-section: #6F9488;
+
+  /* Partner Portal Headers */
+  --df-specialist-header: #232738;
+  --df-lab-header: #1D446B;
+  --df-admin-header: #1C2A26;
+  --df-patient-dark: #102A23;
+
+  /* Primary Brand Teal */
+  --df-teal: #146C58;
+  --df-teal-hover: #0F5646;
+  --df-teal-soft: #E3F3EE;
+  --df-teal-border: #A7D7C9;
+  --df-teal-foreground: #FFFFFF;
+
+  /* Accent Pills ("Unique" & "New") */
+  --df-unique-bg: #F9E5D3;
+  --df-unique-text: #B45B1C;
+  --df-unique-border: #F0CBA9;
+  --df-unique-dark-bg: rgba(242, 166, 107, 0.22);
+  --df-unique-dark-text: #F5B076;
+
+  --df-new-bg: #D7F2E3;
+  --df-new-text: #136A47;
+  --df-new-dark-bg: rgba(74, 222, 128, 0.2);
+  --df-new-dark-text: #6EE7B7;
+
+  /* Semantic Status Pills */
+  --df-status-green-bg: #E3F5EC;
+  --df-status-green-text: #146C43;
+  --df-status-green-border: #BCE6D0;
+
+  --df-status-amber-bg: #FEF3DC;
+  --df-status-amber-text: #9A5B00;
+  --df-status-amber-border: #F8DFAA;
+
+  --df-status-red-bg: #FDE7E7;
+  --df-status-red-text: #B42318;
+  --df-status-red-border: #F7C2C2;
+
+  --df-status-blue-bg: #E5EFFD;
+  --df-status-blue-text: #1D4ED8;
+  --df-status-blue-border: #BFDBFE;
+
+  --df-status-grey-bg: #EFECE6;
+  --df-status-grey-text: #5C5B55;
+  --df-status-grey-border: #DDD9CE;
+
+  --df-status-purple-bg: #F1E8FD;
+  --df-status-purple-text: #6D28D9;
+  --df-status-purple-border: #DDD6FE;
+
+  /* Alert Callout Cards (C01 Needs Attention / O01 Owner Alerts) */
+  --df-alert-red-bg: #FDF4F4;
+  --df-alert-red-accent: #D92D20;
+  --df-alert-amber-bg: #FEF9EE;
+  --df-alert-amber-accent: #D97706;
+  --df-alert-teal-bg: #F2F9F6;
+  --df-alert-teal-accent: #146C58;
+  --df-alert-blue-bg: #F3F7FE;
+  --df-alert-blue-accent: #2563EB;
+
+  /* Typography Families */
+  --df-font-serif: var(--font-serif, "Fraunces", "Georgia", serif);
+  --df-font-sans: var(--font-sans, "Plus Jakarta Sans", system-ui, sans-serif);
+  --df-font-mono: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+}
+
+.df-canvas {
+  background-color: var(--df-canvas);
+  color: var(--df-text);
+  font-family: var(--df-font-sans);
+}
+
+.df-serif {
+  font-family: var(--df-font-serif);
+}
+
+.df-mono {
+  font-family: var(--df-font-mono);
+}
+
+.df-card {
+  background-color: var(--df-surface);
+  border: 1px solid var(--df-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(18, 53, 44, 0.04);
+}
+
+.df-btn-primary {
+  background-color: var(--df-teal);
+  color: var(--df-teal-foreground);
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background-color 150ms ease, transform 100ms ease;
+}
+
+.df-btn-primary:hover:not(:disabled) {
+  background-color: var(--df-teal-hover);
+}
+
+.df-btn-secondary {
+  background-color: var(--df-surface);
+  color: var(--df-text);
+  border: 1px solid var(--df-border-strong);
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+
+.df-btn-secondary:hover:not(:disabled) {
+  background-color: var(--df-surface-hover);
+}
