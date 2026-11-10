@@ -1,167 +1,129 @@
-"use client";
+import React from "react";
+import Link from "next/link";
+import {
+  Building2,
+  FlaskConical,
+  ShieldCheck,
+  Smartphone,
+  Stethoscope,
+  LayoutDashboard,
+} from "lucide-react";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { checkCompanyExistsAction } from "@/lib/actions/companies";
-import { toast } from "sonner";
-import { ArrowRight, Sparkles, Building2, Shield, LayoutDashboard, HeartHandshake } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+const PORTAL_CARDS = [
+  {
+    id: "C01–C17",
+    title: "Clinic Portal",
+    subtitle: "Front desk, dentists, assistants & branch managers",
+    desc: "Today queue, chair calendar, patient profile, FDI odontogram, treatment plans, 8-language explainer, Rx allergy guard, post-op monitor, GST/UPI billing, recovery & gap filler.",
+    href: "/c/smile-studio/dashboard",
+    icon: LayoutDashboard,
+    badge: "17 screens",
+  },
+  {
+    id: "O01–O05",
+    title: "Owner & Multi-Clinic",
+    subtitle: "Clinic owner & accounts",
+    desc: "All-branches group KPIs, visiting specialists week grid & revenue share, branch P&L, RBAC permission matrix & DPDP logs, patient retention & drop-off insights.",
+    href: "/c/smile-studio/dashboard/all-branches",
+    icon: Building2,
+    badge: "5 screens",
+  },
+  {
+    id: "P01–P13",
+    title: "Patient App (PWA & WhatsApp)",
+    subtitle: "Patients and families",
+    desc: "Online booking, Hindi WhatsApp bot, patient home, anxiety comfort check, symptom self-check, guided photo check, Hindi explainer, UPI AutoPay EMI, ABHA records, family timeline, aligner timer.",
+    href: "/smile-studio/patient-portal",
+    icon: Smartphone,
+    badge: "13 screens",
+  },
+  {
+    id: "S01",
+    title: "Visiting Specialist Portal",
+    subtitle: "Visiting endodontist / orthodontist / implantologist",
+    desc: "Multi-clinic visiting days, patient schedule with comfort flags, referral inbox & monthly settlement statement.",
+    href: "/specialist",
+    icon: Stethoscope,
+    badge: "S01",
+  },
+  {
+    id: "L01",
+    title: "Dental Lab Portal",
+    subtitle: "Precision Dental Lab · connected clinics",
+    desc: "Open crown/bridge/aligner cases across clinics, VITA shades & STL scans, due dates and live dispatch updates.",
+    href: "/lab",
+    icon: FlaskConical,
+    badge: "L01",
+  },
+  {
+    id: "A01",
+    title: "SaaS Super-Admin",
+    subtitle: "Platform operations & DPDP compliance",
+    desc: "Clinic group accounts, MRR, WhatsApp credits, AI voice minutes metering, feature flags and DPDP request queue.",
+    href: "/admin/dashboard",
+    icon: ShieldCheck,
+    badge: "A01",
+  },
+];
 
-export default function SalesGuruPortal() {
-  const [slug, setSlug] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handlePortalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!slug.trim()) return;
-
-    setLoading(true);
-    try {
-      const exists = await checkCompanyExistsAction(slug.trim());
-      if (exists) {
-        toast.success(`Redirecting to ${slug} clinic portal...`);
-        router.push(`/c/${slug.toLowerCase().trim()}/home`);
-      } else {
-        toast.error("Company slug not found. Try 'yogaplus', 'stark', 'wayne', or 'hooli'!");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function DentflowLauncherPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white overflow-hidden relative">
-      {/* Background Decorative Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-900/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-900/10 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Header */}
-      <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-600/30">
-            SG
-          </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            Sales Guru
-          </span>
+    <div className="min-h-screen df-canvas flex flex-col justify-between">
+      <header className="bg-[var(--df-sidebar-bg)] text-white px-6 py-10">
+        <div className="max-w-5xl mx-auto space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--df-unique-dark-text)]">
+            DentFlow · Dental CRM
+          </p>
+          <h1 className="df-serif text-3xl sm:text-4xl font-semibold tracking-tight">
+            Smile Studio Dental — 38-Screen Unified Workspace
+          </h1>
+          <p className="text-sm text-[var(--df-sidebar-muted)] max-w-2xl">
+            Multi-tenant, multi-branch dental practice management across clinic operations,
+            owner analytics, patient PWA/WhatsApp journeys, visiting specialists, dental labs
+            and platform admin.
+          </p>
         </div>
-        <Button
-          variant="ghost"
-          className="text-slate-400 hover:text-white text-sm flex items-center gap-1.5 hover:bg-slate-900"
-          onClick={() => router.push("/admin/login")}
-        >
-          <Shield className="h-4 w-4 text-emerald-500" />
-          <span>Super Admin Access</span>
-        </Button>
       </header>
 
-      {/* Hero & Portal Wrapper */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-12 md:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-        {/* Left Column: CRM Intro */}
-        <div className="space-y-6 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-900/50">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Next-Gen Clinic CRM Platform</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-[1.15]">
-            Supercharge your clinic sales & patient management
-          </h1>
-          <p className="text-slate-400 text-lg leading-relaxed">
-            Sales Guru is the ultimate white-labeled CRM software designed specifically for physiotherapy centers, medical clinics, and wellness studios. Manage patient care, lead pipelines, treatment campaigns, and athletic performance training in a unified, premium interface.
-          </p>
-
-          {/* CRM Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
-                <HeartHandshake className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white">Patient Portals</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Custom white-labeled portals for every clinic brand.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
-                <LayoutDashboard className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white">Lead Pipelines</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Convert enquiries to consultations with smart pipelines.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Portal Access & Login */}
-        <div className="flex justify-center">
-          <Card className="w-full max-w-[450px] bg-slate-950/70 border-slate-900 backdrop-blur-xl shadow-2xl shadow-emerald-950/20">
-            <CardHeader className="pb-4">
-              <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-500 mb-3">
-                <Building2 className="h-6 w-6" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-white">Clinic Portal Access</CardTitle>
-              <CardDescription className="text-slate-400 mt-1">
-                Enter your company or clinic slug below to access your customized CRM workspace.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <form onSubmit={handlePortalSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="slug" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Clinic Slug / URL Name
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="slug"
-                      placeholder="e.g. yogaplus, stark, hooli"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      className="bg-slate-900/50 border-slate-800 focus-visible:ring-emerald-600 text-white placeholder:text-slate-600 pr-12 h-11 rounded-lg"
-                      required
-                    />
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-600 select-none">
-                      .sales-guru.com
-                    </div>
+      <main className="max-w-5xl w-full mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {PORTAL_CARDS.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Link
+              key={card.id}
+              href={card.href}
+              className="df-card p-5 flex flex-col justify-between hover:border-[var(--df-teal)] transition-all group"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="h-9 w-9 rounded-xl bg-[var(--df-teal-soft)] text-[var(--df-teal)] flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
                   </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[var(--df-unique-bg)] text-[var(--df-unique-text)]">
+                    {card.badge}
+                  </span>
                 </div>
-                <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-11 gap-1.5 font-medium rounded-lg" disabled={loading}>
-                  {loading ? "Verifying..." : "Access Workspace"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </form>
-
-              {/* Demo Section */}
-              <div className="pt-4 border-t border-slate-900 text-center">
-                <p className="text-xs text-slate-500">
-                  New here? Access using one of our demo slugs:
+                <div>
+                  <h2 className="df-serif text-lg font-semibold text-[var(--df-text)] group-hover:text-[var(--df-teal)]">
+                    {card.title}
+                  </h2>
+                  <p className="text-[11px] text-[var(--df-text-muted)]">{card.subtitle}</p>
+                </div>
+                <p className="text-xs text-[var(--df-text-secondary)] leading-relaxed">
+                  {card.desc}
                 </p>
-                <div className="flex flex-wrap justify-center gap-1.5 mt-2">
-                  {["yogaplus", "stark", "wayne", "hooli"].map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setSlug(d)}
-                      className="px-2.5 py-1 text-xs rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors animate-fade-in"
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <p className="text-xs font-bold text-[var(--df-teal)] mt-4">
+                Open {card.id} →
+              </p>
+            </Link>
+          );
+        })}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-600 bg-slate-950/50">
-        &copy; {new Date().getFullYear()} Sales Guru CRM. All rights reserved.
+      <footer className="max-w-5xl w-full mx-auto px-6 py-4 border-t border-[var(--df-border)] text-[11px] text-[var(--df-text-muted)] flex flex-wrap justify-between gap-2">
+        <span>DentFlow v1.0 · Smile Studio Dental (Station Road · Civil Lines · MG Road)</span>
+        <span>DPDP access logging &amp; RBAC active</span>
       </footer>
     </div>
   );
