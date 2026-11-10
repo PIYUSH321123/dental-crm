@@ -1423,7 +1423,10 @@ function PatientAppInner() {
                   Kavya Reddy · aligners with Dr. Karan Shah
                 </p>
                 <h1 className="df-serif text-xl font-semibold mt-0.5">Tray 10 of 24</h1>
-                <div className="grid grid-cols-24 gap-0.5 mt-2">
+                <div
+                  className="grid gap-0.5 mt-2"
+                  style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}
+                >
                   {Array.from({ length: 24 }, (_, i) => (
                     <div
                       key={i}

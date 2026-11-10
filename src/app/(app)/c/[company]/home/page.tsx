@@ -1,17 +1,10 @@
-import Hero from "@/components/marketing/Hero";
-import HowWeHelp from "@/components/marketing/HowWeHelp";
-import PathToRecovery from "@/components/marketing/PathToRecovery";
-import Testimonials from "@/components/marketing/Testimonials";
-import CtaBanner from "@/components/marketing/CtaBanner";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
-  return (
-    <div className="bg-white text-zinc-950">
-      <Hero />
-      <HowWeHelp />
-      <PathToRecovery />
-      <Testimonials />
-      <CtaBanner />
-    </div>
-  );
+export default async function LegacyHomeRedirect({
+  params,
+}: {
+  params: Promise<{ company: string }>;
+}) {
+  const { company } = await params;
+  redirect(`/c/${company}/dashboard`);
 }

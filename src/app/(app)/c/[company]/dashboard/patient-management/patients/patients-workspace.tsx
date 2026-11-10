@@ -499,7 +499,7 @@ export default function PatientsWorkspace({ initialSection }: { initialSection?:
 
     return (
         <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 bg-background/50">
-            {/* Top Level Navigation Tabs: Patients Directory | Dental Chart & Imaging | Treatment Explainer | Treatment Plans | Billing */}
+            {/* Top Level Navigation Tabs: Patients Directory | Dental Chart & Imaging | Treatment Explainer */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-card border border-border p-1.5 rounded-xl shadow-xs">
                 <div className="flex flex-wrap items-center gap-1.5">
                     <Button
@@ -538,30 +538,6 @@ export default function PatientsWorkspace({ initialSection }: { initialSection?:
                     >
                         <span>✨ Treatment Explainer</span>
                         <span className="dentflow-unique-badge">Unique</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
-                            activeSection === "plans"
-                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
-                        onClick={() => handleSectionChange("plans")}
-                    >
-                        📋 Treatment Plans
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-8 text-xs font-semibold cursor-pointer rounded-lg ${
-                            activeSection === "billing"
-                                ? "bg-[#0E6B5E] text-white hover:bg-[#0E6B5E]/90 hover:text-white"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
-                        onClick={() => handleSectionChange("billing")}
-                    >
-                        💰 Billing
                     </Button>
                 </div>
                 <div className="text-xs font-medium text-muted-foreground pr-2 hidden sm:block">

@@ -1,12 +1,10 @@
-import * as React from "react"
-import PatientsWorkspace from "./patients-workspace"
+import { redirect } from "next/navigation";
 
-export default async function PatientsPage({ params }: { params: Promise<{ company: string }> }) {
-    await params
-
-    return (
-        <React.Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading workspace...</div>}>
-            <PatientsWorkspace />
-        </React.Suspense>
-    )
+export default async function LegacyPatientsListRedirect({
+  params,
+}: {
+  params: Promise<{ company: string }>;
+}) {
+  const { company } = await params;
+  redirect(`/c/${company}/dashboard/patients`);
 }

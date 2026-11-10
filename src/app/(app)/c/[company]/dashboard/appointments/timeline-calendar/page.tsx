@@ -1,17 +1,10 @@
-"use client"
+import { redirect } from "next/navigation";
 
-import * as React from "react"
-import dynamic from "next/dynamic"
-
-// Import CalendarWorkspace dynamically with SSR disabled to prevent server-side 
-// compilation issues with FullCalendar (which references window/document).
-const CalendarWorkspace = dynamic(
-    () => import("./calendar-workspace"),
-    { ssr: false }
-)
-
-export default function TimelineCalendarPage({ params }: { params: Promise<{ company: string }> }) {
-    const { company } = React.use(params)
-
-    return <CalendarWorkspace />
+export default async function LegacyTimelineCalendarRedirect({
+  params,
+}: {
+  params: Promise<{ company: string }>;
+}) {
+  const { company } = await params;
+  redirect(`/c/${company}/dashboard/calendar`);
 }

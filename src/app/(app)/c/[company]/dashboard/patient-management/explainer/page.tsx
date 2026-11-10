@@ -1,5 +1,10 @@
-import PatientsWorkspace from "../patients/patients-workspace"
+import { redirect } from "next/navigation";
 
-export default function TreatmentExplainerPage() {
-    return <PatientsWorkspace initialSection="explainer" />
+export default async function LegacyExplainerRedirect({
+  params,
+}: {
+  params: Promise<{ company: string }>;
+}) {
+  const { company } = await params;
+  redirect(`/c/${company}/dashboard/explainers`);
 }

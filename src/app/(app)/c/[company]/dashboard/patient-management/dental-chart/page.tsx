@@ -1,5 +1,10 @@
-import PatientsWorkspace from "../patients/patients-workspace"
+import { redirect } from "next/navigation";
 
-export default function DentalChartPage() {
-    return <PatientsWorkspace initialSection="dental-chart" />
+export default async function LegacyDentalChartRedirect({
+  params,
+}: {
+  params: Promise<{ company: string }>;
+}) {
+  const { company } = await params;
+  redirect(`/c/${company}/dashboard/dental-chart`);
 }
