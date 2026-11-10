@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState("Users & roles");
   const [emiConnected, setEmiConnected] = useState(false);
 
-  const cyclePermission = (permId: string, role: DentflowRoleKey) => {
+  const cyclePermission = (permKey: string, role: DentflowRoleKey) => {
     if (role === "Owner") {
       toast.info("Owner retains full access across all clinic permissions.");
       return;
@@ -48,13 +48,13 @@ export default function SettingsPage() {
     updateState((prev) => ({
       ...prev,
       rolePermissions: prev.rolePermissions.map((row) =>
-        row.id !== permId
+        row.key !== permKey
           ? row
           : {
               ...row,
-              permissions: {
-                ...row.permissions,
-                [role]: NEXT_PERM[row.permissions[role]],
+              levels: {
+                ...row.levels,
+                [role]: NEXT_PERM[row.levels[role]],
               },
             },
       ),
@@ -173,14 +173,14 @@ export default function SettingsPage() {
                         <th className="py-2 pr-2 text-left">Permission</th>
                         {DENTFLOW_ROLES.map((role) => (
                           <th key={role} className="py-2 px-1.5 text-center">
-                            {role === "Branch manager" ? "Branch mgr" : role}
+                            {role}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--df-border)]">
                       {state.rolePermissions.map((row) => (
-                        <tr key={row.id} className="hover:bg-[var(--df-surface-hover)]/50">
+                        <tr key={row.key} className="hover:bg-[var(--df-surface-hover)]/50">
                           <td className="py-2 pr-2 font-medium text-[var(--df-text)]">
                             {row.label}
                           </td>
@@ -188,11 +188,11 @@ export default function SettingsPage() {
                             <td key={role} className="py-2 px-1.5 text-center">
                               <button
                                 type="button"
-                                onClick={() => cyclePermission(row.id, role)}
+                                onClick={() => cyclePermission(row.key, role)}
                                 title="Click to toggle F / V / O / —"
                                 className="cursor-pointer hover:scale-105 transition-transform"
                               >
-                                {renderPermBadge(row.permissions[role])}
+                                {renderPermBadge(row.levels[role])}
                               </button>
                             </td>
                           ))}
@@ -294,3 +294,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

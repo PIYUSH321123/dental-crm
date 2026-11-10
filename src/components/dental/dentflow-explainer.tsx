@@ -39,8 +39,8 @@ export function DentflowExplainer({
     branchName = DENTAL_CHART_PATIENT.branch,
     onBackToChart,
 }: DentflowExplainerProps) {
-    // Default to Hindi (hi) as shown in the screenshot
-    const [selectedLangCode, setSelectedLangCode] = useState<string>("hi");
+    // Default to English (en)
+    const [selectedLangCode, setSelectedLangCode] = useState<string>("en");
     const [selectedOption, setSelectedOption] = useState<"a" | "b" | "c">("a");
 
     // Checkboxes
@@ -52,7 +52,7 @@ export function DentflowExplainer({
     const [searchQuery, setSearchQuery] = useState("");
 
     const currentLang: ExplainerLanguageData =
-        EXPLAINER_LANGUAGES.find((l) => l.code === selectedLangCode) || EXPLAINER_LANGUAGES[1];
+        EXPLAINER_LANGUAGES.find((l) => l.code === selectedLangCode) || EXPLAINER_LANGUAGES[0];
 
     const handleSendWhatsApp = () => {
         if (!doctorApproved) {

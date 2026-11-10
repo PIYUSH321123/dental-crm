@@ -130,33 +130,36 @@ Extracted directly from `DentFlow-Screen-Mockups.pdf` pages 1–30:
 
 ---
 
-## 4. Final Verification Checklist (Updated in Step 5)
+## 4. Final Verification Checklist (Completed in Step 5)
+
+Verified via production `next build` (`0` TypeScript/build errors) and automated Playwright headless audit across **43 routes/viewports** (`1440x900` desktop + `390x844` mobile for `P01–P13` + legacy URL redirects) with **0 console errors, 0 page errors, 0 HTTP errors, and 0 horizontal mobile overflows**.
 
 | Screen ID | Screen Name | Route | Implemented | Wired to Backend | Playwright Verified | Status |
 |---|---|---|---|---|---|---|
-| C01 | Today — front desk | `/c/[company]/dashboard` | Pending | Pending | Pending | Planned |
-| C02 | Chair calendar + booking | `/c/[company]/dashboard/calendar` | Pending | Pending | Pending | Planned |
-| C03 | Patient profile | `/c/[company]/dashboard/patients` | Pending | Pending | Pending | Planned |
-| C04 | Dental chart & imaging | `/c/[company]/dashboard/dental-chart` | Pending | Pending | Pending | Planned |
-| C05 | Treatment plan builder | `/c/[company]/dashboard/treatment-plans` | Pending | Pending | Pending | Planned |
-| C06 | Treatment explainer (unique) | `/c/[company]/dashboard/explainers` | Pending | Pending | Pending | Planned |
-| C07 | Prescription | `/c/[company]/dashboard/prescriptions` | Pending | Pending | Pending | Planned |
-| C08 | Post-op monitor (unique) | `/c/[company]/dashboard/post-op` | Pending | Pending | Pending | Planned |
-| C09 | Billing & payments | `/c/[company]/dashboard/billing` | Pending | Pending | Pending | Planned |
-| C10 | Unfinished treatment recovery | `/c/[company]/dashboard/recovery` | Pending | Pending | Pending | Planned |
-| C11 | Gap filler & waitlist | `/c/[company]/dashboard/gap-filler` | Pending | Pending | Pending | Planned |
-| C12 | Recall & campaigns | `/c/[company]/dashboard/campaigns` | Pending | Pending | Pending | Planned |
-| C13 | Inventory & procedure profit | `/c/[company]/dashboard/inventory` | Pending | Pending | Pending | Planned |
-| C14 | Lab cases | `/c/[company]/dashboard/lab-cases` | Pending | Pending | Pending | Planned |
-| C15 | Sterilisation log (unique) | `/c/[company]/dashboard/sterilisation` | Pending | Pending | Pending | Planned |
-| C16 | Staff & commission | `/c/[company]/dashboard/staff` | Pending | Pending | Pending | Planned |
-| C17 | Voice AI receptionist (unique) | `/c/[company]/dashboard/ai-receptionist` | Pending | Pending | Pending | Planned |
-| O01 | Group dashboard (All branches) | `/c/[company]/dashboard/all-branches` | Pending | Pending | Pending | Planned |
-| O02 | Visiting specialists (unique) | `/c/[company]/dashboard/visiting-specialists` | Pending | Pending | Pending | Planned |
-| O03 | Reports & P&L | `/c/[company]/dashboard/reports` | Pending | Pending | Pending | Planned |
-| O04 | Settings, users & roles | `/c/[company]/dashboard/settings` | Pending | Pending | Pending | Planned |
-| O05 | Patient insights (unique) | `/c/[company]/dashboard/patient-insights` | Pending | Pending | Pending | Planned |
-| P01–P13 | Patient App PWA (13 screens) | `/[companySlug]/patient-portal` | Pending | Pending | Pending | Planned |
-| S01 | Specialist portal | `/specialist` | Pending | Pending | Pending | Planned |
-| L01 | Dental lab portal | `/lab` | Pending | Pending | Pending | Planned |
-| A01 | SaaS super-admin | `/admin/dashboard` | Pending | Pending | Pending | Planned |
+| C01 | Today — front desk | `/c/[company]/dashboard` | Yes | Yes (`/api/dentflow/state` + NestJS bridge) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C02 | Chair calendar + booking | `/c/[company]/dashboard/calendar` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
+| C03 | Patient profile | `/c/[company]/dashboard/patients` | Yes | Yes (with DPDP access log) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C04 | Dental chart & imaging | `/c/[company]/dashboard/dental-chart` | Yes | Yes (FDI Adult/Child/Mixed + surfaces) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C05 | Treatment plan builder | `/c/[company]/dashboard/treatment-plans` | Yes | Yes (Options A/B/C + stage pipeline) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C06 | Treatment explainer (unique) | `/c/[company]/dashboard/explainers` | Yes | Yes (8 langs + doctor approval gate) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C07 | Prescription | `/c/[company]/dashboard/prescriptions` | Yes | Yes (rule-based penicillin allergy block) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C08 | Post-op monitor (unique) | `/c/[company]/dashboard/post-op` | Yes | Yes (D1/D3/D7 + pain alert rules) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C09 | Billing & payments | `/c/[company]/dashboard/billing` | Yes | Yes (Exempt vs 18% GST + dynamic UPI QR) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C10 | Unfinished treatment recovery | `/c/[company]/dashboard/recovery` | Yes | Yes (5-day cap + 5-step sequence) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C11 | Gap filler & waitlist | `/c/[company]/dashboard/gap-filler` | Yes | Yes (waves of 3 + 10-min hold) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C12 | Recall & campaigns | `/c/[company]/dashboard/campaigns` | Yes | Yes (4–5★ Google review filter + referrals) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C13 | Inventory & procedure profit | `/c/[company]/dashboard/inventory` | Yes | Yes (batches + real profit per procedure) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C14 | Lab cases | `/c/[company]/dashboard/lab-cases` | Yes | Yes (5-column Kanban synced with `L01`) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C15 | Sterilisation log (unique) | `/c/[company]/dashboard/sterilisation` | Yes | Yes (kit ↔ cycle ↔ patient traceability) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C16 | Staff & commission | `/c/[company]/dashboard/staff` | Yes | Yes (`35% net of lab` + TDS 194J) | Yes (`1440x900`, 0 errors) | **DONE** |
+| C17 | Voice AI receptionist (unique) | `/c/[company]/dashboard/ai-receptionist` | Yes | Yes (hi/mr/en transcripts + safety locks) | Yes (`1440x900`, 0 errors) | **DONE** |
+| O01 | Group dashboard (All branches) | `/c/[company]/dashboard/all-branches` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
+| O02 | Visiting specialists (unique) | `/c/[company]/dashboard/visiting-specialists` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
+| O03 | Reports & P&L | `/c/[company]/dashboard/reports` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
+| O04 | Settings, users & roles | `/c/[company]/dashboard/settings` | Yes | Yes (live `F/V/O/-` RBAC + DPDP logs) | Yes (`1440x900`, 0 errors) | **DONE** |
+| O05 | Patient insights (unique) | `/c/[company]/dashboard/patient-insights` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
+| P01–P13 | Patient App PWA (13 screens) | `/[companySlug]/patient-portal` | Yes | Yes (P01–P13 interactive flows) | Yes (`390x844` mobile, 0 errors) | **DONE** |
+| S01 | Specialist portal | `/specialist` | Yes | Yes (shared referral inbox + schedule) | Yes (`1440x900`, 0 errors) | **DONE** |
+| L01 | Dental lab portal | `/lab` | Yes | Yes (shared `LabCase` sync w/ `C14`) | Yes (`1440x900`, 0 errors) | **DONE** |
+| A01 | SaaS super-admin | `/admin/dashboard` | Yes | Yes (plans, credits, AI mins, DPDP queue) | Yes (`1440x900`, 0 errors) | **DONE** |
+

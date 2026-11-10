@@ -238,3 +238,4 @@ export default function AiReceptionistPage() {
     </div>
   );
 }
+

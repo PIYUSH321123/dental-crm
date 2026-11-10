@@ -1,10 +1,12 @@
 // DentFlow Design System Tokens & O04 Role Permission Matrix
 
-export type StatusTone = "green" | "amber" | "red" | "blue" | "grey" | "purple";
+export type StatusTone = "green" | "amber" | "red" | "blue" | "grey" | "purple" | "teal";
 
 export const STATUS_PILL_STYLES: Record<StatusTone, string> = {
   green:
     "bg-[var(--df-status-green-bg)] text-[var(--df-status-green-text)] border-[var(--df-status-green-border)]",
+  teal:
+    "bg-[var(--df-teal-soft)] text-[var(--df-teal)] border-[var(--df-teal-border)]",
   amber:
     "bg-[var(--df-status-amber-bg)] text-[var(--df-status-amber-text)] border-[var(--df-status-amber-border)]",
   red:
@@ -27,6 +29,7 @@ export type DentflowRoleKey =
   | "Accounts";
 
 export type PermissionAccessLevel = "F" | "V" | "O" | "-";
+export type PermissionCode = PermissionAccessLevel;
 
 export type PermissionRowKey =
   | "view_patient_records"
@@ -475,3 +478,4 @@ export const ROLE_USER_PROFILES: Record<
     initials: "MJ",
   },
 };
+
