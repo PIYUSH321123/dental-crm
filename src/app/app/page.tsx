@@ -15,3 +15,4 @@ export default async function AppIndexPage() {
   }
   redirect(getDefaultRedirectForSession(session));
 }
+

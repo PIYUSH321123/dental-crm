@@ -49,3 +49,4 @@ export default function AppDashboardLayout({ children }: { children: React.React
     </DentflowProvider>
   );
 }
+

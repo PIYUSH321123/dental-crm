@@ -1551,3 +1551,4 @@ export default function PatientPortalPage() {
     </DentflowProvider>
   );
 }
+

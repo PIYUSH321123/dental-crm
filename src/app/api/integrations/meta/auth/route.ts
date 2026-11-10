@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.redirect(fbOAuthUrl);
   } else {
-    // Fallback: redirect to mock OAuth consent page in the local app
+    // Fallback: redirect to settings integrations view in the local app
     const origin = request.nextUrl.origin;
-    const mockAuthUrl = `${origin}/c/${companySlug}/dashboard/settings/integrations/meta-mock-auth?state=${companySlug}`;
+    const mockAuthUrl = `${origin}/app/settings?state=${companySlug}`;
     return NextResponse.redirect(mockAuthUrl);
   }
 }

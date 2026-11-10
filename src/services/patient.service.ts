@@ -1,5 +1,5 @@
 import db from "@/lib/db";
-import { initialPatients, mockTherapists } from "@/app/(app)/c/[company]/dashboard/patient-management/patients/_patient-table/patient-data";
+import { initialPatients, mockTherapists } from "@/lib/mock/patient-seed";
 
 /**
  * Maps DB Patient record to Frontend format

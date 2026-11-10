@@ -3,7 +3,6 @@ import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { CompanyProvider } from "@/components/marketing/CompanyContext";
 
 export const metadata: Metadata = {
   title: "DentFlow — Multi-Branch Dental CRM",
@@ -25,9 +24,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            <CompanyProvider>{children}</CompanyProvider>
-          </TooltipProvider>
+          <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="top-right" />
         </ThemeProvider>
       </body>

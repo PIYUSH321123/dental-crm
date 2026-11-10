@@ -216,3 +216,4 @@ export async function DELETE() {
   res.cookies.delete(DENTFLOW_SESSION_COOKIE);
   return res;
 }
+

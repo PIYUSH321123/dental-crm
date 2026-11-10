@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     if (!code) {
       return NextResponse.redirect(
-        `${request.nextUrl.origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=no_auth_code`
+        `${request.nextUrl.origin}/app/settings?error=no_auth_code`
       );
     }
 
@@ -33,12 +33,12 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/c/${normalizedSlug}/dashboard/settings/integrations?meta_connected=true`
+      `${request.nextUrl.origin}/app/settings?meta_connected=true`
     );
   } catch (error: any) {
     console.error("Meta OAuth callback processing failed:", error);
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/c/${normalizedSlug}/dashboard/settings/integrations?error=oauth_processing_failed`
+      `${request.nextUrl.origin}/app/settings?error=oauth_processing_failed`
     );
   }
 }
