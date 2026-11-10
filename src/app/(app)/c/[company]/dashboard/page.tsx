@@ -1,345 +1,421 @@
-"use client"
-import * as React from "react"
-import { 
-    Users, 
-    Calendar, 
-    TrendingUp, 
-    Activity, 
-    ArrowUpRight, 
-    Clock, 
-    CheckCircle2, 
-    UserPlus, 
-    TrendingDown, 
-    ClipboardList,
-    Search,
-    Bell,
-    Moon,
-    Sun,
-    ArrowUp,
-    ArrowDown
-} from "lucide-react"
-import { useTheme } from "next-themes"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useSidebar } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React, { useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+  DentflowDrawer,
+  DentflowKpiCard,
+  DentflowPageHeader,
+  DentflowStatusPill,
+} from "@/components/dental/dentflow-primitives";
+import { StatusTone } from "@/lib/dentflow-theme";
+import { useDentflow } from "@/lib/dentflow-store";
+import { ClinicAppointment } from "@/types/dentflow";
 
-export default function Page() {
-    const appointments = [
-        {
-            patient: "Alice Johnson",
-            time: "09:30 AM",
-            type: "Knee Rehabilitation",
-            practitioner: "Dr. Anil (Physio)",
-            status: "Confirmed",
-            statusVariant: "success"
-        },
-        {
-            patient: "Bob Smith",
-            time: "11:00 AM",
-            type: "Lower Back Flow",
-            practitioner: "Dr. Ankita (Yoga)",
-            status: "Pending",
-            statusVariant: "warning"
-        },
-        {
-            patient: "Clara Davis",
-            time: "02:30 PM",
-            type: "Post-Op Recovery",
-            practitioner: "Dr. Anil (Physio)",
-            status: "Confirmed",
-            statusVariant: "success"
-        },
-        {
-            patient: "Daniel Wilson",
-            time: "04:00 PM",
-            type: "Spine Alignment",
-            practitioner: "Dr. Ankita (Yoga)",
-            status: "Checked In",
-            statusVariant: "secondary"
-        }
-    ]
+const APT_STATUS_TONE: Record<ClinicAppointment["status"], StatusTone> = {
+  Done: "green",
+  "In chair": "amber",
+  "Checked in": "blue",
+  "Late 10 min": "red",
+  Confirmed: "green",
+  "Not confirmed": "amber",
+  Cancelled: "grey",
+};
 
-    const recentLeads = [
-        {
-            name: "Emily Brown",
-            email: "emily@example.com",
-            phone: "+91 98765 00112",
-            source: "Website Form",
-            date: "10 mins ago"
-        },
-        {
-            name: "John Carter",
-            email: "john.c@example.com",
-            phone: "+91 98765 00113",
-            source: "WhatsApp Inquiry",
-            date: "1 hour ago"
-        },
-        {
-            name: "Sophia Martinez",
-            email: "sophia@example.com",
-            phone: "+91 98765 00114",
-            source: "Google Maps",
-            date: "3 hours ago"
-        }
-    ]
+const FLAG_STYLES: Record<string, string> = {
+  Anxious: "bg-[#FEF3DC] text-[#9A5B00] border-[#F8DFAA]",
+  Allergy: "bg-[#FDE7E7] text-[#B42318] border-[#F7C2C2]",
+  New: "bg-[#E5EFFD] text-[#1D4ED8] border-[#BFDBFE]",
+  VIP: "bg-[#F1E8FD] text-[#6D28D9] border-[#DDD6FE]",
+};
 
-    const { theme, setTheme } = useTheme()
-    const { open, openMobile, isMobile } = useSidebar()
-    const isCollapsed = isMobile ? !openMobile : !open
-    const [mounted, setMounted] = React.useState(false)
+export default function TodayFrontDeskPage() {
+  const params = useParams();
+  const router = useRouter();
+  const company = (Array.isArray(params?.company) ? params.company[0] : params?.company) || "smile-studio";
+  const { state, updateState, searchQuery } = useDentflow();
 
-    React.useEffect(() => {
-        setMounted(true)
-    }, [])
+  const [chairFilter, setChairFilter] = useState<string>("All chairs");
+  const [walkInOpen, setWalkInOpen] = useState(false);
+  const [walkInForm, setWalkInForm] = useState({
+    patientName: "",
+    procedure: "Consultation · tooth pain",
+    doctor: "Dr. Arjun M.",
+    chair: "C1",
+    time: "11:15",
+  });
 
-    return (
-        <div className={`flex-1 space-y-6 p-6 md:p-8 pt-6 ${isCollapsed ? "pl-12 md:pl-14 transition-[padding] duration-200" : "transition-[padding] duration-200"}`}>
-            {/* Page Header */}
-            <div className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                <div className="flex items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">Dashboard</h2>
-                        <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5">
-                            Overview of your practice's metrics, clients, and upcoming schedule.
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                    {/* Search Bar */}
-                    <div className="relative w-56 hidden sm:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                        <input 
-                            type="text" 
-                            placeholder="Search..." 
-                            className="w-full pl-8.5 pr-4 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#f97316]/50 placeholder-slate-400 dark:placeholder-slate-500 transition-all"
+  const filteredAppointments = useMemo(() => {
+    return state.appointments.filter((apt) => {
+      if (chairFilter !== "All chairs" && apt.chair !== chairFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          apt.patientName.toLowerCase().includes(q) ||
+          apt.procedure.toLowerCase().includes(q) ||
+          apt.doctor.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [state.appointments, chairFilter, searchQuery]);
+
+  const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
+  const doneCount = state.appointments.filter((a) => a.status === "Done").length + 8;
+  const notConfirmedCount = state.appointments.filter((a) => a.status === "Not confirmed").length + 1;
+
+  const cycleStatus = (apt: ClinicAppointment) => {
+    const order: ClinicAppointment["status"][] = [
+      "Not confirmed",
+      "Confirmed",
+      "Checked in",
+      "In chair",
+      "Done",
+    ];
+    const idx = order.indexOf(apt.status);
+    const nextStatus = order[(idx + 1) % order.length];
+    updateState((prev) => ({
+      ...prev,
+      appointments: prev.appointments.map((a) =>
+        a.id === apt.id ? { ...a, status: nextStatus } : a,
+      ),
+    }));
+    toast.success(`${apt.patientName} marked as "${nextStatus}"`);
+  };
+
+  const handleAddWalkIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!walkInForm.patientName.trim()) {
+      toast.error("Enter patient name");
+      return;
+    }
+    const newApt: ClinicAppointment = {
+      id: `apt-${Date.now()}`,
+      time: walkInForm.time,
+      endTime: "11:45",
+      durationMin: 30,
+      anxietyBufferMin: 0,
+      patientId: `pat-${Date.now()}`,
+      patientName: walkInForm.patientName.trim(),
+      flags: ["New"],
+      procedure: walkInForm.procedure,
+      doctor: walkInForm.doctor,
+      chair: walkInForm.chair,
+      branch: state.activeBranch === "All 3 branches" ? "Station Road branch" : state.activeBranch,
+      status: "Checked in",
+    };
+    updateState((prev) => ({
+      ...prev,
+      appointments: [newApt, ...prev.appointments],
+    }));
+    toast.success(`Walk-in added for ${newApt.patientName} (${newApt.chair})`);
+    setWalkInForm({ ...walkInForm, patientName: "" });
+    setWalkInOpen(false);
+  };
+
+  const greetingName =
+    state.activeRole === "Front desk" ? "Anita" : "Dr. Sneha";
+
+  return (
+    <div>
+      <DentflowPageHeader
+        title={`Good morning, ${greetingName}`}
+        subtitle={`Tuesday, 29 September · ${24 + state.appointments.length} appointments across 4 chairs`}
+      />
+
+      {/* 5 KPI Cards (Exact PDF C01) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-5">
+        <DentflowKpiCard
+          label="Appointments today"
+          value={`${24 + state.appointments.length}`}
+          subtext={`${doneCount} done · ${notConfirmedCount} not confirmed`}
+        />
+        <DentflowKpiCard
+          label="Chairs in use"
+          value="3 / 4"
+          subtext="Chair 4 free till 11:00"
+        />
+        <DentflowKpiCard
+          label="Collected today"
+          value="₹48,200"
+          subtext="UPI 71% · card 18% · cash 11%"
+        />
+        <DentflowKpiCard
+          label="Unfinished treatment"
+          value="₹6.84 L"
+          subtext="57 plans waiting · open recovery"
+          subtextTone="teal"
+        />
+        <DentflowKpiCard
+          label="Post-op alerts"
+          value={`${postOpAlertCount}`}
+          subtext="Pain rising after extraction"
+          subtextTone="red"
+        />
+      </div>
+
+      {/* Main Content Split: Queue (Left) + Needs Attention & AI Receptionist (Right) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        {/* Today's Queue */}
+        <section className="xl:col-span-8 df-card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-[var(--df-border)]">
+            <h2 className="df-serif text-base font-semibold text-[var(--df-text)]">
+              Today&apos;s queue
+            </h2>
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="Filter by chair"
+                value={chairFilter}
+                onChange={(e) => setChairFilter(e.target.value)}
+                className="bg-[var(--df-surface)] border border-[var(--df-border)] rounded-lg px-2.5 py-1.5 text-xs font-medium text-[var(--df-text)] cursor-pointer"
+              >
+                <option value="All chairs">All chairs</option>
+                <option value="C1">Chair 1 (C1)</option>
+                <option value="C2">Chair 2 (C2)</option>
+                <option value="C3">Chair 3 (C3)</option>
+                <option value="C4">Chair 4 (C4)</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setWalkInOpen(true)}
+                className="df-btn-primary px-3 py-1.5 text-xs inline-flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" /> Walk-in / booking
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--df-border)] bg-[var(--df-surface-muted)]">
+                  <th className="py-2.5 pl-5 pr-3 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Time
+                  </th>
+                  <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Patient
+                  </th>
+                  <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Procedure
+                  </th>
+                  <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Doctor
+                  </th>
+                  <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Chair
+                  </th>
+                  <th className="py-2.5 pl-3 pr-5 text-right text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--df-border)]">
+                {filteredAppointments.map((apt) => (
+                  <tr
+                    key={apt.id}
+                    className="hover:bg-[var(--df-surface-hover)]/60 transition-colors"
+                  >
+                    <td className="py-2.5 pl-5 pr-3 text-xs df-mono text-[var(--df-text-secondary)] whitespace-nowrap">
+                      {apt.time}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Link
+                          href={`/c/${company}/dashboard/patients?patientId=${apt.patientId}`}
+                          className="text-xs font-semibold text-[var(--df-text)] hover:text-[var(--df-teal)] hover:underline"
+                        >
+                          {apt.patientName}
+                        </Link>
+                        {apt.flags.map((flag) => (
+                          <span
+                            key={flag}
+                            className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${
+                              FLAG_STYLES[flag] || ""
+                            }`}
+                          >
+                            {flag}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-xs text-[var(--df-text-secondary)]">
+                      {apt.procedure}
+                    </td>
+                    <td className="py-2.5 px-3 text-xs text-[var(--df-text-muted)] whitespace-nowrap">
+                      {apt.doctor}
+                    </td>
+                    <td className="py-2.5 px-3 text-xs font-medium text-[var(--df-text-secondary)]">
+                      {apt.chair}
+                    </td>
+                    <td className="py-2.5 pl-3 pr-5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => cycleStatus(apt)}
+                        title="Click to advance queue status"
+                        className="cursor-pointer"
+                      >
+                        <DentflowStatusPill
+                          label={apt.status}
+                          tone={APT_STATUS_TONE[apt.status]}
                         />
-                    </div>
-                    {/* Notification Bell */}
-                    <button className="relative h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center transition-all cursor-pointer">
-                        <Bell className="h-4 w-4" />
-                        <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-[#f97316] border border-white dark:border-slate-900" />
-                    </button>
-                    {/* Theme Toggle (Moon/Sun) */}
-                    <button 
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center transition-all cursor-pointer"
-                        title="Toggle Theme"
-                    >
-                        {mounted && theme === "dark" ? (
-                            <Sun className="h-4 w-4" />
-                        ) : (
-                            <Moon className="h-4 w-4" />
-                        )}
-                        {!mounted && <div className="h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />}
-                    </button>
-                    {/* Divider */}
-                    <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
-                    {/* Profile */}
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden md:block">
-                            <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">Dr. Sarah</p>
-                            <p className="text-[9px] font-medium text-slate-400 dark:text-slate-500 tracking-wider">Admin</p>
-                        </div>
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#4ade80] to-[#f97316] flex items-center justify-center text-white text-[10px] font-bold shadow-xs">
-                            DS
-                        </div>
-                    </div>
-                </div>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Right Column: Needs Attention + AI Receptionist Summary */}
+        <div className="xl:col-span-4 space-y-4">
+          <section className="df-card p-4">
+            <h2 className="df-serif text-base font-semibold text-[var(--df-text)] mb-3">
+              Needs attention
+            </h2>
+            <div className="space-y-2.5">
+              {state.needsAttention.map((item) => {
+                const borderColor =
+                  item.tone === "red"
+                    ? "border-l-[var(--df-alert-red-accent)] bg-[var(--df-alert-red-bg)]"
+                    : item.tone === "amber"
+                    ? "border-l-[var(--df-alert-amber-accent)] bg-[var(--df-alert-amber-bg)]"
+                    : item.tone === "teal"
+                    ? "border-l-[var(--df-alert-teal-accent)] bg-[var(--df-alert-teal-bg)]"
+                    : "border-l-[var(--df-alert-blue-accent)] bg-[var(--df-alert-blue-bg)]";
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => router.push(`/c/${company}/dashboard/${item.targetRoute}`)}
+                    className={`w-full text-left p-2.5 rounded-lg border border-[var(--df-border)] border-l-4 ${borderColor} hover:brightness-98 transition-all cursor-pointer`}
+                  >
+                    <p className="text-xs font-semibold text-[var(--df-text)]">{item.title}</p>
+                    <p className="text-[11px] text-[var(--df-text-secondary)] mt-0.5 leading-snug">
+                      {item.subtitle}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
+          </section>
 
-            {/* KPI Stats Grid */}
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Total Patients */}
-                <Card className="shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                                Total Patients
-                            </span>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white block">
-                                284
-                            </span>
-                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                                <span>+12.5%</span>
-                                <ArrowDown className="h-3 w-3" />
-                            </div>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-red-50/70 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
-                            <Users className="h-5 w-5" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Today's Sessions */}
-                <Card className="shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                                Today's Sessions
-                            </span>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white block">
-                                48
-                            </span>
-                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                                <span>+5.2%</span>
-                                <ArrowDown className="h-3 w-3" />
-                            </div>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-red-50/70 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
-                            <Calendar className="h-5 w-5" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Lead Conversion */}
-                <Card className="shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                                Lead Conversion
-                            </span>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white block">
-                                18.4%
-                            </span>
-                            <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-                                <span>-1.8%</span>
-                                <ArrowUp className="h-3 w-3" />
-                            </div>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-red-50/70 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
-                            <Activity className="h-5 w-5" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Active Recovery */}
-                <Card className="shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl">
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                                Active Recovery
-                            </span>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white block">
-                                94 Plans
-                            </span>
-                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                                <span>+6.3%</span>
-                                <ArrowDown className="h-3 w-3" />
-                            </div>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-red-50/70 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
-                            <ClipboardList className="h-5 w-5" />
-                        </div>
-                    </CardContent>
-                </Card>
+          {/* AI Receptionist Dark Forest Card */}
+          <section className="rounded-2xl bg-[var(--df-sidebar-bg)] text-white p-4 border border-[var(--df-sidebar-border)] shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-unique-dark-bg)] text-[var(--df-unique-dark-text)]">
+                AI receptionist
+              </span>
+              <span className="text-[11px] text-[var(--df-sidebar-muted)]">since 8:00 am</span>
             </div>
-
-            {/* Bottom Grid: Appointments & Leads */}
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-12">
-                {/* Left Side: Appointments Table */}
-                <Card className="lg:col-span-8 shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl flex flex-col justify-between">
-                    <div>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                            <div className="space-y-1">
-                                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">Upcoming Sessions</CardTitle>
-                                <CardDescription className="text-xs text-slate-400 dark:text-slate-500">Today's scheduled appointments</CardDescription>
-                            </div>
-                            <button className="text-xs font-semibold px-4 py-1.5 rounded-full border border-orange-250 dark:border-orange-500/30 text-[#f97316] hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all cursor-pointer">
-                                View Calendar
-                            </button>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="border-slate-100 dark:border-slate-805">
-                                        <TableHead className="pl-6 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Patient</TableHead>
-                                        <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Time</TableHead>
-                                        <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Service Type</TableHead>
-                                        <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Therapist</TableHead>
-                                        <TableHead className="pr-6 text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {appointments.map((a, idx) => (
-                                        <TableRow key={idx} className="border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/30 dark:hover:bg-slate-900/10">
-                                            <TableCell className="pl-6 font-semibold text-slate-950 dark:text-white text-sm py-4">{a.patient}</TableCell>
-                                            <TableCell className="text-slate-400 dark:text-slate-550 text-xs font-medium py-4">{a.time}</TableCell>
-                                            <TableCell className="text-slate-500 dark:text-slate-350 text-xs font-medium py-4">{a.type}</TableCell>
-                                            <TableCell className="text-slate-400 dark:text-slate-550 text-xs font-medium py-4">{a.practitioner}</TableCell>
-                                            <TableCell className="pr-6 text-right py-4">
-                                                <span 
-                                                    className={`text-[10px] font-bold px-3 py-1 rounded-full ${
-                                                        a.statusVariant === "success" 
-                                                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
-                                                            : a.statusVariant === "warning"
-                                                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
-                                                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
-                                                    }`}
-                                                >
-                                                    {a.status}
-                                                </span>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </div>
-                </Card>
-
-                {/* Right Side: Recent Leads Feed */}
-                <Card className="lg:col-span-4 shadow-xs border-slate-100/80 dark:border-slate-800/80 rounded-2xl flex flex-col justify-between">
-                    <div>
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">Recent Inquiries</CardTitle>
-                            <CardDescription className="text-xs text-slate-400 dark:text-slate-550">New leads to follow up</CardDescription>
-                        </CardHeader>
-                        <CardContent className="divide-y divide-slate-100 dark:divide-slate-800/60 p-0">
-                            {recentLeads.map((lead, idx) => (
-                                <div key={idx} className="flex items-start gap-4 px-6 py-4">
-                                    <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 ${
-                                        idx === 0 ? "bg-blue-500" : idx === 1 ? "bg-purple-500" : "bg-pink-500"
-                                    }`}>
-                                        {lead.name.split(" ").map(n => n[0]).join("")}
-                                    </div>
-                                    <div className="space-y-1.5 flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <p className="text-sm font-bold text-slate-955 dark:text-white truncate leading-none">
-                                                {lead.name}
-                                            </p>
-                                            <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{lead.date}</span>
-                                        </div>
-                                        <p className="text-xs text-slate-400 dark:text-slate-550 truncate leading-none">
-                                            {lead.email}
-                                        </p>
-                                        <div className="flex items-center justify-between pt-1">
-                                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{lead.phone}</span>
-                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
-                                                {lead.source}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </div>
-                    <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/60 flex justify-center">
-                        <a href="#" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 transition-all">
-                            View All Inquiries →
-                        </a>
-                    </div>
-                </Card>
-            </div>
+            <p className="df-serif text-lg font-semibold leading-snug">
+              23 calls handled · 6 booked
+            </p>
+            <p className="text-[11px] text-[var(--df-sidebar-muted)] mt-1 leading-relaxed">
+              4 calls handed to you (implant swelling, insurance query...)
+            </p>
+            <Link
+              href={`/c/${company}/dashboard/ai-receptionist`}
+              className="inline-block mt-3 text-xs font-semibold text-white underline underline-offset-4 hover:text-[#F5B076]"
+            >
+              Open call log
+            </Link>
+          </section>
         </div>
-    )
+      </div>
+
+      {/* Walk-in / Quick Booking Drawer */}
+      <DentflowDrawer
+        open={walkInOpen}
+        onClose={() => setWalkInOpen(false)}
+        title="Walk-in / quick booking"
+        subtitle="Adds patient straight into today's Station Road queue"
+      >
+        <form onSubmit={handleAddWalkIn} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-[var(--df-text)] mb-1">
+              Patient name
+            </label>
+            <input
+              type="text"
+              value={walkInForm.patientName}
+              onChange={(e) => setWalkInForm({ ...walkInForm, patientName: e.target.value })}
+              placeholder="e.g. Snehal Pawar"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[var(--df-text)] mb-1">
+              Procedure
+            </label>
+            <input
+              type="text"
+              value={walkInForm.procedure}
+              onChange={(e) => setWalkInForm({ ...walkInForm, procedure: e.target.value })}
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--df-text)] mb-1">
+                Doctor
+              </label>
+              <select
+                value={walkInForm.doctor}
+                onChange={(e) => setWalkInForm({ ...walkInForm, doctor: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+              >
+                <option>Dr. Sneha K.</option>
+                <option>Dr. Arjun M.</option>
+                <option>Dr. Farhan A.</option>
+                <option>Dr. Karan S.</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[var(--df-text)] mb-1">
+                Chair
+              </label>
+              <select
+                value={walkInForm.chair}
+                onChange={(e) => setWalkInForm({ ...walkInForm, chair: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+              >
+                <option>C1</option>
+                <option>C2</option>
+                <option>C3</option>
+                <option>C4</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[var(--df-text)] mb-1">
+              Time
+            </label>
+            <input
+              type="text"
+              value={walkInForm.time}
+              onChange={(e) => setWalkInForm({ ...walkInForm, time: e.target.value })}
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+            />
+          </div>
+          <div className="pt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setWalkInOpen(false)}
+              className="df-btn-secondary flex-1 py-2 text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="df-btn-primary flex-1 py-2 text-xs cursor-pointer">
+              Add to queue
+            </button>
+          </div>
+        </form>
+      </DentflowDrawer>
+    </div>
+  );
 }
