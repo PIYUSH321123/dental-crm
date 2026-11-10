@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -8,6 +8,7 @@ import {
   Check,
   Clock,
   FilePlay,
+  LayoutDashboard,
   Menu,
   PhoneCall,
   RefreshCw,
@@ -18,6 +19,10 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DentflowSessionPayload,
+  getDefaultRedirectForSession,
+} from "@/lib/dentflow-session";
 
 const FEATURES = [
   {
@@ -125,12 +130,32 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [demoSubmitted, setDemoSubmitted] = useState(false);
+  const [activeSession, setActiveSession] = useState<DentflowSessionPayload | null>(null);
   const [demoForm, setDemoForm] = useState({
     name: "",
     clinic: "",
     phone: "",
     branches: "1–3 branches",
   });
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/dentflow/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (mounted && data?.session) {
+          setActiveSession(data.session);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const dashboardHref = activeSession
+    ? getDefaultRedirectForSession(activeSession)
+    : "/app/today";
 
   const handleDemoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +177,7 @@ export default function LandingPage() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-[var(--df-text-secondary)]">
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[var(--df-text-secondary)]">
             <a href="#features" className="hover:text-[var(--df-teal)] transition-colors">
               Features
             </a>
@@ -168,9 +193,18 @@ export default function LandingPage() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2.5">
-            <Link href="/login" className="df-btn-secondary px-3.5 py-2 text-xs">
-              Log in
+            <Link
+              href={dashboardHref}
+              className="df-btn-secondary px-3.5 py-2 text-xs inline-flex items-center gap-1.5"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+              <span>Dashboard</span>
             </Link>
+            {!activeSession && (
+              <Link href="/login" className="df-btn-secondary px-3.5 py-2 text-xs">
+                Log in
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => {
@@ -214,10 +248,28 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--df-border)]">
-              <Link href="/login" className="df-btn-secondary py-2 text-center text-xs">
-                Log in
+              <Link
+                href={dashboardHref}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${activeSession ? "col-span-2" : ""} df-btn-secondary py-2 text-center text-xs inline-flex items-center justify-center gap-1.5`}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+                <span>Dashboard</span>
               </Link>
-              <Link href="/signup" className="df-btn-primary py-2 text-center text-xs">
+              {!activeSession && (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="df-btn-secondary py-2 text-center text-xs"
+                >
+                  Log in
+                </Link>
+              )}
+              <Link
+                href="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="col-span-2 df-btn-primary py-2 text-center text-xs"
+              >
                 Start free trial
               </Link>
             </div>
@@ -246,11 +298,18 @@ export default function LandingPage() {
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
-                href="/signup"
+                href={dashboardHref}
                 className="df-btn-primary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2"
               >
-                <span>Start free 14-day trial</span>
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Go to dashboard</span>
                 <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/signup"
+                className="df-btn-secondary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2"
+              >
+                <span>Start free 14-day trial</span>
               </Link>
               <button
                 type="button"
@@ -258,16 +317,10 @@ export default function LandingPage() {
                   setDemoSubmitted(false);
                   setDemoModalOpen(true);
                 }}
-                className="df-btn-secondary px-5 py-3 text-xs sm:text-sm cursor-pointer"
+                className="df-btn-secondary px-4 py-3 text-xs sm:text-sm cursor-pointer"
               >
                 Book a demo
               </button>
-              <Link
-                href="/login"
-                className="text-xs font-semibold text-[var(--df-teal)] hover:underline px-2 py-2"
-              >
-                Log in to clinic workspace →
-              </Link>
             </div>
 
             <div className="flex flex-wrap items-center gap-5 pt-2 text-[11px] text-[var(--df-text-muted)] font-medium">
@@ -335,6 +388,17 @@ export default function LandingPage() {
                 <p className="text-[11px] text-[var(--df-sidebar-muted)]">
                   Hindi, Marathi & English · zero missed inquiries
                 </p>
+              </div>
+
+              <div className="pt-1 flex items-center justify-between text-xs">
+                <span className="text-[var(--df-text-muted)]">Explore interactive CRM</span>
+                <Link
+                  href={dashboardHref}
+                  className="font-semibold text-[var(--df-teal)] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Open dashboard</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
           </div>
@@ -503,8 +567,15 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link
+              href={dashboardHref}
+              className="px-5 py-3 rounded-xl bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] text-white text-xs font-semibold inline-flex items-center gap-2"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span>Open dashboard</span>
+            </Link>
+            <Link
               href="/signup"
-              className="px-5 py-3 rounded-xl bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] text-white text-xs font-semibold"
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs font-semibold"
             >
               Create clinic account
             </Link>
@@ -530,6 +601,9 @@ export default function LandingPage() {
             <span>· Multi-Branch Dental CRM & Patient Platform</span>
           </div>
           <div className="flex flex-wrap items-center gap-5 font-medium">
+            <Link href={dashboardHref} className="hover:text-[var(--df-teal)]">
+              Dashboard
+            </Link>
             <Link href="/login" className="hover:text-[var(--df-teal)]">
               Clinic & staff login
             </Link>
