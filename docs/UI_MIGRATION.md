@@ -1,165 +1,103 @@
-# DentFlow UI & Backend Migration Audit (`/docs/UI_MIGRATION.md`)
+# DentFlow UI & Application Flow Migration Audit (`/docs/UI_MIGRATION.md`)
 
 **Branch:** `ui-redesign`  
-**Source Spec:** `DentFlow-Screen-Mockups.pdf` (38 screens: `C01–C17` Clinic Portal, `O01–O05` Owner & Multi-Clinic, `P01–P13` Patient App PWA/WhatsApp, `S01` Specialist Portal, `L01` Dental Lab Portal, `A01` SaaS Super-Admin)  
-**Target Architecture:** Next.js App Router frontend (`src/`) wired to DentFlow NestJS + Prisma + BullMQ + FastAPI AI backend (`backend/api`, `backend/ai-service`) with local mock fallback when offline.
+**Source Spec:** `DentFlow-Screen-Mockups.pdf` (38 screens across Public Landing, Auth, One-Time Setup Wizard, Clinic & Owner App, Patient App, Specialist Portal, Dental Lab Portal, and Platform Admin Portal)  
+**Strict Naming Rule:** No internal mockup codes (`C01`, `O01`, `P01`, `S01`, `L01`, `A01`, etc.) are used anywhere in the UI, routes, filenames, component names, query parameters, comments, or identifiers. Every screen is identified solely by its readable screen name and readable URL path.
 
 ---
 
-## 1. Visual Design System & Ambiguity Resolutions (Best-Guess Spec Notes)
+## 1. End-to-End Application Flow & Role Redirect Rules
 
-Extracted directly from `DentFlow-Screen-Mockups.pdf` pages 1–30:
-
-1. **Color Palette & Tokens (`src/styles/dentflow-theme.css` + `src/lib/dentflow-theme.ts`)**
-   - **Clinic/Owner Sidebar:** Deep forest green `#12352C` (hover `#1A463B`, active pill `#1F5447`, section headers muted sage `#7FA398`, border `#1E493E`).
-   - **Partner Portal Top Bars:**
-     - Specialist (`S01`): Deep slate navy `#232738`
-     - Dental Lab (`L01`): Deep steel blue `#1D446B`
-     - Super-Admin (`A01`): Charcoal forest `#1C2A26`
-   - **Canvas Background:** Warm cream `#F6F5F0` (secondary surface `#EFECE4`, pure white `#FFFFFF` cards with `1px solid #E5E2D9` borders and subtle shadow).
-   - **Primary Action / Teal:** `#146C58` (hover `#0F5646`, foreground `#FFFFFF`).
-   - **Accent Pills:**
-     - `"Unique"` badge: soft amber/peach background `#F9E5D3` / text `#B45B1C` (or dark-sidebar variant `rgba(242, 166, 107, 0.22)` / `#F2A66B`).
-     - `"New"` badge: soft mint `#D7F2E3` / text `#136A47`.
-     - **Status Pills:**
-       - Green (`Done`, `Confirmed`, `Paid`, `Pass`, `Connected`, `Live`, `Healthy`, `On track`): `#E3F5EC` bg / `#146C43` text.
-       - Amber (`In chair`, `Checked in`, `Pending`, `Viewed`, `Sent`, `Part paid`, `Expiring`, `Due`, `Overdue 2 d`, `At risk`, `Trial`): `#FEF3DC` bg / `#9A5B00` text.
-       - Red (`Alert`, `Late 10 min`, `Low`, `Declined`, `Overdue`, `Fail`, `High`): `#FDE7E7` bg / `#B42318` text.
-       - Blue (`Booked`, `Received`, `Scheduled`, `New`): `#E5EFFD` bg / `#1D4ED8` text.
-       - Grey (`Not confirmed`, `No reply`, `Closed`, `Draft`, `Off`, `Leave`): `#EFECE6` bg / `#5C5B55` text.
-2. **Typography**
-   - **Display / Headings / KPI Big Numbers:** Editorial serif (`Fraunces` / `Source Serif 4` / `Georgia` fallback) — used for screen titles (`Good morning, Anita`, `Dental chart · Priya Deshmukh`, `All branches`, `Treatments`) and KPI figures (`34`, `₹48,200`, `₹6.84 L`, `₹24.6 L`).
-   - **Body / Tables / Controls:** Clean geometric sans (`Plus Jakarta Sans` / `Inter`).
-   - **Clinical Codes / Tooth / Cycle IDs:** Monospace (`JetBrains Mono`) for FDI numbers, invoice IDs (`INV-SR-2026-04418`), lab cases (`LC-8841`), autoclave cycles (`#1419`), and ABHA IDs (`91-XXXX-XXXX-4821`).
-3. **PDF Placeholder Resolutions (Best-Guess Rules)**
-   - `[LENDING PARTNER]` (`C05`, `O04`) → Rendered as `"Bajaj Finserv Health / GrayQuest"` (configurable partner label in `BranchIntegrationConfig`).
-   - `[IMPLANT BRAND]` (`L01`) → Rendered as `"Straumann BLX 4.2 mm"` (and stored as editable `implantSystem` on `LabCase`).
-   - `[CLINIC ADDRESS]` / `[REG NO]` (`C07`) → Populated from `Branch.address` and `StaffUser.registrationNo` (`DCI Reg. A-24819`).
-   - `[OTHER CLINIC A]`, `[OTHER CLINIC B]` (`S01`) & `[CLINIC B..G]` (`A01`) → Seeded with realistic Indian dental clinic names (`Apex Dental Care, Pune`, `Pearl & Root Clinic, Baner`, etc.) while supporting arbitrary tenant names from DB.
-   - `[MIN]` hold (`C15`) → Default `4 min` hold at `134 °C · 2.1 bar` (or `20 min` at `121 °C · 1.1 bar`).
-   - `[N]` / `₹[AMT]` KPIs (`A01`) → Computed dynamically from `ClinicGroup` & `Branch` records (with sample values `24` groups, `68` branches, `₹4.85 L` MRR, `1,42,800` WhatsApp msgs, `3,140` AI voice mins).
-4. **Role-Based Sidebar Filtering (`O04` Permission Matrix)**
-   - Clinic/Owner layout includes a **Role Switcher** (`Owner`, `Branch mgr`, `Dentist`, `Visiting`, `Assistant`, `Front desk`, `Accounts`) wired directly to the `O04` Role Permissions Matrix so each role sees and accesses only its permitted screens and actions, and every patient record view writes to the DPDP `AccessLog`.
+1. **Public Landing Page (`/`)**
+   - Public marketing & product showcase (mobile responsive): hero section, 6 core capabilities (*AI X-ray scan*, *Treatment explainer*, *Gap filler*, *Treatment recovery*, *Post-op check-ins*, *Voice AI receptionist*), pricing tiers (*Starter* `₹4,999/mo`, *Growth* `₹14,999/mo`, *Chain* `Custom`), clinic owner testimonials, interactive *Book a demo* drawer/modal, *Log in* (`/login`), and *Start free trial* (`/signup`).
+2. **Authentication (`/login`, `/signup`, `/forgot-password`, `/patient/login`)**
+   - **Clinic & Staff Login (`/login`)**: Email/password login + instant role-preview login cards for every persona so flows can be tested immediately.
+   - **Clinic Owner Sign Up (`/signup`)**: Registers a new clinic group owner with `setupCompleted = false` and routes straight into `/setup`.
+   - **Forgot Password (`/forgot-password`)**: Sends password reset instructions and confirms delivery.
+   - **Patient OTP Login (`/patient/login`)**: Mobile `+91` OTP login flow redirecting to `/patient`.
+   - **Post-Login Role Redirects & Route Guards (`src/proxy.ts` + server/client guards)**:
+     - `platform_admin` → `/admin` (Admin portal)
+     - `owner` (first time, `setupCompleted === false`) → `/setup` (cannot skip to `/app/*` until setup completes) → `/app/group-dashboard`
+     - `owner` (after setup, `setupCompleted === true`) → `/app/group-dashboard`
+     - `branch_manager`, `dentist`, `front_desk`, `assistant`, `accounts` → `/app/today`
+     - `specialist` → `/specialist`
+     - `lab` → `/lab`
+     - `patient` → `/patient`
+     - Unauthorized access to `/admin/*`, `/app/*`, `/setup`, `/specialist`, `/lab`, or `/patient` is blocked and redirected to `/login` (or the user's permitted home route).
+3. **Platform Admin Portal (`/admin`, `/admin/clinics`)**
+   - Accessible exclusively to `platform_admin`.
+   - Sections: *Clinics* (clinic accounts + *Onboard clinic*), *Plans & billing* (Starter / Growth / Chain + feature flags), *Messaging* (WhatsApp credits), *AI usage* (voice minutes), *Support*, and *Compliance* (DPDP access/deletion/breach request queue).
+4. **One-Time Setup Wizard (`/setup`)**
+   - Mandatory 8-step onboarding wizard for first-time clinic owners (`setupCompleted === false` blocks direct navigation to `/app/*`):
+     1. *Clinic profile* → 2. *Branches* → 3. *Chairs and rooms* → 4. *Working hours* → 5. *Staff and roles* → 6. *Procedure fees* → 7. *WhatsApp connect* → 8. *Done* (sets `setupCompleted = true` and launches `/app/group-dashboard`).
+5. **Clinic & Owner Application (`/app/*`)**
+   - Shared shell with dark forest-green sidebar (`#12352C`), cream canvas (`#F6F5F0`), teal primary buttons (`#146C58`), orange `"Unique"` accent pills, green `"New"` pills, editorial serif headings & KPI numbers, status pills, branch selector, global search, and right-side detail drawers.
+   - Sidebar items and route access are dynamically controlled by the **Users & roles** permission matrix in **Settings** (`/app/settings`).
+6. **Specialist Portal (`/specialist`), Dental Lab Portal (`/lab`), Patient App (`/patient`)**
+   - **Specialist Portal (`/specialist`)**: *My days*, *Referrals*, *Patients*, *Earnings*, referral inbox with *Accept & slot* / *Reply with advice*.
+   - **Dental Lab Portal (`/lab`)**: *Open cases*, STL scan preview, case specification sheet, *Mark dispatched · attach invoice* synced with clinic *Lab cases*.
+   - **Patient App (`/patient`)**: Mobile-first PWA with bottom tab bar (*Home*, *Book*, *Records*, *Family*, *Pay*) and full workflows (*Book a visit*, *WhatsApp bot*, *Home*, *Before your visit*, *Self-check*, *Photo check*, *Result*, *My treatment explained*, *Plan and payments*, *Records*, *Family*, *Recovery check-in*, *Aligner progress*).
 
 ---
 
-## 2. Complete Inventory & Migration Mapping (`Purana Page -> Naya Screen ID -> Action`)
+## 2. Complete Route & Component Migration Map
 
-### A. Clinic & Owner Dashboard Routes (`src/app/(app)/c/[company]/dashboard/...`)
-
-| Purana Route / File | Purana Purpose | Naya Screen ID | Naya Route | Action |
+| Current / Legacy Route or File | Current Purpose | Target DentFlow Screen | Target Readable Route | Action |
 |---|---|---|---|---|
-| `/c/[company]/dashboard` (`dashboard/page.tsx`) | PhysioYoga KPIs, Upcoming Sessions, Recent Inquiries | **C01** (`Today — front desk`) | `/c/[company]/dashboard` (alias `/today`) | **REPLACE** |
-| `/c/[company]/dashboard/layout.tsx` | Generic Shadcn sidebar + floating bubble | **Shared Shell (C01–C17, O01–O05)** | `/c/[company]/dashboard/layout.tsx` | **REPLACE** |
-| `/c/[company]/dashboard/_navigation/*` | Marketing, Lead Mgmt, Activity Mgmt, Physio sidebar | **PDF 5-Section Sidebar** | `_navigation/dentflow-sidebar.tsx` | **REPLACE** |
-| `/c/[company]/dashboard/appointments/timeline-calendar` | FullCalendar Physio timeline | **C02** (`Chair calendar + booking`) | `/c/[company]/dashboard/calendar` (redirect old URL) | **REPLACE** |
-| `/c/[company]/dashboard/appointments/sessions` | Physio session exercise/modalities tracker | **C02** | Redirect → `/c/[company]/dashboard/calendar` | **DELETE** (redirect) |
-| `/c/[company]/dashboard/appointments` | Appointments index | **C02** | Redirect → `/c/[company]/dashboard/calendar` | **DELETE** (redirect) |
-| `/c/[company]/dashboard/patient-management/patients` | Patient table + Physio workspace | **C03** (`Patient profile` + directory) | `/c/[company]/dashboard/patients` | **KEEP+RESTYLE** |
-| `/c/[company]/dashboard/patient-management/dental-chart` | `DentflowChart` prototype | **C04** (`Dental chart & imaging`) | `/c/[company]/dashboard/dental-chart` (keep old alias) | **KEEP+RESTYLE** |
-| `/c/[company]/dashboard/patient-management/explainer` | `DentflowExplainer` prototype | **C06** (`Treatment explainer (unique)`) | `/c/[company]/dashboard/explainers` (keep old alias) | **KEEP+RESTYLE** |
-| `/c/[company]/dashboard/patient-management` | Redirect to patients | **C03** | Redirect → `/c/[company]/dashboard/patients` | **KEEP+RESTYLE** |
-| *(none)* | — | **C11** (`Gap filler & waitlist (unique)`) | `/c/[company]/dashboard/gap-filler` | **CREATE NEW** |
-| *(none)* | — | **C17** (`Voice AI receptionist (unique)`) | `/c/[company]/dashboard/ai-receptionist` | **CREATE NEW** |
-| `/c/[company]/dashboard/activity-management/treatment-plans` | Physio therapy phases | **C05** (`Treatment plan builder`) | `/c/[company]/dashboard/treatment-plans` (redirect old URL) | **REPLACE** |
-| `/c/[company]/dashboard/activity-management/exercise-prescription` | Physio exercise prescription | **C07** (`Prescription` w/ allergy block) | `/c/[company]/dashboard/prescriptions` (redirect old URL) | **REPLACE** |
-| `/c/[company]/dashboard/activity-management/assessments` | Physio clinical assessments | **C04 / C08** | Redirect → `/c/[company]/dashboard/dental-chart` | **DELETE** (redirect) |
-| `/c/[company]/dashboard/activity-management/ai-assesment` | AI Biomechanical ROM | **C04** | Redirect → `/c/[company]/dashboard/dental-chart` | **DELETE** (redirect) |
-| `/c/[company]/dashboard/activity-management` | Activity management index | **C05** | Redirect → `/c/[company]/dashboard/treatment-plans` | **DELETE** (redirect) |
-| *(none)* | — | **C08** (`Post-op monitor (unique)`) | `/c/[company]/dashboard/post-op` | **CREATE NEW** |
-| `/c/[company]/dashboard/billing` (+ `/invoices`, `/payments`, `/subscriptions`) | Basic invoice/subscription list | **C09** (`Billing & payments` w/ GST, UPI QR, EMI) | `/c/[company]/dashboard/billing` (redirect subroutes) | **REPLACE** |
-| `/c/[company]/dashboard/lead-management/follow-up` | Lead follow-up table | **C10** (`Unfinished treatment recovery (unique)`) | `/c/[company]/dashboard/recovery` (redirect old URL) | **REPLACE** |
-| `/c/[company]/dashboard/lead-management/leads` (+ `lead-management/page.tsx`) | Generic sales leads CRM | **C10 / C12** | Redirect → `/c/[company]/dashboard/recovery` | **DELETE** (redirect) |
-| `/c/[company]/dashboard/marketing/campaign` (+ `marketing/page.tsx`, `ai-ad-studio`) | Meta ad studio & marketing table | **C12** (`Recall & campaigns` + Reviews + Referrals) | `/c/[company]/dashboard/campaigns` (redirect old URLs) | **REPLACE** |
-| *(none)* | — | **C13** (`Inventory & procedure profit`) | `/c/[company]/dashboard/inventory` | **CREATE NEW** |
-| *(none)* | — | **C14** (`Lab cases` Kanban) | `/c/[company]/dashboard/lab-cases` | **CREATE NEW** |
-| *(none)* | — | **C15** (`Sterilisation log (unique)`) | `/c/[company]/dashboard/sterilisation` | **CREATE NEW** |
-| `/c/[company]/dashboard/erp/staff` | Basic staff list | **C16** (`Staff & commission` + TDS 194J) | `/c/[company]/dashboard/staff` (redirect old URL) | **REPLACE** |
-| *(none)* | — | **O01** (`Group dashboard — All branches`) | `/c/[company]/dashboard/all-branches` | **CREATE NEW** |
-| *(none)* | — | **O05** (`Patient insights (unique)`) | `/c/[company]/dashboard/patient-insights` | **CREATE NEW** |
-| *(none)* | — | **O02** (`Visiting specialists (unique)`) | `/c/[company]/dashboard/visiting-specialists` | **CREATE NEW** |
-| *(none)* | — | **O03** (`Reports & P&L`) | `/c/[company]/dashboard/reports` | **CREATE NEW** |
-| `/c/[company]/dashboard/settings/integrations` | Meta integration page | **O04** (`Settings, users & roles` RBAC matrix + integrations) | `/c/[company]/dashboard/settings` (redirect old URL) | **REPLACE** |
+| `/` (`src/app/page.tsx`) | Internal portal launcher with screen codes | Public Landing Page | `/` | **REPLACE** |
+| `/previous-landing-page/*` | Old PhysioYoga landing page | Public Landing Page (`/`) | Redirect `/` | **DELETE** |
+| `/[companySlug]/login` & `/admin/login` | Old company/admin login pages | Unified Login (`/login`) | `/login` (redirect old URLs) | **REPLACE** |
+| `/[companySlug]/patient-login` | Old patient login page | Patient OTP Login (`/patient/login`) | `/patient/login` (redirect old URL) | **REPLACE** |
+| *(none)* | — | Clinic Owner Sign Up | `/signup` | **CREATE** |
+| *(none)* | — | Forgot Password | `/forgot-password` | **CREATE** |
+| *(none)* | — | One-Time Clinic Setup Wizard | `/setup` | **CREATE** |
+| `/admin/dashboard`, `/admin/projects`, `/admin/subscription` | Admin portal with screen IDs / legacy pages | Platform Admin Portal (`Clinics`, `Plans`, `Messaging`, `AI usage`, `Support`, `Compliance`) | `/admin` & `/admin/clinics` (redirect old URLs) | **REPLACE** |
+| `/c/[company]/dashboard` & `/c/[company]/dashboard/layout.tsx` | Tenant-prefixed dashboard with screen IDs | Clinic & Owner App Shell + *Today* | `/app/today` & `/app/layout.tsx` (redirect `/c/*`) | **REPLACE** |
+| `/c/[company]/dashboard/calendar` & `/appointments/*` | Chair calendar / legacy timeline | *Calendar* | `/app/calendar` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/patients` & `/patient-management/*` | Patient profile & directory | *Patients* | `/app/patients` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/gap-filler` | Waitlist & gap filler | *Gap filler* | `/app/gap-filler` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/ai-receptionist` | Voice AI receptionist | *AI receptionist* | `/app/ai-receptionist` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/dental-chart` | FDI odontogram & imaging | *Dental chart* | `/app/dental-chart` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/treatment-plans` & `/activity-management/*` | Treatment plan builder / legacy therapy | *Treatment plans* | `/app/treatment-plans` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/explainers` | 8-language treatment explainer | *Explainers* | `/app/explainers` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/prescriptions` | Prescription builder w/ allergy block | *Prescriptions* | `/app/prescriptions` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/post-op` | Post-op check-in monitor | *Post-op check-ins* | `/app/post-op` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/billing/*` | GST billing, UPI QR, EMI, Tally | *Billing* | `/app/billing` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/recovery` & `/lead-management/*` | Unfinished treatment recovery / legacy leads | *Treatment recovery* | `/app/treatment-recovery` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/campaigns` & `/marketing/*` | Recall, campaigns, referrals, reviews | *Recall & campaigns* | `/app/recall-campaigns` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/inventory` | Batches, expiry, procedure profit | *Inventory & costing* | `/app/inventory` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/lab-cases` | Lab case Kanban board | *Lab cases* | `/app/lab-cases` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/sterilisation` | Autoclave cycles & kit trace | *Sterilisation* | `/app/sterilisation` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/staff` & `/erp/staff` | Staff & commission + TDS 194J | *Staff & commission* | `/app/staff-commission` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/all-branches` | Owner group dashboard | *All branches* (Group dashboard) | `/app/group-dashboard` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/patient-insights` | Funnel, cohort retention, loyal patients | *Patient insights* | `/app/patient-insights` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/visiting-specialists` | Visiting specialist schedule & settlement | *Visiting specialists* | `/app/visiting-specialists` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/reports` | Group P&L & reports | *Reports & P&L* | `/app/reports` | **KEEP+RESTYLE** |
+| `/c/[company]/dashboard/settings/*` | Clinic settings & RBAC matrix | *Settings* | `/app/settings` | **KEEP+RESTYLE** |
+| `/specialist` (`src/app/specialist/page.tsx`) | Specialist portal (remove screen IDs) | *Specialist portal* | `/specialist` | **KEEP+RESTYLE** |
+| `/lab` (`src/app/lab/page.tsx`) | Dental lab portal (remove screen IDs) | *Dental lab portal* | `/lab` | **KEEP+RESTYLE** |
+| `/[companySlug]/patient-portal` & `/c/[company]/home/*` | Patient app (remove screen IDs, move to `/patient`) | *Patient app* (13 patient views) | `/patient` (redirect old URLs) | **REPLACE** |
+| `src/components/dental/dentflow-chart.tsx`, `dentflow-explainer.tsx`, `medical-alert-banner.tsx` | Unused prototype components | Superseded by `/app/dental-chart` & `/app/explainers` | — | **DELETE** |
 
 ---
 
-### B. Patient App Routes (`P01–P13` — Mobile Web / PWA + WhatsApp)
+## 3. Best-Guess Spec Notes (Items Not Explicit in Mockup PDF)
 
-| Purana Route / File | Purana Purpose | Naya Screen ID | Naya Route | Action |
-|---|---|---|---|---|
-| `/[companySlug]/patient-portal` (`(auth)/[companySlug]/patient-portal/page.tsx`) | Basic placeholder patient card | **P01–P13** (Full DentFlow Mobile PWA App) | `/[companySlug]/patient-portal` (with bottom nav + screen switcher for P01–P13) | **REPLACE** |
-| `/c/[company]/home/Booking/*` | Physio multi-step booking | **P01** (`Online booking`) | Integrated in Patient PWA (`P01`) + redirect `/c/[company]/home/Booking` | **REPLACE** |
-| *(none)* | — | **P02** (`WhatsApp booking bot`) | Patient PWA (`P02` interactive Hindi/EN WhatsApp simulator + live webhook) | **CREATE NEW** |
-| `/c/[company]/home/page.tsx` | Physio patient home | **P03** (`Patient home`) | Integrated in Patient PWA (`P03`) + redirect `/c/[company]/home` | **REPLACE** |
-| `/c/[company]/home/onboarding/page.tsx` | Basic onboarding | **P04** (`Pre-visit form & comfort`) | Integrated in Patient PWA (`P04`) | **REPLACE** |
-| *(none)* | — | **P05** (`Self-assessment`) | Integrated in Patient PWA (`P05`) | **CREATE NEW** |
-| *(none)* | — | **P06** (`Photo check (unique)`) | Integrated in Patient PWA (`P06`) | **CREATE NEW** |
-| *(none)* | — | **P07** (`Assessment result`) | Integrated in Patient PWA (`P07`) | **CREATE NEW** |
-| *(none)* | — | **P08** (`My treatment explained (unique)`) | Integrated in Patient PWA (`P08`) + public signed link `/explainer/[slug]` | **CREATE NEW** |
-| *(none)* | — | **P09** (`Plan, payments & EMI`) | Integrated in Patient PWA (`P09`) | **CREATE NEW** |
-| *(none)* | — | **P10** (`Records` + ABHA sharing) | Integrated in Patient PWA (`P10`) | **CREATE NEW** |
-| *(none)* | — | **P11** (`Family timeline (unique)`) | Integrated in Patient PWA (`P11`) | **CREATE NEW** |
-| *(none)* | — | **P12** (`Recovery check-in (unique)`) | Integrated in Patient PWA (`P12`) | **CREATE NEW** |
-| *(none)* | — | **P13** (`Aligner progress (unique)`) | Integrated in Patient PWA (`P13`) | **CREATE NEW** |
-| `/c/[company]/home/sessions/*` & `/home/blogs/*` | Physio video room & yoga blogs | — | Redirect → `/[companySlug]/patient-portal` | **DELETE** (redirect) |
+- **Landing Page Copy & Pricing Tiers (`/`)**: Uses the exact 3 plans from the platform admin mockup (*Starter* `₹4,999/mo`, *Growth* `₹14,999/mo`, *Chain* `Custom`) and showcases the 6 flagship capabilities from the clinic/patient mockups.
+- **Setup Wizard Steps (`/setup`)**: Structured into the 8 operational configuration groups shown in *Settings* (*Clinic profile*, *Branches*, *Chairs and rooms*, *Working hours*, *Staff and roles*, *Procedure fees*, *WhatsApp connect*, *Done*).
+- **Session Cookie & Demo Sign-In**: Uses an HTTP cookie (`dentflow_session`) read by `src/proxy.ts` for server-side route protection + role redirects, paired with both standard form submission and one-click persona sign-in buttons on `/login`.
 
 ---
 
-### C. Partner & Super-Admin Portals (`S01`, `L01`, `A01`) & Entry Points
+## 4. Verification Status Checklist (Updated in Step F)
 
-| Purana Route / File | Purana Purpose | Naya Screen ID | Naya Route | Action |
-|---|---|---|---|---|
-| *(none)* | — | **S01** (`Specialist portal`) | `/specialist` (and `/c/[company]/specialist`) | **CREATE NEW** |
-| *(none)* | — | **L01** (`Dental lab portal`) | `/lab` | **CREATE NEW** |
-| `/admin/dashboard` (`(admin)/admin/*`) | Generic SaaS admin panel | **A01** (`SaaS super-admin`) | `/admin/dashboard` | **REPLACE** |
-| `/admin/projects` & `/admin/subscription` | Old admin subpages | **A01** | Redirect → `/admin/dashboard` | **DELETE** (redirect) |
-| `/` (`src/app/page.tsx`) & `/previous-landing-page/*` | PhysioYoga marketing landing page | **DentFlow Portal Launcher + Clinic Entry** | `/` (clean DentFlow hub linking Clinic Portal, Owner View, Patient App PWA, Specialist Portal, Lab Portal, Super-Admin) | **REPLACE** |
-
----
-
-## 3. Existing Reusable Components & New Shared Component Plan
-
-| Existing File | Status | Migration Decision |
+| Area / Screen | Readable Route | Status |
 |---|---|---|
-| `src/components/dental/dentflow-chart.tsx` | Exists (C04 prototype) | **KEEP+RESTYLE** — align colors to theme tokens, wire to chart versioning & backend API |
-| `src/components/dental/dentflow-explainer.tsx` | Exists (C06 prototype) | **KEEP+RESTYLE** — wire doctor-approval lock, 8-language toggle, signed 30d link, backend API |
-| `src/lib/mock/dentflow.ts` | Exists (partial mock data) | **EXPAND** — add complete deterministic dataset matching every number, patient, invoice, cycle, and KPI in the 38-screen PDF |
-| `src/types/dental.ts` | Exists (partial types) | **EXPAND** — add full TypeScript interfaces for all 38 screens & API payloads |
-| `src/components/marketing/*` & `src/app/previous-landing-page/*` | Unused PhysioYoga marketing | **DELETE** in Step 4 after routes are migrated |
-| `src/components/ui/*` | Shadcn UI primitives | **KEEP** — restyle tokens in `globals.css` / `dentflow-theme.css` |
-
----
-
-## 4. Final Verification Checklist (Completed in Step 5)
-
-Verified via production `next build` (`0` TypeScript/build errors) and automated Playwright headless audit across **43 routes/viewports** (`1440x900` desktop + `390x844` mobile for `P01–P13` + legacy URL redirects) with **0 console errors, 0 page errors, 0 HTTP errors, and 0 horizontal mobile overflows**.
-
-| Screen ID | Screen Name | Route | Implemented | Wired to Backend | Playwright Verified | Status |
-|---|---|---|---|---|---|---|
-| C01 | Today — front desk | `/c/[company]/dashboard` | Yes | Yes (`/api/dentflow/state` + NestJS bridge) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C02 | Chair calendar + booking | `/c/[company]/dashboard/calendar` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
-| C03 | Patient profile | `/c/[company]/dashboard/patients` | Yes | Yes (with DPDP access log) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C04 | Dental chart & imaging | `/c/[company]/dashboard/dental-chart` | Yes | Yes (FDI Adult/Child/Mixed + surfaces) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C05 | Treatment plan builder | `/c/[company]/dashboard/treatment-plans` | Yes | Yes (Options A/B/C + stage pipeline) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C06 | Treatment explainer (unique) | `/c/[company]/dashboard/explainers` | Yes | Yes (8 langs + doctor approval gate) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C07 | Prescription | `/c/[company]/dashboard/prescriptions` | Yes | Yes (rule-based penicillin allergy block) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C08 | Post-op monitor (unique) | `/c/[company]/dashboard/post-op` | Yes | Yes (D1/D3/D7 + pain alert rules) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C09 | Billing & payments | `/c/[company]/dashboard/billing` | Yes | Yes (Exempt vs 18% GST + dynamic UPI QR) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C10 | Unfinished treatment recovery | `/c/[company]/dashboard/recovery` | Yes | Yes (5-day cap + 5-step sequence) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C11 | Gap filler & waitlist | `/c/[company]/dashboard/gap-filler` | Yes | Yes (waves of 3 + 10-min hold) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C12 | Recall & campaigns | `/c/[company]/dashboard/campaigns` | Yes | Yes (4–5★ Google review filter + referrals) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C13 | Inventory & procedure profit | `/c/[company]/dashboard/inventory` | Yes | Yes (batches + real profit per procedure) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C14 | Lab cases | `/c/[company]/dashboard/lab-cases` | Yes | Yes (5-column Kanban synced with `L01`) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C15 | Sterilisation log (unique) | `/c/[company]/dashboard/sterilisation` | Yes | Yes (kit ↔ cycle ↔ patient traceability) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C16 | Staff & commission | `/c/[company]/dashboard/staff` | Yes | Yes (`35% net of lab` + TDS 194J) | Yes (`1440x900`, 0 errors) | **DONE** |
-| C17 | Voice AI receptionist (unique) | `/c/[company]/dashboard/ai-receptionist` | Yes | Yes (hi/mr/en transcripts + safety locks) | Yes (`1440x900`, 0 errors) | **DONE** |
-| O01 | Group dashboard (All branches) | `/c/[company]/dashboard/all-branches` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
-| O02 | Visiting specialists (unique) | `/c/[company]/dashboard/visiting-specialists` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
-| O03 | Reports & P&L | `/c/[company]/dashboard/reports` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
-| O04 | Settings, users & roles | `/c/[company]/dashboard/settings` | Yes | Yes (live `F/V/O/-` RBAC + DPDP logs) | Yes (`1440x900`, 0 errors) | **DONE** |
-| O05 | Patient insights (unique) | `/c/[company]/dashboard/patient-insights` | Yes | Yes | Yes (`1440x900`, 0 errors) | **DONE** |
-| P01–P13 | Patient App PWA (13 screens) | `/[companySlug]/patient-portal` | Yes | Yes (P01–P13 interactive flows) | Yes (`390x844` mobile, 0 errors) | **DONE** |
-| S01 | Specialist portal | `/specialist` | Yes | Yes (shared referral inbox + schedule) | Yes (`1440x900`, 0 errors) | **DONE** |
-| L01 | Dental lab portal | `/lab` | Yes | Yes (shared `LabCase` sync w/ `C14`) | Yes (`1440x900`, 0 errors) | **DONE** |
-| A01 | SaaS super-admin | `/admin/dashboard` | Yes | Yes (plans, credits, AI mins, DPDP queue) | Yes (`1440x900`, 0 errors) | **DONE** |
-
+| Public Landing Page | `/` | Planned |
+| Auth (`Login`, `Sign up`, `Forgot password`, `Patient OTP login`) | `/login`, `/signup`, `/forgot-password`, `/patient/login` | Planned |
+| One-Time Setup Wizard (8 steps) | `/setup` | Planned |
+| Platform Admin Portal (`Clinics`, `Plans`, `Messaging`, `AI usage`, `Support`, `Compliance`) | `/admin`, `/admin/clinics` | Planned |
+| Clinic & Owner App (22 screens) | `/app/today` … `/app/settings` | Planned |
+| Specialist Portal | `/specialist` | Planned |
+| Dental Lab Portal | `/lab` | Planned |
+| Patient App (13 views) | `/patient` | Planned |
