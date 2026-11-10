@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       actor: payload.actor || "Staff",
       role: payload.role || state.activeRole,
       patientName: payload.patientName || "Priya Deshmukh",
-      screenId: payload.screenId || "C03",
+      screenName: payload.screenName || "Patients",
       action: payload.readAction || "READ",
     };
     state = {

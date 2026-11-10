@@ -1,130 +1,641 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Building2,
-  FlaskConical,
+  Activity,
+  ArrowRight,
+  Check,
+  Clock,
+  FilePlay,
+  Menu,
+  PhoneCall,
+  RefreshCw,
+  ScanLine,
   ShieldCheck,
-  Smartphone,
-  Stethoscope,
-  LayoutDashboard,
+  Sparkles,
+  Star,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 
-const PORTAL_CARDS = [
+const FEATURES = [
   {
-    id: "C01–C17",
-    title: "Clinic Portal",
-    subtitle: "Front desk, dentists, assistants & branch managers",
-    desc: "Today queue, chair calendar, patient profile, FDI odontogram, treatment plans, 8-language explainer, Rx allergy guard, post-op monitor, GST/UPI billing, recovery & gap filler.",
-    href: "/c/smile-studio/dashboard",
-    icon: LayoutDashboard,
-    badge: "17 screens",
+    title: "AI X-ray scan",
+    tag: "Unique",
+    desc: "Detects caries, periapical lesions, and restorations on IOPA and OPG radiographs with FDI tooth mapping — ready for dentist sign-off.",
+    icon: ScanLine,
   },
   {
-    id: "O01–O05",
-    title: "Owner & Multi-Clinic",
-    subtitle: "Clinic owner & accounts",
-    desc: "All-branches group KPIs, visiting specialists week grid & revenue share, branch P&L, RBAC permission matrix & DPDP logs, patient retention & drop-off insights.",
-    href: "/c/smile-studio/dashboard/all-branches",
-    icon: Building2,
-    badge: "5 screens",
+    title: "Treatment explainer",
+    tag: "Unique",
+    desc: "Turns X-rays and treatment plans into narrated 8-language visual explainers on WhatsApp with doctor-approval lock and EMI options.",
+    icon: FilePlay,
   },
   {
-    id: "P01–P13",
-    title: "Patient App (PWA & WhatsApp)",
-    subtitle: "Patients and families",
-    desc: "Online booking, Hindi WhatsApp bot, patient home, anxiety comfort check, symptom self-check, guided photo check, Hindi explainer, UPI AutoPay EMI, ABHA records, family timeline, aligner timer.",
-    href: "/smile-studio/patient-portal",
-    icon: Smartphone,
-    badge: "13 screens",
+    title: "Gap filler",
+    tag: "Unique",
+    desc: "When a patient cancels, DentFlow automatically messages matched waitlisted patients in waves of 3 with a 10-minute priority hold.",
+    icon: Clock,
   },
   {
-    id: "S01",
-    title: "Visiting Specialist Portal",
-    subtitle: "Visiting endodontist / orthodontist / implantologist",
-    desc: "Multi-clinic visiting days, patient schedule with comfort flags, referral inbox & monthly settlement statement.",
-    href: "/specialist",
-    icon: Stethoscope,
-    badge: "S01",
+    title: "Treatment recovery",
+    tag: "Unique",
+    desc: "Follows up on unbooked root canals, crowns, and implants across Day 3–45 sequences and stops automatically the moment they book.",
+    icon: RefreshCw,
   },
   {
-    id: "L01",
-    title: "Dental Lab Portal",
-    subtitle: "Precision Dental Lab · connected clinics",
-    desc: "Open crown/bridge/aligner cases across clinics, VITA shades & STL scans, due dates and live dispatch updates.",
-    href: "/lab",
-    icon: FlaskConical,
-    badge: "L01",
+    title: "Post-op check-ins",
+    tag: "Unique",
+    desc: "Automated Day 1, Day 3, and Day 7 WhatsApp check-ins after extractions, root canals, and implants — alerting doctors if pain spikes.",
+    icon: Activity,
   },
   {
-    id: "A01",
-    title: "SaaS Super-Admin",
-    subtitle: "Platform operations & DPDP compliance",
-    desc: "Clinic group accounts, MRR, WhatsApp credits, AI voice minutes metering, feature flags and DPDP request queue.",
-    href: "/admin/dashboard",
-    icon: ShieldCheck,
-    badge: "A01",
+    title: "Voice AI receptionist",
+    tag: "Unique",
+    desc: "Answers clinic phone calls in Hindi, Marathi, and English 24/7, books chairs, quotes standard fees, and escalates emergencies.",
+    icon: PhoneCall,
   },
 ];
 
-export default function DentflowLauncherPage() {
+const PRICING = [
+  {
+    name: "Starter",
+    subtitle: "1 clinic",
+    price: "₹4,999",
+    period: "/mo",
+    highlighted: false,
+    items: [
+      "Chair & doctor calendar with anxiety buffers",
+      "FDI dental chart, prescriptions & allergy alerts",
+      "GST billing, dynamic UPI QR & Tally export",
+      "WhatsApp appointment reminders & patient app",
+    ],
+  },
+  {
+    name: "Growth",
+    subtitle: "Up to 3 branches",
+    price: "₹14,999",
+    period: "/mo",
+    highlighted: true,
+    items: [
+      "Everything in Starter across up to 3 branches",
+      "AI X-ray scan & 8-language treatment explainers",
+      "Automated gap filler & treatment recovery engine",
+      "Post-op check-ins, autoclave kit trace & costing",
+    ],
+  },
+  {
+    name: "Chain",
+    subtitle: "4+ branches",
+    price: "Custom",
+    period: "",
+    highlighted: false,
+    items: [
+      "Group owner dashboard, cohort insights & P&L",
+      "Visiting specialist scheduling & TDS 194J payroll",
+      "24/7 Hindi/Marathi/English Voice AI receptionist",
+      "ABDM / ABHA integration, custom API & SSO",
+    ],
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Case acceptance jumped from 44% to 68% within two months of sending Hindi and Marathi treatment explainers on WhatsApp.",
+    author: "Dr. Sneha Kulkarni",
+    role: "Founder, Smile Studio Dental (3 branches, Pune)",
+  },
+  {
+    quote:
+      "Gap filler recovered ₹1.46 lakh in cancelled chair time last month alone without my front desk making a single cold call.",
+    author: "Dr. Vikramaditya Rao",
+    role: "Director, Apex Dental & Implant Centre, Bengaluru",
+  },
+  {
+    quote:
+      "Every autoclave pouch is traced to the patient chair, and our visiting endodontist sees his live schedule and commission split on his phone.",
+    author: "Dr. Meera Iyer",
+    role: "Consultant Endodontist, Mumbai",
+  },
+];
+
+export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [demoSubmitted, setDemoSubmitted] = useState(false);
+  const [demoForm, setDemoForm] = useState({
+    name: "",
+    clinic: "",
+    phone: "",
+    branches: "1–3 branches",
+  });
+
+  const handleDemoSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDemoSubmitted(true);
+    toast.success("Demo request received — our dental onboarding specialist will call within 2 hours.");
+  };
+
   return (
-    <div className="min-h-screen df-canvas flex flex-col justify-between">
-      <header className="bg-[var(--df-sidebar-bg)] text-white px-6 py-10">
-        <div className="max-w-5xl mx-auto space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--df-unique-dark-text)]">
-            DentFlow · Dental CRM
-          </p>
-          <h1 className="df-serif text-3xl sm:text-4xl font-semibold tracking-tight">
-            Smile Studio Dental — 38-Screen Unified Workspace
-          </h1>
-          <p className="text-sm text-[var(--df-sidebar-muted)] max-w-2xl">
-            Multi-tenant, multi-branch dental practice management across clinic operations,
-            owner analytics, patient PWA/WhatsApp journeys, visiting specialists, dental labs
-            and platform admin.
-          </p>
+    <div className="min-h-screen df-canvas flex flex-col">
+      {/* Sticky Top Navbar */}
+      <header className="sticky top-0 z-40 bg-[var(--df-canvas)]/95 backdrop-blur border-b border-[var(--df-border)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-[var(--df-teal)] flex items-center justify-center text-white font-bold text-base">
+              W
+            </div>
+            <span className="df-serif text-xl font-semibold text-[var(--df-text)] tracking-tight">
+              DentFlow
+            </span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-[var(--df-text-secondary)]">
+            <a href="#features" className="hover:text-[var(--df-teal)] transition-colors">
+              Features
+            </a>
+            <a href="#pricing" className="hover:text-[var(--df-teal)] transition-colors">
+              Pricing
+            </a>
+            <a href="#testimonials" className="hover:text-[var(--df-teal)] transition-colors">
+              Testimonials
+            </a>
+            <Link href="/patient/login" className="hover:text-[var(--df-teal)] transition-colors">
+              Patient app
+            </Link>
+          </nav>
+
+          <div className="hidden md:flex items-center gap-2.5">
+            <Link href="/login" className="df-btn-secondary px-3.5 py-2 text-xs">
+              Log in
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setDemoSubmitted(false);
+                setDemoModalOpen(true);
+              }}
+              className="df-btn-secondary px-3.5 py-2 text-xs cursor-pointer"
+            >
+              Book a demo
+            </button>
+            <Link href="/signup" className="df-btn-primary px-4 py-2 text-xs">
+              Start free trial
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="md:hidden p-2 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] text-[var(--df-text)]"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
+
+        {/* Mobile Nav Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[var(--df-border)] bg-[var(--df-surface)] px-4 py-4 space-y-3">
+            <div className="flex flex-col gap-2 text-xs font-semibold text-[var(--df-text-secondary)]">
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="py-1.5">
+                Features
+              </a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="py-1.5">
+                Pricing
+              </a>
+              <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="py-1.5">
+                Testimonials
+              </a>
+              <Link href="/patient/login" onClick={() => setMobileMenuOpen(false)} className="py-1.5">
+                Patient OTP login
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--df-border)]">
+              <Link href="/login" className="df-btn-secondary py-2 text-center text-xs">
+                Log in
+              </Link>
+              <Link href="/signup" className="df-btn-primary py-2 text-center text-xs">
+                Start free trial
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
-      <main className="max-w-5xl w-full mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {PORTAL_CARDS.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Link
-              key={card.id}
-              href={card.href}
-              className="df-card p-5 flex flex-col justify-between hover:border-[var(--df-teal)] transition-all group"
-            >
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="h-9 w-9 rounded-xl bg-[var(--df-teal-soft)] text-[var(--df-teal)] flex items-center justify-center">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[var(--df-unique-bg)] text-[var(--df-unique-text)]">
-                    {card.badge}
-                  </span>
-                </div>
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16 lg:pt-16 lg:pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7 space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] text-[11px] font-bold text-[var(--df-teal)]">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Multi-branch Dental CRM · DPDP & ABDM Ready</span>
+            </div>
+
+            <h1 className="df-serif text-3xl sm:text-5xl font-semibold text-[var(--df-text)] tracking-tight leading-[1.12]">
+              Run every dental chair, treatment plan, and follow-up on autopilot.
+            </h1>
+
+            <p className="text-sm sm:text-base text-[var(--df-text-secondary)] leading-relaxed max-w-xl">
+              DentFlow connects chair scheduling, FDI charting, AI X-ray analysis, 8-language
+              WhatsApp treatment explainers, gap filling, post-op monitoring, and GST + UPI
+              AutoPay billing in one calm workspace.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href="/signup"
+                className="df-btn-primary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2"
+              >
+                <span>Start free 14-day trial</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setDemoSubmitted(false);
+                  setDemoModalOpen(true);
+                }}
+                className="df-btn-secondary px-5 py-3 text-xs sm:text-sm cursor-pointer"
+              >
+                Book a demo
+              </button>
+              <Link
+                href="/login"
+                className="text-xs font-semibold text-[var(--df-teal)] hover:underline px-2 py-2"
+              >
+                Log in to clinic workspace →
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-5 pt-2 text-[11px] text-[var(--df-text-muted)] font-medium">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-[var(--df-teal)]" />
+                DPDP patient access logging
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-[var(--df-teal)]" />
+                Zero PHI in WhatsApp messages
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-[var(--df-teal)]" />
+                Exempt vs 18% cosmetic GST
+              </span>
+            </div>
+          </div>
+
+          {/* Live Product Snapshot Card */}
+          <div className="lg:col-span-5">
+            <div className="df-card p-5 space-y-4 shadow-md">
+              <div className="flex items-center justify-between border-b border-[var(--df-border)] pb-3">
                 <div>
-                  <h2 className="df-serif text-lg font-semibold text-[var(--df-text)] group-hover:text-[var(--df-teal)]">
-                    {card.title}
-                  </h2>
-                  <p className="text-[11px] text-[var(--df-text-muted)]">{card.subtitle}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    Live Clinic Pulse · Station Road
+                  </p>
+                  <p className="df-serif text-lg font-semibold text-[var(--df-text)] mt-0.5">
+                    Good morning, Dr. Sneha
+                  </p>
                 </div>
-                <p className="text-xs text-[var(--df-text-secondary)] leading-relaxed">
-                  {card.desc}
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[var(--df-status-green-bg)] text-[var(--df-status-green-text)] border border-[var(--df-status-green-border)]">
+                  4 chairs active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)]">
+                  <p className="text-[11px] text-[var(--df-text-muted)]">Collected today</p>
+                  <p className="df-serif text-2xl font-semibold text-[var(--df-text)] mt-0.5">
+                    ₹48,200
+                  </p>
+                  <p className="text-[10.5px] text-[var(--df-status-green-text)] font-medium mt-0.5">
+                    UPI 71% · card 18% · cash 11%
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)]">
+                  <p className="text-[11px] text-[var(--df-teal)] font-medium">Gaps filled</p>
+                  <p className="df-serif text-2xl font-semibold text-[var(--df-text)] mt-0.5">
+                    23 / 31
+                  </p>
+                  <p className="text-[10.5px] text-[var(--df-teal)] font-medium mt-0.5">
+                    ₹1,46,500 recovered · 14 min avg
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[var(--df-sidebar-bg)] text-white space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-unique-dark-bg)] text-[var(--df-unique-dark-text)]">
+                    AI receptionist
+                  </span>
+                  <span className="text-[11px] text-[var(--df-sidebar-muted)]">Since 8:00 am</span>
+                </div>
+                <p className="df-serif text-lg font-semibold">23 calls handled · 6 booked</p>
+                <p className="text-[11px] text-[var(--df-sidebar-muted)]">
+                  Hindi, Marathi & English · zero missed inquiries
                 </p>
               </div>
-              <p className="text-xs font-bold text-[var(--df-teal)] mt-4">
-                Open {card.id} →
-              </p>
-            </Link>
-          );
-        })}
-      </main>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <footer className="max-w-5xl w-full mx-auto px-6 py-4 border-t border-[var(--df-border)] text-[11px] text-[var(--df-text-muted)] flex flex-wrap justify-between gap-2">
-        <span>DentFlow v1.0 · Smile Studio Dental (Station Road · Civil Lines · MG Road)</span>
-        <span>DPDP access logging &amp; RBAC active</span>
+      {/* Features Section */}
+      <section id="features" className="border-t border-[var(--df-border)] bg-[var(--df-surface)] py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-10">
+          <div className="max-w-2xl space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--df-teal)]">
+              Built for clinical precision & revenue retention
+            </p>
+            <h2 className="df-serif text-2xl sm:text-3xl font-semibold text-[var(--df-text)]">
+              Six workflows that separate DentFlow from generic clinic software
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="df-card p-5 space-y-3 bg-[var(--df-surface-muted)]">
+                  <div className="flex items-center justify-between">
+                    <div className="h-9 w-9 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] flex items-center justify-center text-[var(--df-teal)]">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-unique-bg)] text-[var(--df-unique-text)] border border-[var(--df-unique-border)]">
+                      {f.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-[var(--df-text)]">{f.title}</h3>
+                  <p className="text-xs text-[var(--df-text-secondary)] leading-relaxed">{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16 max-w-6xl mx-auto px-4 sm:px-6 w-full space-y-10">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--df-teal)]">
+            Transparent pricing
+          </p>
+          <h2 className="df-serif text-2xl sm:text-3xl font-semibold text-[var(--df-text)]">
+            Plans that grow from a single chair to a multi-city chain
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {PRICING.map((plan) => (
+            <div
+              key={plan.name}
+              className={`df-card p-6 flex flex-col justify-between space-y-6 ${
+                plan.highlighted
+                  ? "border-[var(--df-teal)] ring-2 ring-[var(--df-teal)]/20 bg-[var(--df-surface)]"
+                  : "bg-[var(--df-surface)]"
+              }`}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="df-serif text-xl font-semibold text-[var(--df-text)]">
+                      {plan.name}
+                    </h3>
+                    <p className="text-xs text-[var(--df-text-muted)]">{plan.subtitle}</p>
+                  </div>
+                  {plan.highlighted && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]">
+                      Most popular
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-baseline gap-1">
+                  <span className="df-serif text-3xl font-semibold text-[var(--df-text)]">
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-xs text-[var(--df-text-muted)]">{plan.period}</span>
+                  )}
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-[var(--df-text-secondary)]">
+                  {plan.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-[var(--df-teal)] shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {plan.name === "Chain" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDemoSubmitted(false);
+                    setDemoModalOpen(true);
+                  }}
+                  className="w-full df-btn-secondary py-2.5 text-xs cursor-pointer"
+                >
+                  Book a demo
+                </button>
+              ) : (
+                <Link
+                  href="/signup"
+                  className={`w-full py-2.5 text-xs text-center block ${
+                    plan.highlighted ? "df-btn-primary" : "df-btn-secondary"
+                  }`}
+                >
+                  Start free trial
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section
+        id="testimonials"
+        className="border-t border-[var(--df-border)] bg-[var(--df-surface)] py-16"
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--df-teal)]">
+              Trusted by Indian dental practices
+            </p>
+            <h2 className="df-serif text-2xl sm:text-3xl font-semibold text-[var(--df-text)]">
+              Built with clinicians, front-desk teams, and visiting specialists
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {TESTIMONIALS.map((t) => (
+              <div key={t.author} className="df-card p-5 space-y-3 bg-[var(--df-surface-muted)]">
+                <div className="flex gap-0.5 text-[#D97706]">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                  ))}
+                </div>
+                <p className="text-xs text-[var(--df-text)] leading-relaxed">“{t.quote}”</p>
+                <div className="pt-2 border-t border-[var(--df-border)]">
+                  <p className="text-xs font-bold text-[var(--df-text)]">{t.author}</p>
+                  <p className="text-[11px] text-[var(--df-text-muted)]">{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA Banner */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 w-full">
+        <div className="rounded-2xl bg-[var(--df-sidebar-bg)] text-white p-7 sm:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <h2 className="df-serif text-2xl sm:text-3xl font-semibold">
+              Set up your clinic branches, chairs, and WhatsApp reminders in 5 minutes.
+            </h2>
+            <p className="text-xs sm:text-sm text-[var(--df-sidebar-muted)]">
+              Guided 8-step clinic onboarding wizard with role-based permissions out of the box.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 shrink-0">
+            <Link
+              href="/signup"
+              className="px-5 py-3 rounded-xl bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] text-white text-xs font-semibold"
+            >
+              Create clinic account
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setDemoSubmitted(false);
+                setDemoModalOpen(true);
+              }}
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs font-semibold cursor-pointer"
+            >
+              Book a demo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--df-border)] py-8 text-xs text-[var(--df-text-muted)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="df-serif font-semibold text-[var(--df-text)]">DentFlow</span>
+            <span>· Multi-Branch Dental CRM & Patient Platform</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-5 font-medium">
+            <Link href="/login" className="hover:text-[var(--df-teal)]">
+              Clinic & staff login
+            </Link>
+            <Link href="/signup" className="hover:text-[var(--df-teal)]">
+              Clinic owner sign up
+            </Link>
+            <Link href="/patient/login" className="hover:text-[var(--df-teal)]">
+              Patient OTP login
+            </Link>
+          </div>
+        </div>
       </footer>
+
+      {/* Book a Demo Modal */}
+      {demoModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="df-card w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--df-border)] pb-3">
+              <div>
+                <h3 className="df-serif text-lg font-semibold text-[var(--df-text)]">
+                  Book a live DentFlow demo
+                </h3>
+                <p className="text-xs text-[var(--df-text-muted)]">
+                  15-minute walkthrough tailored to your clinic size
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDemoModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-[var(--df-surface-hover)] text-[var(--df-text-muted)] cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {demoSubmitted ? (
+              <div className="py-4 space-y-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-[var(--df-status-green-bg)] border border-[var(--df-status-green-border)] text-[var(--df-status-green-text)] font-medium">
+                  Thank you, {demoForm.name || "Doctor"}! We have scheduled a callback for{" "}
+                  <strong>{demoForm.clinic || "your clinic"}</strong>.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDemoModalOpen(false)}
+                  className="w-full df-btn-primary py-2.5 text-xs cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleDemoSubmit} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold mb-1">Your name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Dr. Rohan Kulkarni"
+                    value={demoForm.name}
+                    onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Clinic name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Smile Studio Dental"
+                    value={demoForm.clinic}
+                    onChange={(e) => setDemoForm({ ...demoForm, clinic: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block font-semibold mb-1">WhatsApp / phone</label>
+                    <input
+                      required
+                      type="tel"
+                      placeholder="+91 98220 44100"
+                      value={demoForm.phone}
+                      onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
+                      className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Branches</label>
+                    <select
+                      value={demoForm.branches}
+                      onChange={(e) => setDemoForm({ ...demoForm, branches: e.target.value })}
+                      className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                    >
+                      <option>Single clinic</option>
+                      <option>1–3 branches</option>
+                      <option>4+ branches</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" className="w-full df-btn-primary py-2.5 text-xs cursor-pointer">
+                  Request demo callback
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
