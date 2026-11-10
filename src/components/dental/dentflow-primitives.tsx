@@ -377,9 +377,9 @@ export function DentflowSidebar({
   };
 
   const sidebarContent = (
-    <aside className="w-[224px] shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none">
+    <aside className="w-[236px] shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none">
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[var(--df-sidebar-border)]">
+      <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 border-b border-[var(--df-sidebar-border)]">
         <Link
           href={state.activeRole === "Owner" ? "/app/group-dashboard" : "/app/today"}
           onClick={onCloseMobile}
@@ -403,7 +403,7 @@ export function DentflowSidebar({
       </div>
 
       {/* 5 Navigation Sections */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+      <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-2.5">
         {DENTFLOW_SIDEBAR_SECTIONS.map((section) => {
           const visibleItems = section.items.filter((item) =>
             canRoleAccessNavItem(state.activeRole, item, state.rolePermissions),
@@ -412,7 +412,7 @@ export function DentflowSidebar({
 
           return (
             <div key={section.title}>
-              <p className="px-2.5 mb-1.5 text-[10px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)]">
+              <p className="px-2.5 mb-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)]">
                 {section.title}
               </p>
               <ul className="space-y-0.5">
@@ -426,7 +426,7 @@ export function DentflowSidebar({
                       <Link
                         href={href}
                         onClick={onCloseMobile}
-                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors ${
+                        className={`flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
                           isActive
                             ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
                             : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
@@ -458,20 +458,14 @@ export function DentflowSidebar({
       </nav>
 
       {/* Session Footer */}
-      <div className="p-2.5 border-t border-[var(--df-sidebar-border)] space-y-1.5">
-        <div className="px-2 py-1 rounded-lg bg-[var(--df-sidebar-hover)]/60">
-          <p className="text-[11px] font-semibold text-white truncate">Smile Studio Dental</p>
-          <p className="text-[10px] text-[var(--df-sidebar-muted)] truncate">
-            Multi-branch CRM · Live
-          </p>
-        </div>
+      <div className="px-2.5 py-2 border-t border-[var(--df-sidebar-border)]">
         <button
           type="button"
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white text-[11px] font-semibold cursor-pointer transition-colors"
         >
           <LogOut className="h-3 w-3 text-[#FCA5A5]" />
-          <span>Log out</span>
+          <span>Log out · Smile Studio</span>
         </button>
       </div>
     </aside>
@@ -479,8 +473,8 @@ export function DentflowSidebar({
 
   return (
     <>
-      {/* Desktop fixed rail */}
-      <div className="hidden lg:block shrink-0 min-h-screen">{sidebarContent}</div>
+      {/* Desktop fixed sticky rail */}
+      <div className="hidden lg:block shrink-0 h-screen sticky top-0">{sidebarContent}</div>
 
       {/* Mobile slide-over */}
       {mobileOpen && (

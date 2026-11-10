@@ -89,15 +89,18 @@
 
 ---
 
-## 4. Verification Status Checklist (Updated in Step F)
+## 4. Verification Status Checklist (Verified in Step F)
+
+All checks ran against the production build (`npm run build` + `next start`) via Playwright across desktop (`1440×900`) and mobile (`390×844`) viewports with zero console errors, zero page errors, zero HTTP 500s, zero mobile horizontal overflows, zero visible mockup screen IDs in rendered DOM, and confirmed route guard enforcement:
 
 | Area / Screen | Readable Route | Status |
 |---|---|---|
-| Public Landing Page | `/` | Planned |
-| Auth (`Login`, `Sign up`, `Forgot password`, `Patient OTP login`) | `/login`, `/signup`, `/forgot-password`, `/patient/login` | Planned |
-| One-Time Setup Wizard (8 steps) | `/setup` | Planned |
-| Platform Admin Portal (`Clinics`, `Plans`, `Messaging`, `AI usage`, `Support`, `Compliance`) | `/admin`, `/admin/clinics` | Planned |
-| Clinic & Owner App (22 screens) | `/app/today` … `/app/settings` | Planned |
-| Specialist Portal | `/specialist` | Planned |
-| Dental Lab Portal | `/lab` | Planned |
-| Patient App (13 views) | `/patient` | Planned |
+| Public Landing Page | `/` | Verified (desktop + mobile + Book a demo modal) |
+| Auth (`Login`, `Sign up`, `Forgot password`, `Patient OTP login`) | `/login`, `/signup`, `/forgot-password`, `/patient/login` | Verified |
+| One-Time Setup Wizard (8 steps, unskippable until completed) | `/setup` | Verified (`/app/*` blocked before completion) |
+| Platform Admin Portal (`Clinics`, `Plans`, `Messaging`, `AI usage`, `Support`, `Compliance`) | `/admin`, `/admin/clinics` | Verified (role-isolated) |
+| Clinic & Owner App (22 screens) | `/app/today` … `/app/settings` | Verified (all 22 screens + RBAC matrix + in-screen modals) |
+| Specialist Portal (with chart preview drawer) | `/specialist` | Verified (role-isolated) |
+| Dental Lab Portal | `/lab` | Verified (role-isolated) |
+| Patient App (13 mobile PWA views) | `/patient` | Verified (OTP auth, `390×844` mobile layout, zero overflow) |
+| Legacy URL Redirects & Dead Code Removal | `next.config.ts` | Verified (`/c/*`, `/:company/patient-portal`, `/admin/dashboard`, `/previous-landing-page` -> new routes) |
