@@ -434,6 +434,28 @@ export function DentflowSidebar({
   const router = useRouter();
   const { state } = useDentflow();
 
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
+    patients: true,
+    "treatment-plans": true,
+  });
+
+  const toggleGroup = (title: string) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
+  const toggleItem = (itemId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
+  };
+
   const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
 
   const handleLogout = async () => {
@@ -468,68 +490,108 @@ export function DentflowSidebar({
         </button>
       </div>
 
-      {/* 5 Navigation Sections */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-2.5">
+      {/* Navigation Sections with Dropdowns on every group */}
+      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-2">
         {DENTFLOW_SIDEBAR_SECTIONS.map((section) => {
           const visibleItems = section.items.filter((item) =>
             canRoleAccessNavItem(state.activeRole, item, state.rolePermissions),
           );
           if (visibleItems.length === 0) return null;
 
+          const isCollapsed = Boolean(collapsedGroups[section.title]);
+
           return (
-            <div key={section.title}>
-              <p className="px-2.5 mb-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)]">
-                {section.title}
-              </p>
-              <ul className="space-y-0.5">
-                {visibleItems.map((item) => {
-                  const href = `/app/${item.slug}`;
-                  const isItemExactActive = pathname === href || pathname?.startsWith(`${href}/`);
-                  const isFamilyActive =
-                    isItemExactActive ||
-                    Boolean(
-                      item.subTabs &&
-                        item.subTabs.some((st) => {
-                          const clean = st.slug.split("?")[0];
-                          return pathname === `/app/${clean}` || pathname?.startsWith(`/app/${clean}/`);
-                        }),
-                    );
-                  const Icon = NAV_ICONS[item.id] || Home;
+            <div key={section.title} className="space-y-0.5">
+              {/* Group Title with Dropdown Option */}
+              <button
+                type="button"
+                onClick={() => toggleGroup(section.title)}
+                className="w-full flex items-center justify-between px-2.5 py-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)] hover:text-white rounded transition-colors cursor-pointer group"
+                aria-expanded={!isCollapsed}
+              >
+                <span>{section.title}</span>
+                <ChevronDown
+                  className={`h-3 w-3 text-[var(--df-sidebar-muted)] group-hover:text-white transition-transform duration-200 ${
+                    isCollapsed ? "-rotate-90" : "rotate-0"
+                  }`}
+                />
+              </button>
 
-                  return (
-                    <li key={item.id} className="space-y-1">
-                      <Link
-                        href={href}
-                        onClick={onCloseMobile}
-                        className={`flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                          isItemExactActive && !item.subTabs
-                            ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
-                            : isFamilyActive
-                            ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
-                            : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 min-w-0">
-                          <Icon
-                            className={`h-3.5 w-3.5 shrink-0 ${
-                              isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)]"
+              {/* Group Items */}
+              {!isCollapsed && (
+                <ul className="space-y-0.5">
+                  {visibleItems.map((item) => {
+                    const href = `/app/${item.slug}`;
+                    const isItemExactActive = pathname === href || pathname?.startsWith(`${href}/`);
+                    const isFamilyActive =
+                      isItemExactActive ||
+                      Boolean(
+                        item.subTabs &&
+                          item.subTabs.some((st) => {
+                            const clean = st.slug.split("?")[0];
+                            return (
+                              pathname === `/app/${clean}` ||
+                              pathname?.startsWith(`/app/${clean}/`)
+                            );
+                          }),
+                      );
+                    const Icon = NAV_ICONS[item.id] || Home;
+                    const isItemExpanded = Boolean(expandedItems[item.id]);
+
+                    return (
+                      <li key={item.id} className="space-y-0.5">
+                        <div className="flex items-center">
+                          <Link
+                            href={href}
+                            onClick={onCloseMobile}
+                            className={`flex-1 flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
+                              isItemExactActive && !item.subTabs
+                                ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
+                                : isFamilyActive
+                                ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
+                                : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
                             }`}
-                          />
-                          <span className="truncate">{item.label}</span>
-                        </span>
-                        {item.badgeType === "unique" && <DentflowUniquePill dark />}
-                        {item.badgeType === "new" && <DentflowNewPill dark />}
-                        {item.badgeType === "count" && (
-                          <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)]">
-                            {postOpAlertCount || item.badgeText}
-                          </span>
-                        )}
-                      </Link>
+                          >
+                            <span className="flex items-center gap-2 min-w-0">
+                              <Icon
+                                className={`h-3.5 w-3.5 shrink-0 ${
+                                  isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)]"
+                                }`}
+                              />
+                              <span className="truncate">{item.label}</span>
+                            </span>
 
-                      {/* Chrome-style Sub-tabs in sidebar */}
-                      {item.subTabs && item.subTabs.length > 0 && (
-                        <div className="ml-3 pl-2 border-l border-[var(--df-sidebar-border)]/50 py-0.5">
-                          <div className="grid grid-flow-col auto-cols-fr gap-0.5 p-0.5 bg-[var(--df-sidebar-bg)] rounded-md border border-[var(--df-sidebar-border)]">
+                            <span className="flex items-center gap-1.5 shrink-0">
+                              {item.badgeType === "unique" && <DentflowUniquePill dark />}
+                              {item.badgeType === "new" && <DentflowNewPill dark />}
+                              {item.badgeType === "count" && (
+                                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)]">
+                                  {postOpAlertCount || item.badgeText}
+                                </span>
+                              )}
+                            </span>
+                          </Link>
+
+                          {/* Dropdown chevron toggle for items with subTabs */}
+                          {item.subTabs && item.subTabs.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => toggleItem(item.id, e)}
+                              className="p-1 text-[var(--df-sidebar-muted)] hover:text-white rounded hover:bg-[var(--df-sidebar-hover)] ml-0.5 cursor-pointer"
+                              aria-label={`Toggle ${item.label} sub-items`}
+                            >
+                              <ChevronDown
+                                className={`h-3 w-3 transition-transform duration-150 ${
+                                  isItemExpanded ? "rotate-0" : "-rotate-90"
+                                }`}
+                              />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Clean vertical sub-menu dropdown matching sidebar layout */}
+                        {item.subTabs && isItemExpanded && (
+                          <ul className="pl-6 pr-1 py-0.5 space-y-0.5 border-l border-[var(--df-sidebar-border)]/40 ml-4">
                             {item.subTabs.map((tab) => {
                               const tabHref = `/app/${tab.slug}`;
                               const tabClean = tab.slug.split("?")[0];
@@ -537,28 +599,28 @@ export function DentflowSidebar({
                                 pathname === `/app/${tabClean}` ||
                                 (tab.slug.includes("?") && pathname?.startsWith(`/app/${tabClean}`));
                               return (
-                                <Link
-                                  key={tab.id}
-                                  href={tabHref}
-                                  onClick={onCloseMobile}
-                                  className={`px-1 py-1 text-[10px] font-medium rounded text-center truncate transition-colors ${
-                                    isTabActive
-                                      ? "bg-[var(--df-teal)] text-white font-semibold shadow-xs"
-                                      : "text-[var(--df-sidebar-text)]/75 hover:text-white hover:bg-[var(--df-sidebar-hover)]"
-                                  }`}
-                                  title={tab.label}
-                                >
-                                  {tab.label}
-                                </Link>
+                                <li key={tab.id}>
+                                  <Link
+                                    href={tabHref}
+                                    onClick={onCloseMobile}
+                                    className={`flex items-center justify-between px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                                      isTabActive
+                                        ? "bg-[var(--df-teal)] text-white font-semibold shadow-xs"
+                                        : "text-[var(--df-sidebar-text)]/75 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
+                                    }`}
+                                  >
+                                    <span className="truncate">{tab.label}</span>
+                                  </Link>
+                                </li>
                               );
                             })}
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           );
         })}
