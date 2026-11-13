@@ -1,445 +1,768 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import React, { Suspense, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import {
+  AlertCircle,
+  Calendar as CalendarIcon,
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  MessageSquare,
+  Mic,
+  MicOff,
+  MoreVertical,
+  Phone,
+  PhoneOff,
+  Plus,
+  Search,
+  Share2,
+  Sparkles,
+  User,
+  Users,
+  Video,
+  VideoOff,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
-import { DentflowPageHeader } from "@/components/dental/dentflow-primitives";
+import {
+  DentflowDrawer,
+  DentflowKpiCard,
+  DentflowPageHeader,
+  DentflowStatusPill,
+} from "@/components/dental/dentflow-primitives";
 import { useDentflow } from "@/lib/dentflow-store";
+import { StatusTone } from "@/lib/dentflow-theme";
+import { ClinicAppointment } from "@/types/dentflow";
 
-interface CalendarBlock {
+interface AppointmentBlock {
   id: string;
   chair: "C1" | "C2" | "C3" | "C4";
-  startHour: number; // e.g., 9.5 for 9:30
+  startHour: number; // e.g. 9.5 for 9:30
   durationHours: number;
   timeLabel: string;
+  endTimeLabel: string;
+  patientId: string;
   patientName: string;
   procedure: string;
   doctor: string;
+  status: ClinicAppointment["status"];
+  anxietyBufferMin: number;
+  flags: string[];
 }
 
-const INITIAL_BLOCKS: CalendarBlock[] = [
-  { id: "cb-1", chair: "C1", startHour: 9.5, durationHours: 0.7, timeLabel: "9:30", patientName: "Meera Nair", procedure: "Scaling", doctor: "Dr. Sneha K." },
-  { id: "cb-2", chair: "C1", startHour: 10.25, durationHours: 0.75, timeLabel: "10:15", patientName: "Rahul Verma", procedure: "Filling 14", doctor: "Dr. Arjun M." },
-  { id: "cb-3", chair: "C1", startHour: 12.5, durationHours: 0.75, timeLabel: "12:30", patientName: "Imran Khan", procedure: "Consult", doctor: "Dr. Arjun M." },
-  { id: "cb-4", chair: "C1", startHour: 15.0, durationHours: 0.9, timeLabel: "3:00", patientName: "Pooja Jain", procedure: "RCT 26", doctor: "Dr. Arjun M." },
-  { id: "cb-5", chair: "C1", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", patientName: "Ajay Rao", procedure: "Review", doctor: "Dr. Arjun M." },
+const INITIAL_BLOCKS: AppointmentBlock[] = [
+  { id: "cb-1", chair: "C1", startHour: 9.5, durationHours: 0.6, timeLabel: "9:30", endTimeLabel: "10:05", patientId: "pat-meera", patientName: "Meera Nair", procedure: "Scaling & polish", doctor: "Dr. Sneha K.", status: "Done", anxietyBufferMin: 0, flags: ["VIP"] },
+  { id: "cb-2", chair: "C1", startHour: 10.25, durationHours: 0.75, timeLabel: "10:15", endTimeLabel: "11:00", patientId: "pat-rahul", patientName: "Rahul Verma", procedure: "Composite filling 14", doctor: "Dr. Arjun M.", status: "Checked in", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-3", chair: "C1", startHour: 12.5, durationHours: 0.75, timeLabel: "12:30", endTimeLabel: "1:15", patientId: "pat-imran", patientName: "Imran Khan", procedure: "Consultation & X-ray", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-4", chair: "C1", startHour: 15.0, durationHours: 0.9, timeLabel: "3:00", endTimeLabel: "3:55", patientId: "pat-pooja", patientName: "Pooja Jain", procedure: "RCT 26 sitting 1", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-5", chair: "C1", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", endTimeLabel: "5:15", patientId: "pat-ajay", patientName: "Ajay Rao", procedure: "Post-op review", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
-  { id: "cb-6", chair: "C2", startHour: 10.0, durationHours: 1.25, timeLabel: "10:00", patientName: "Priya Deshmukh", procedure: "RCT 36", doctor: "Dr. Sneha K." },
-  { id: "cb-7", chair: "C2", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", patientName: "Suresh Patil", procedure: "Denture trial", doctor: "Dr. Sneha K." },
-  { id: "cb-8", chair: "C2", startHour: 13.0, durationHours: 0.75, timeLabel: "1:00", patientName: "Neha Gupta", procedure: "Crown fit 46", doctor: "Dr. Sneha K." },
-  { id: "cb-9", chair: "C2", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", patientName: "Deepak More", procedure: "RCT 11", doctor: "Dr. Sneha K." },
+  { id: "cb-6", chair: "C2", startHour: 10.0, durationHours: 1.25, timeLabel: "10:00", endTimeLabel: "11:15", patientId: "pat-priya", patientName: "Priya Deshmukh", procedure: "Root canal 36 · sitting 2", doctor: "Dr. Sneha K.", status: "In chair", anxietyBufferMin: 15, flags: ["Anxious", "Allergy"] },
+  { id: "cb-7", chair: "C2", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", endTimeLabel: "12:15", patientId: "pat-suresh", patientName: "Suresh Patil", procedure: "Denture trial", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-8", chair: "C2", startHour: 13.0, durationHours: 0.75, timeLabel: "1:00", endTimeLabel: "1:45", patientId: "pat-neha", patientName: "Neha Gupta", procedure: "Crown fit 46", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-9", chair: "C2", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", endTimeLabel: "5:15", patientId: "pat-deepak", patientName: "Deepak More", procedure: "RCT 11", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
-  { id: "cb-10", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", patientName: "Aarav Joshi", procedure: "Sealants", doctor: "Dr. Arjun M." },
-  { id: "cb-11", chair: "C3", startHour: 12.0, durationHours: 0.55, timeLabel: "12:00", patientName: "Kavya Reddy", procedure: "Aligner 10", doctor: "Dr. Karan S." },
-  { id: "cb-12", chair: "C3", startHour: 12.6, durationHours: 0.55, timeLabel: "12:30", patientName: "Tanvi Shah", procedure: "Braces adj.", doctor: "Dr. Karan S." },
-  { id: "cb-13", chair: "C3", startHour: 13.2, durationHours: 0.55, timeLabel: "1:00", patientName: "Om Kulkarni", procedure: "Braces adj.", doctor: "Dr. Karan S." },
-  { id: "cb-14", chair: "C3", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", patientName: "Riya Das", procedure: "Aligner scan", doctor: "Dr. Karan S." },
+  { id: "cb-10", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Sealants + fluoride", doctor: "Dr. Arjun M.", status: "Late 10 min", anxietyBufferMin: 0, flags: ["New"] },
+  { id: "cb-11", chair: "C3", startHour: 12.0, durationHours: 0.55, timeLabel: "12:00", endTimeLabel: "12:35", patientId: "pat-kavya", patientName: "Kavya Reddy", procedure: "Aligner check 10", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Anxious"] },
+  { id: "cb-12", chair: "C3", startHour: 12.6, durationHours: 0.55, timeLabel: "12:35", endTimeLabel: "1:10", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Braces adjustment", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-13", chair: "C3", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-riya", patientName: "Riya Das", procedure: "Aligner 3D scan", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
-  { id: "cb-15", chair: "C4", startHour: 11.0, durationHours: 0.8, timeLabel: "11:00", patientName: "Fatima Shaikh", procedure: "Implant review", doctor: "Dr. Farhan A." },
-  { id: "cb-16", chair: "C4", startHour: 14.5, durationHours: 0.8, timeLabel: "2:30", patientName: "Vikram Singh", procedure: "Extraction 38", doctor: "Dr. Farhan A." },
-  { id: "cb-17", chair: "C4", startHour: 15.5, durationHours: 0.85, timeLabel: "3:30", patientName: "Anil Bhosale", procedure: "Implant 46", doctor: "Dr. Farhan A." },
+  { id: "cb-14", chair: "C4", startHour: 11.0, durationHours: 0.8, timeLabel: "11:00", endTimeLabel: "11:50", patientId: "pat-fatima", patientName: "Fatima Shaikh", procedure: "Implant review", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-15", chair: "C4", startHour: 14.5, durationHours: 0.8, timeLabel: "2:30", endTimeLabel: "3:20", patientId: "pat-vikram", patientName: "Vikram Singh", procedure: "Surgical extraction 38", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-16", chair: "C4", startHour: 15.5, durationHours: 0.85, timeLabel: "3:30", endTimeLabel: "4:20", patientId: "pat-anil", patientName: "Anil Bhosale", procedure: "Implant placement 46", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 ];
 
 const SUGGESTED_SLOTS = [
-  "Thu 1 Oct · 10:00",
-  "Thu 1 Oct · 4:00",
-  "Fri 2 Oct · 9:30",
-  "Sat 3 Oct · 11:00",
-  "Mon 5 Oct · 10:00",
-  "Mon 5 Oct · 5:00",
+  "9:30 AM",
+  "11:00 AM",
+  "12:30 PM",
+  "2:30 PM",
+  "4:00 PM",
+  "5:15 PM",
 ];
 
-const DOCTOR_STYLE: Record<string, { border: string; bg: string; dot: string }> = {
-  "Dr. Sneha K.": {
-    border: "border-l-[#146C58]",
-    bg: "bg-[#E7F4EF]",
-    dot: "bg-[#146C58]",
-  },
-  "Dr. Arjun M.": {
-    border: "border-l-[#3B82F6]",
-    bg: "bg-[#EDF4FE]",
-    dot: "bg-[#3B82F6]",
-  },
-  "Dr. Farhan A.": {
-    border: "border-l-[#D97706]",
-    bg: "bg-[#FDF3E3]",
-    dot: "bg-[#D97706]",
-  },
-  "Dr. Karan S.": {
-    border: "border-l-[#7C3AED]",
-    bg: "bg-[#F3EDFE]",
-    dot: "bg-[#7C3AED]",
-  },
+const STATUS_TONES: Record<ClinicAppointment["status"], StatusTone> = {
+  Done: "green",
+  "In chair": "blue",
+  "Checked in": "teal",
+  "Late 10 min": "amber",
+  Confirmed: "green",
+  "Not confirmed": "grey",
+  Cancelled: "red",
 };
 
-export default function ChairCalendarPage() {
+interface VideoConsultationItem {
+  id: string;
+  patientName: string;
+  doctorName: string;
+  time: string;
+  status: "Scheduled" | "Live" | "Completed";
+  reason: string;
+}
+
+const INITIAL_VIDEO_CONSULTS: VideoConsultationItem[] = [
+  { id: "vc-1", patientName: "Priya Deshmukh", doctorName: "Dr. Sneha Kulkarni", time: "11:30 AM", status: "Scheduled", reason: "Crown color preview & shade verification" },
+  { id: "vc-2", patientName: "Rohan Mehta", doctorName: "Dr. Arjun Mehta", time: "1:00 PM", status: "Live", reason: "Day 3 post-op extraction pain check" },
+  { id: "vc-3", patientName: "Ananya Iyer", doctorName: "Dr. Karan Shah", time: "9:00 AM", status: "Completed", reason: "Aligner tray 12 fitting assessment" },
+];
+
+function CalendarPageInner() {
+  const searchParams = useSearchParams();
   const { state, updateState } = useDentflow();
-  const [viewMode, setViewMode] = useState<"Chairs" | "Doctors" | "Week">("Chairs");
-  const [blocks, setBlocks] = useState<CalendarBlock[]>(INITIAL_BLOCKS);
 
-  // Booking drawer state
+  // Calendar View Controls
+  const [viewMode, setViewMode] = useState<"Day" | "Week" | "List">("Day");
+  const [selectedDate, setSelectedDate] = useState("Thursday, 1 Oct 2026");
+  const [doctorFilter, setDoctorFilter] = useState("All Doctors");
+  const [chairFilter, setChairFilter] = useState("All Chairs");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+
+  // Appointments State
+  const [blocks, setBlocks] = useState<AppointmentBlock[]>(INITIAL_BLOCKS);
+  const [selectedBlock, setSelectedBlock] = useState<AppointmentBlock | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+
+  // New Appointment Drawer State
+  const [newApptOpen, setNewApptOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState("pat-priya");
-  const [procedure, setProcedure] = useState("Root canal 36 · sitting 2 — 60 min");
-  const [doctor, setDoctor] = useState("Dr. Sneha K.");
-  const [chair, setChair] = useState("Chair 2");
-  const [selectedSlot, setSelectedSlot] = useState(SUGGESTED_SLOTS[0]);
-  const [remindWa, setRemindWa] = useState(true);
+  const [selectedProcedure, setSelectedProcedure] = useState("Root canal 36 · sitting 2 — 60 min");
+  const [selectedDoctor, setSelectedDoctor] = useState("Dr. Sneha Kulkarni");
+  const [selectedChair, setSelectedChair] = useState<"C1" | "C2" | "C3" | "C4">("C2");
+  const [selectedSlot, setSelectedSlot] = useState("10:00 AM");
+  const [apptNotes, setApptNotes] = useState("");
+  const [sendWhatsApp, setSendWhatsApp] = useState(true);
   const [askDeposit, setAskDeposit] = useState(false);
-  const [sendPreVisit, setSendPreVisit] = useState(true);
 
-  const selectedPatient = useMemo(
-    () => state.patients.find((p) => p.id === selectedPatientId) || state.patients[0],
-    [state.patients, selectedPatientId],
-  );
+  // Video Consultation Modal & Call Overlay
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [videoTab, setVideoTab] = useState<"Schedule" | "Start now" | "Today">("Today");
+  const [videoConsults, setVideoConsults] = useState<VideoConsultationItem[]>(INITIAL_VIDEO_CONSULTS);
+  const [activeCall, setActiveCall] = useState<VideoConsultationItem | null>(null);
+  const [callMuted, setCallMuted] = useState(false);
+  const [callVideoOff, setCallVideoOff] = useState(false);
+  const [callChatMessages, setCallChatMessages] = useState<{ sender: string; text: string }[]>([
+    { sender: "System", text: "Encrypted HD tele-dentistry session started." },
+  ]);
+  const [callInputChat, setCallInputChat] = useState("");
 
-  const anxietyBuffer = selectedPatient?.comfortProfile.autoBufferMin || 0;
-  const totalDuration = 60 + anxietyBuffer;
+  // Check URL query for booking trigger
+  React.useEffect(() => {
+    const bookId = searchParams?.get("bookPatientId");
+    if (bookId) {
+      setSelectedPatientId(bookId);
+      setNewApptOpen(true);
+    }
+  }, [searchParams]);
 
-  const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17];
-  const chairs: { id: "C1" | "C2" | "C3" | "C4"; label: string }[] = [
-    { id: "C1", label: "Chair 1 · General" },
-    { id: "C2", label: "Chair 2 · Endo" },
-    { id: "C3", label: "Chair 3 · Kids & ortho" },
-    { id: "C4", label: "Chair 4 · Surgery" },
+  const selectedPatient = useMemo(() => {
+    return state.patients.find((p) => p.id === selectedPatientId) || state.patients[0];
+  }, [state.patients, selectedPatientId]);
+
+  const anxietyBuffer = selectedPatient?.comfortProfile?.autoBufferMin || 0;
+
+  // Filtered blocks for Day Calendar
+  const filteredBlocks = useMemo(() => {
+    return blocks.filter((b) => {
+      if (doctorFilter !== "All Doctors" && !b.doctor.includes(doctorFilter.split(" ")[1] || "")) return false;
+      if (chairFilter !== "All Chairs" && b.chair !== chairFilter) return false;
+      if (statusFilter !== "All Status" && b.status !== statusFilter) return false;
+      return true;
+    });
+  }, [blocks, doctorFilter, chairFilter, statusFilter]);
+
+  // Chair column setup
+  const chairs = [
+    { id: "C1", label: "Chair 1 · General", doc: "Dr. Arjun M." },
+    { id: "C2", label: "Chair 2 · Surgery/Endo", doc: "Dr. Sneha K." },
+    { id: "C3", label: "Chair 3 · Ortho", doc: "Dr. Karan S." },
+    { id: "C4", label: "Chair 4 · Implant", doc: "Dr. Farhan A." },
   ];
 
-  const handleBookSlot = () => {
-    updateState((prev) => ({
-      ...prev,
-      appointments: [
-        {
-          id: `apt-${Date.now()}`,
-          time: selectedSlot.split("·")[1]?.trim() || "10:00",
-          endTime: "11:15",
-          durationMin: 60,
-          anxietyBufferMin: anxietyBuffer,
-          patientId: selectedPatient.id,
-          patientName: selectedPatient.name,
-          flags: selectedPatient.flags,
-          procedure: procedure.split("—")[0].trim(),
-          doctor,
-          chair: chair.replace("Chair ", "C"),
-          branch: state.activeBranch === "All 3 branches" ? "Station Road branch" : state.activeBranch,
-          status: "Confirmed",
-          depositRequested: askDeposit,
-          remindWhatsApp: remindWa,
-          sendPreVisitForm: sendPreVisit,
-        },
-        ...prev.appointments,
-      ],
-    }));
-    toast.success(
-      `Booked ${selectedPatient.name} for ${selectedSlot} (${totalDuration} min incl. buffer)`,
-    );
+  const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17];
+
+  // Actions on appointment block
+  const handleOpenBlock = (block: AppointmentBlock) => {
+    setSelectedBlock(block);
+    setDetailDrawerOpen(true);
   };
 
-  const handleAddToWaitlist = () => {
-    updateState((prev) => ({
-      ...prev,
-      gapFillerCandidates: [
-        {
-          rank: prev.gapFillerCandidates.length + 1,
-          patientId: selectedPatient.id,
-          patientName: selectedPatient.name,
-          needs: procedure.split("—")[0].trim(),
-          whyMatched: `Waitlisted · ${doctor}`,
-          score: 88,
-          offerStatus: "Wave 2",
-          wave: 2,
-        },
-        ...prev.gapFillerCandidates,
-      ],
-    }));
-    toast.success(`${selectedPatient.name} added to gap filler waitlist`);
+  const handleUpdateStatus = (newStatus: ClinicAppointment["status"]) => {
+    if (!selectedBlock) return;
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === selectedBlock.id ? { ...b, status: newStatus } : b)),
+    );
+    setSelectedBlock((prev) => (prev ? { ...prev, status: newStatus } : null));
+    toast.success(`Appointment updated: ${newStatus}`);
   };
 
-  const handleCancelBlock = (block: CalendarBlock) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== block.id));
-    toast.info(
-      `Cancelled ${block.patientName} (${block.timeLabel}) — Gap filler notified for freed ${block.chair} slot`,
-    );
+  // Book appointment handler
+  const handleBookAppointment = () => {
+    const startH = selectedSlot.includes("9:30")
+      ? 9.5
+      : selectedSlot.includes("11:00")
+      ? 11.0
+      : selectedSlot.includes("12:30")
+      ? 12.5
+      : selectedSlot.includes("2:30")
+      ? 14.5
+      : 16.0;
+
+    const newBlock: AppointmentBlock = {
+      id: `cb-${Date.now()}`,
+      chair: selectedChair,
+      startHour: startH,
+      durationHours: 0.85,
+      timeLabel: selectedSlot,
+      endTimeLabel: "—",
+      patientId: selectedPatient.id,
+      patientName: selectedPatient.name,
+      procedure: selectedProcedure.split("—")[0].trim(),
+      doctor: selectedDoctor,
+      status: "Confirmed",
+      anxietyBufferMin: anxietyBuffer,
+      flags: selectedPatient.flags,
+    };
+
+    setBlocks((prev) => [...prev, newBlock]);
+    setNewApptOpen(false);
+    toast.success(`Appointment booked for ${selectedPatient.name} at ${selectedSlot}!`);
+  };
+
+  // Video call controls
+  const handleStartCall = (consult: VideoConsultationItem) => {
+    setActiveCall(consult);
+    setVideoModalOpen(false);
+    toast.success(`Connected to tele-consult with ${consult.patientName}`);
+  };
+
+  const handleEndCall = () => {
+    setActiveCall(null);
+    toast.info("Tele-consultation ended.");
   };
 
   return (
-    <div>
-      <DentflowPageHeader
-        title="Calendar"
-        subtitle={`Chair view · ${state.activeBranch}`}
-      />
-
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-1 bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2 py-1">
-            <button type="button" className="p-1 hover:bg-[var(--df-surface-hover)] rounded-lg">
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <span className="text-xs font-semibold px-2 text-[var(--df-text)]">
-              Tue, 29 September
-            </span>
-            <button type="button" className="p-1 hover:bg-[var(--df-surface-hover)] rounded-lg">
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div className="inline-flex bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl p-0.5">
-            {(["Chairs", "Doctors", "Week"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setViewMode(tab)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  viewMode === tab
-                    ? "bg-[var(--df-sidebar-bg)] text-white"
-                    : "text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+    <div className="space-y-4">
+      {/* Header Pattern */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--df-border)]">
+        <div>
+          <h1 className="df-serif text-2xl font-semibold text-[var(--df-text)] tracking-tight">
+            Appointments
+          </h1>
+          <p className="text-xs text-[var(--df-text-muted)] mt-0.5">
+            Schedule and manage patient visits · Station Road branch
+          </p>
         </div>
 
-        {/* Doctor filter chips */}
-        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-          <span className="text-[var(--df-text-muted)] mr-1">Doctors:</span>
-          {[
-            { name: "Dr. Sneha K.", label: "Dr. Sneha K." },
-            { name: "Dr. Arjun M.", label: "Dr. Arjun M." },
-            { name: "Dr. Farhan A.", label: "Dr. Farhan A. (visiting)" },
-            { name: "Dr. Karan S.", label: "Dr. Karan S. (visiting)" },
-          ].map((doc) => (
-            <span
-              key={doc.name}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--df-surface)] border border-[var(--df-border)] font-medium text-[var(--df-text)]"
-            >
-              <span className={`h-2 w-2 rounded-full ${DOCTOR_STYLE[doc.name].dot}`} />
-              {doc.label}
-            </span>
-          ))}
+        {/* Right Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setVideoTab("Today");
+              setVideoModalOpen(true);
+            }}
+            className="df-btn-secondary px-3.5 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+          >
+            <Video className="h-4 w-4 text-[var(--df-teal)]" />
+            <span>Video Consultation</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setNewApptOpen(true)}
+            className="df-btn-primary px-4 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>+ New Appointment</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Split: Chair Grid + New Appointment Drawer */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-        {/* Left: 4-Chair Day Calendar */}
-        <div className="xl:col-span-8 df-card p-4 overflow-x-auto">
-          {viewMode === "Chairs" && (
-            <div className="min-w-[680px]">
-              <div className="grid grid-cols-[54px_repeat(4,1fr)] gap-2 pb-2 border-b border-[var(--df-border)] text-center">
-                <div />
-                {chairs.map((c) => (
-                  <div key={c.id} className="text-xs font-semibold text-[var(--df-text)]">
-                    {c.label}
-                  </div>
-                ))}
-              </div>
+      {/* Summary KPI Card Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <DentflowKpiCard
+          label="Total today"
+          value="16"
+          subtext="+2 vs yesterday"
+          subtextTone="green"
+        />
+        <DentflowKpiCard
+          label="Confirmed"
+          value="11"
+          subtext="69% arrival rate"
+          subtextTone="teal"
+          highlighted
+        />
+        <DentflowKpiCard
+          label="Completed"
+          value="3"
+          subtext="₹48,200 collected"
+          subtextTone="green"
+        />
+        <DentflowKpiCard
+          label="In chair / Waiting"
+          value="2"
+          subtext="1 delayed 10m"
+          subtextTone="amber"
+        />
+      </div>
 
-              <div className="relative grid grid-cols-[54px_repeat(4,1fr)] gap-2 pt-2">
-                {/* Hour labels */}
-                <div className="space-y-0">
-                  {hours.map((h) => (
-                    <div
-                      key={h}
-                      className="h-14 text-[10px] text-[var(--df-text-muted)] pr-2 text-right pt-0.5"
-                    >
-                      {h === 12 ? "12 pm" : h > 12 ? `${h - 12} pm` : `${h} am`}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Chair Columns */}
-                {chairs.map((c) => {
-                  const chairBlocks = blocks.filter((b) => b.chair === c.id);
-                  return (
-                    <div
-                      key={c.id}
-                      className="relative border-l border-[var(--df-border)] bg-[var(--df-surface-muted)]/40"
-                      style={{ height: `${hours.length * 56}px` }}
-                    >
-                      {hours.map((h, i) => (
-                        <div
-                          key={h}
-                          className="border-b border-dashed border-[var(--df-border)]/70"
-                          style={{ height: "56px", top: `${i * 56}px` }}
-                        />
-                      ))}
-
-                      {chairBlocks.map((b) => {
-                        const style = DOCTOR_STYLE[b.doctor] || DOCTOR_STYLE["Dr. Sneha K."];
-                        const topPx = (b.startHour - 9) * 56;
-                        const heightPx = Math.max(b.durationHours * 56 - 2, 32);
-                        return (
-                          <div
-                            key={b.id}
-                            style={{ top: `${topPx}px`, height: `${heightPx}px` }}
-                            className={`group absolute left-1 right-1 rounded-lg border border-[var(--df-border)] border-l-4 ${style.border} ${style.bg} px-2 py-1 overflow-hidden shadow-2xs`}
-                          >
-                            <div className="flex items-start justify-between gap-1">
-                              <p className="text-[11px] font-bold text-[var(--df-text)] truncate leading-tight">
-                                {b.patientName}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => handleCancelBlock(b)}
-                                title="Cancel slot & trigger Gap Filler"
-                                className="opacity-0 group-hover:opacity-100 text-[var(--df-text-muted)] hover:text-[var(--df-status-red-text)] cursor-pointer"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                            <p className="text-[10px] text-[var(--df-text-secondary)] truncate">
-                              {b.timeLabel} · {b.procedure}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {viewMode === "Doctors" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {Object.keys(DOCTOR_STYLE).map((docName) => {
-                const docBlocks = blocks.filter((b) => b.doctor === docName);
-                return (
-                  <div key={docName} className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-[var(--df-text)]">{docName}</span>
-                      <span className="text-[11px] text-[var(--df-text-muted)]">{docBlocks.length} slots</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {docBlocks.map((b) => (
-                        <div key={b.id} className="p-2 rounded-lg bg-[var(--df-surface)] border border-[var(--df-border)] text-xs flex justify-between">
-                          <span><strong className="df-mono">{b.timeLabel}</strong> · {b.patientName}</span>
-                          <span className="text-[var(--df-text-muted)]">{b.chair}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {viewMode === "Week" && (
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
-              {["Tue 29", "Wed 30", "Thu 1 Oct", "Fri 2 Oct", "Sat 3 Oct", "Mon 5 Oct"].map((d, i) => (
-                <div key={d} className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)]">
-                  <p className="font-bold text-[var(--df-text)] mb-1">{d}</p>
-                  <p className="text-[11px] text-[var(--df-teal)] font-semibold">{34 - i * 3} appointments</p>
-                  <p className="text-[11px] text-[var(--df-text-muted)] mt-1">Chair util: {82 - i * 4}%</p>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* Controls Bar: View Toggle + Date Navigator + Filters */}
+      <div className="df-card p-3 flex flex-wrap items-center justify-between gap-3">
+        {/* Left: View Mode Toggle */}
+        <div className="flex items-center gap-1 bg-[var(--df-surface-muted)] p-1 rounded-xl border border-[var(--df-border)]">
+          {(["Day", "Week", "List"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                viewMode === mode
+                  ? "bg-[var(--df-surface)] text-[var(--df-text)] shadow-xs"
+                  : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
         </div>
 
-        {/* Right: New Appointment Drawer */}
-        <div className="xl:col-span-4 df-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="df-serif text-base font-semibold text-[var(--df-text)]">
-              New appointment
-            </h2>
-            <span className="text-xs text-[var(--df-text-muted)]">Booking drawer</span>
+        {/* Center: Date Navigator */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] cursor-pointer text-[var(--df-text-muted)]"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-xs font-bold text-[var(--df-text)] px-1">
+            {selectedDate}
+          </span>
+          <button
+            type="button"
+            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] cursor-pointer text-[var(--df-text-muted)]"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Right: Filters */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <select
+            aria-label="Filter doctor"
+            value={doctorFilter}
+            onChange={(e) => setDoctorFilter(e.target.value)}
+            className="bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2.5 py-1.5 text-xs font-medium cursor-pointer"
+          >
+            <option value="All Doctors">All Doctors</option>
+            <option value="Dr. Sneha K.">Dr. Sneha K.</option>
+            <option value="Dr. Arjun M.">Dr. Arjun M.</option>
+            <option value="Dr. Farhan A.">Dr. Farhan A.</option>
+            <option value="Dr. Karan S.">Dr. Karan S.</option>
+          </select>
+
+          <select
+            aria-label="Filter chair"
+            value={chairFilter}
+            onChange={(e) => setChairFilter(e.target.value)}
+            className="bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2.5 py-1.5 text-xs font-medium cursor-pointer"
+          >
+            <option value="All Chairs">All Chairs</option>
+            <option value="C1">Chair 1</option>
+            <option value="C2">Chair 2</option>
+            <option value="C3">Chair 3</option>
+            <option value="C4">Chair 4</option>
+          </select>
+
+          <select
+            aria-label="Filter status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2.5 py-1.5 text-xs font-medium cursor-pointer"
+          >
+            <option value="All Status">All Status</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="In chair">In chair</option>
+            <option value="Checked in">Checked in</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Main View Area: Day Calendar OR List View */}
+      {viewMode === "Day" && (
+        <div className="df-card overflow-hidden">
+          {/* Chair Headers */}
+          <div className="grid grid-cols-12 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-xs font-bold divide-x divide-[var(--df-border)]">
+            <div className="col-span-1 p-2.5 text-center text-[11px] text-[var(--df-text-muted)]">Time</div>
+            {chairs.map((c) => (
+              <div key={c.id} className="col-span-2 p-2.5">
+                <p className="text-[var(--df-text)]">{c.label}</p>
+                <p className="text-[10px] text-[var(--df-text-muted)] font-normal">{c.doc}</p>
+              </div>
+            ))}
+            <div className="col-span-3 p-2.5 text-right text-[11px] text-[var(--df-text-muted)] pr-3">
+              Waitlist & Walk-in queue (2)
+            </div>
           </div>
 
+          {/* Time Rows Grid */}
+          <div className="relative min-h-[580px] bg-[var(--df-surface)]">
+            {/* Horizontal Hour Lines */}
+            {hours.map((h, i) => (
+              <div
+                key={h}
+                className="grid grid-cols-12 border-b border-[var(--df-border)]/60 text-[10px] text-[var(--df-text-muted)] h-14 divide-x divide-[var(--df-border)]/40"
+              >
+                <div className="col-span-1 p-1 text-center font-mono">
+                  {h > 12 ? `${h - 12}:00` : `${h}:00`}
+                </div>
+                <div className="col-span-2" />
+                <div className="col-span-2" />
+                <div className="col-span-2" />
+                <div className="col-span-2" />
+                <div className="col-span-3" />
+              </div>
+            ))}
+
+            {/* Render Appointment Blocks */}
+            {filteredBlocks.map((b) => {
+              const topOffset = (b.startHour - 9.0) * 56; // 56px per hour
+              const height = Math.max(b.durationHours * 56, 42);
+
+              let colClass = "left-[8.33%] w-[16.66%]";
+              if (b.chair === "C2") colClass = "left-[25%] w-[16.66%]";
+              if (b.chair === "C3") colClass = "left-[41.66%] w-[16.66%]";
+              if (b.chair === "C4") colClass = "left-[58.33%] w-[16.66%]";
+
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => handleOpenBlock(b)}
+                  style={{ top: `${topOffset}px`, height: `${height}px` }}
+                  className={`absolute ${colClass} p-1 z-10`}
+                >
+                  <div
+                    className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-pointer ${
+                      b.status === "Done"
+                        ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
+                        : b.status === "In chair"
+                        ? "bg-[var(--df-teal-soft)] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                        : b.status === "Late 10 min"
+                        ? "bg-amber-50 border-amber-300 text-amber-900"
+                        : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-bold truncate">{b.patientName}</span>
+                        <span className="text-[10px] font-mono shrink-0">{b.timeLabel}</span>
+                      </div>
+                      <p className="text-[10.5px] truncate opacity-90 mt-0.5">{b.procedure}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-1 pt-1">
+                      <span className="text-[10px] opacity-75">{b.doctor}</span>
+                      {b.anxietyBufferMin > 0 && (
+                        <span className="px-1 py-0.2 rounded-full text-[9px] font-bold bg-amber-200 text-amber-900">
+                          +{b.anxietyBufferMin}m
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* List View Table */}
+      {viewMode === "List" && (
+        <div className="df-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-[11px] font-bold text-[var(--df-text-muted)] uppercase tracking-wider">
+                  <th className="py-3 px-4">Time</th>
+                  <th className="py-3 px-4">Patient</th>
+                  <th className="py-3 px-4">Procedure</th>
+                  <th className="py-3 px-4">Doctor</th>
+                  <th className="py-3 px-4">Chair</th>
+                  <th className="py-3 px-4">Buffer</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--df-border)]">
+                {filteredBlocks.map((b) => (
+                  <tr
+                    key={b.id}
+                    onClick={() => handleOpenBlock(b)}
+                    className="hover:bg-[var(--df-surface-hover)] transition-colors cursor-pointer"
+                  >
+                    <td className="py-3 px-4 font-mono font-bold text-[var(--df-text)]">
+                      {b.timeLabel}
+                    </td>
+                    <td className="py-3 px-4 font-bold text-[var(--df-text)]">
+                      {b.patientName}
+                    </td>
+                    <td className="py-3 px-4 text-[var(--df-text-secondary)]">
+                      {b.procedure}
+                    </td>
+                    <td className="py-3 px-4 text-[var(--df-text)]">
+                      {b.doctor}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--df-surface-muted)] border text-[11px] font-semibold">
+                        {b.chair}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {b.anxietyBufferMin > 0 ? (
+                        <span className="text-amber-700 font-bold">+{b.anxietyBufferMin} min</span>
+                      ) : (
+                        <span className="text-[var(--df-text-muted)]">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <DentflowStatusPill label={b.status} tone={STATUS_TONES[b.status] || "grey"} />
+                    </td>
+                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenBlock(b)}
+                        className="df-btn-secondary px-2.5 py-1 text-xs cursor-pointer"
+                      >
+                        Manage
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Week View */}
+      {viewMode === "Week" && (
+        <div className="df-card p-6 text-center space-y-3">
+          <p className="font-bold text-sm text-[var(--df-text)]">Week Overview (Oct 1 - Oct 7, 2026)</p>
+          <div className="grid grid-cols-7 gap-2 pt-2">
+            {["Thu 1", "Fri 2", "Sat 3", "Sun 4", "Mon 5", "Tue 6", "Wed 7"].map((d, i) => (
+              <div key={d} className={`p-3 rounded-xl border ${i === 0 ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)]" : "bg-[var(--df-surface-muted)]"}`}>
+                <p className="font-bold text-xs">{d}</p>
+                <p className="text-xl font-bold mt-1">{i === 0 ? "16" : i === 3 ? "Closed" : "12-14"}</p>
+                <p className="text-[10px] text-[var(--df-text-muted)] mt-0.5">{i === 3 ? "Sunday" : "slots full"}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Appointment Detail Drawer */}
+      {selectedBlock && (
+        <DentflowDrawer
+          open={detailDrawerOpen}
+          onClose={() => setDetailDrawerOpen(false)}
+          title={`Appointment · ${selectedBlock.patientName}`}
+          subtitle={`${selectedBlock.timeLabel} · ${selectedBlock.chair} · ${selectedBlock.procedure}`}
+        >
+          <div className="space-y-5 text-xs pb-10">
+            {/* Status Card */}
+            <div className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-[var(--df-text-muted)]">Current Status</p>
+                <p className="font-bold text-sm text-[var(--df-text)] mt-0.5">{selectedBlock.status}</p>
+              </div>
+              <DentflowStatusPill label={selectedBlock.status} tone={STATUS_TONES[selectedBlock.status] || "grey"} />
+            </div>
+
+            {/* Quick Actions */}
+            <div className="space-y-2">
+              <p className="font-bold text-xs text-[var(--df-text)]">Status Progression</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateStatus("Checked in")}
+                  className="df-btn-secondary py-2 text-xs font-semibold cursor-pointer"
+                >
+                  Mark Checked In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateStatus("In chair")}
+                  className="df-btn-secondary py-2 text-xs font-semibold text-[var(--df-teal)] border-[var(--df-teal-border)] cursor-pointer"
+                >
+                  Move to Chair
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateStatus("Done")}
+                  className="df-btn-primary py-2 text-xs font-semibold cursor-pointer"
+                >
+                  Complete Procedure
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateStatus("Cancelled")}
+                  className="df-btn-secondary py-2 text-xs font-semibold text-red-600 hover:bg-red-50 cursor-pointer"
+                >
+                  Cancel Sitting
+                </button>
+              </div>
+            </div>
+
+            {/* Patient & Anxiety Alert */}
+            {selectedBlock.anxietyBufferMin > 0 && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-amber-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Anxiety Buffer Active (+{selectedBlock.anxietyBufferMin} mins)</span>
+                </div>
+                <p className="text-[11px]">
+                  Patient sensitive to injections. Doctor must explain each step before starting and observe hand-raise stop signal.
+                </p>
+              </div>
+            )}
+
+            {/* Reminders & WhatsApp */}
+            <div className="df-card p-3.5 space-y-2">
+              <p className="font-bold text-xs text-[var(--df-text)]">WhatsApp Notifications</p>
+              <p className="text-[11px] text-[var(--df-text-secondary)]">
+                Automated reminder sent at 8:00 am today. Patient confirmed via WhatsApp interactive reply.
+              </p>
+              <button
+                type="button"
+                onClick={() => toast.success("WhatsApp appointment details resent!")}
+                className="df-btn-secondary px-3 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer mt-1"
+              >
+                <MessageSquare className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+                <span>Resend reminder</span>
+              </button>
+            </div>
+          </div>
+        </DentflowDrawer>
+      )}
+
+      {/* "+ New Appointment" Right-Side Drawer */}
+      <DentflowDrawer
+        open={newApptOpen}
+        onClose={() => setNewApptOpen(false)}
+        title="+ Book Chair Appointment"
+        subtitle="Match patient, procedure duration, doctor & anxiety buffer"
+      >
+        <div className="space-y-5 text-xs pb-10">
+          {/* Patient Selection */}
           <div>
-            <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
-              Patient
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-semibold text-[var(--df-text)]">Select patient *</label>
+              <Link href="/app/patients" className="text-[11px] font-semibold text-[var(--df-teal)] hover:underline">
+                + New patient
+              </Link>
+            </div>
             <select
+              aria-label="Select patient"
               value={selectedPatientId}
               onChange={(e) => setSelectedPatientId(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+              className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 font-medium"
             >
               {state.patients.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} · {p.phone}
+                  {p.name} ({p.code}) · {p.phone}
                 </option>
               ))}
             </select>
-
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {selectedPatient.comfortProfile.anxietyScore >= 6 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--df-status-amber-bg)] text-[var(--df-status-amber-text)] border border-[var(--df-status-amber-border)]">
-                  Anxiety {selectedPatient.comfortProfile.anxietyScore}/10 · give {anxietyBuffer} min extra
-                </span>
-              )}
-              {selectedPatient.allergies.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--df-status-red-bg)] text-[var(--df-status-red-text)] border border-[var(--df-status-red-border)]">
-                  {selectedPatient.allergies[0]} allergy
-                </span>
-              )}
-            </div>
           </div>
 
+          {/* Dynamic Allergy & Anxiety Alert */}
+          {(selectedPatient.allergies.length > 0 || anxietyBuffer > 0) && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-xs text-amber-800">
+                <AlertCircle className="h-4 w-4" />
+                <span>Patient Health Alerts</span>
+              </div>
+              <p className="text-[11.5px]">
+                {selectedPatient.allergies.length > 0 && (
+                  <span>Allergies: <strong>{selectedPatient.allergies.join(", ")}</strong>. </span>
+                )}
+                {anxietyBuffer > 0 && (
+                  <span>Dental anxiety: <strong>+{anxietyBuffer}m automatic buffer</strong> added to slot.</span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Procedure */}
           <div>
-            <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
-              Procedure (sets duration)
-            </label>
+            <label className="block font-semibold mb-1 text-[var(--df-text)]">Procedure *</label>
             <select
-              value={procedure}
-              onChange={(e) => setProcedure(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+              aria-label="Procedure"
+              value={selectedProcedure}
+              onChange={(e) => setSelectedProcedure(e.target.value)}
+              className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 font-medium"
             >
-              <option>Root canal 36 · sitting 2 — 60 min</option>
-              <option>Zirconia crown prep 36 — 45 min</option>
-              <option>Scaling & polishing — 30 min</option>
-              <option>Implant placement 46 — 90 min</option>
+              <option value="Scaling & polish — 30 min">Scaling & polish — 30 min</option>
+              <option value="Composite filling 14 — 45 min">Composite filling — 45 min</option>
+              <option value="Root canal 36 · sitting 2 — 60 min">Root canal treatment — 60 min</option>
+              <option value="Crown prep & scan — 60 min">Crown prep & scan — 60 min</option>
+              <option value="Implant consultation — 45 min">Implant consultation — 45 min</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* Doctor & Chair */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
-                Doctor
-              </label>
+              <label className="block font-semibold mb-1 text-[var(--df-text)]">Doctor</label>
               <select
-                value={doctor}
-                onChange={(e) => setDoctor(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+                aria-label="Doctor"
+                value={selectedDoctor}
+                onChange={(e) => setSelectedDoctor(e.target.value)}
+                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
               >
-                <option>Dr. Sneha K.</option>
-                <option>Dr. Arjun M.</option>
-                <option>Dr. Farhan A.</option>
-                <option>Dr. Karan S.</option>
+                <option value="Dr. Sneha Kulkarni">Dr. Sneha Kulkarni</option>
+                <option value="Dr. Arjun Mehta">Dr. Arjun Mehta</option>
+                <option value="Dr. Farhan Ali">Dr. Farhan Ali</option>
+                <option value="Dr. Karan Shah">Dr. Karan Shah</option>
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
-                Chair
-              </label>
+              <label className="block font-semibold mb-1 text-[var(--df-text)]">Chair</label>
               <select
-                value={chair}
-                onChange={(e) => setChair(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)]"
+                aria-label="Chair"
+                value={selectedChair}
+                onChange={(e) => setSelectedChair(e.target.value as any)}
+                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
               >
-                <option>Chair 1</option>
-                <option>Chair 2</option>
-                <option>Chair 3</option>
-                <option>Chair 4</option>
+                <option value="C1">Chair 1 · General</option>
+                <option value="C2">Chair 2 · Surgery/Endo</option>
+                <option value="C3">Chair 3 · Ortho</option>
+                <option value="C4">Chair 4 · Implant</option>
               </select>
             </div>
           </div>
 
+          {/* Suggested Free Slots Chips */}
           <div>
-            <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1.5">
-              Suggested free slots ({totalDuration} min incl. anxiety buffer)
+            <label className="block font-semibold mb-1.5 text-[var(--df-text)]">
+              Suggested free time slots (Today)
             </label>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {SUGGESTED_SLOTS.map((slot) => (
                 <button
                   key={slot}
                   type="button"
                   onClick={() => setSelectedSlot(slot)}
-                  className={`px-2 py-2 rounded-lg text-[10.5px] font-semibold border transition-colors cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition-colors ${
                     selectedSlot === slot
-                      ? "bg-[var(--df-sidebar-bg)] text-white border-[var(--df-sidebar-bg)]"
-                      : "bg-[var(--df-surface)] text-[var(--df-text)] border-[var(--df-border)] hover:bg-[var(--df-surface-hover)]"
+                      ? "bg-[var(--df-teal)] text-white border-[var(--df-teal)]"
+                      : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
                   }`}
                 >
                   {slot}
@@ -448,55 +771,366 @@ export default function ChairCalendarPage() {
             </div>
           </div>
 
-          <div className="space-y-2 pt-1 text-xs text-[var(--df-text)]">
+          {/* Notes */}
+          <div>
+            <label className="block font-semibold mb-1 text-[var(--df-text)]">Clinical notes</label>
+            <textarea
+              rows={2}
+              value={apptNotes}
+              onChange={(e) => setApptNotes(e.target.value)}
+              placeholder="e.g. Patient requested morning sitting, headphones enabled"
+              className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl p-2.5 text-xs"
+            />
+          </div>
+
+          {/* WhatsApp & Deposit Checkboxes */}
+          <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={remindWa}
-                onChange={(e) => setRemindWa(e.target.checked)}
-                className="accent-[var(--df-teal)] rounded"
+                checked={sendWhatsApp}
+                onChange={(e) => setSendWhatsApp(e.target.checked)}
+                className="h-3.5 w-3.5 rounded text-[var(--df-teal)]"
               />
-              <span>Remind on WhatsApp (24 h + 2 h)</span>
+              <span className="text-[11px] text-[var(--df-text-secondary)]">
+                Send WhatsApp confirmation with Google Maps clinic directions
+              </span>
             </label>
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={askDeposit}
                 onChange={(e) => setAskDeposit(e.target.checked)}
-                className="accent-[var(--df-teal)] rounded"
+                className="h-3.5 w-3.5 rounded text-[var(--df-teal)]"
               />
-              <span>Ask ₹500 booking deposit via UPI</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sendPreVisit}
-                onChange={(e) => setSendPreVisit(e.target.checked)}
-                className="accent-[var(--df-teal)] rounded"
-              />
-              <span>Send pre-visit form &amp; comfort check</span>
+              <span className="text-[11px] text-[var(--df-text-secondary)]">
+                Request booking deposit (₹500 dynamic UPI QR link)
+              </span>
             </label>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2">
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-[var(--df-border)] flex items-center justify-end gap-2.5">
             <button
               type="button"
-              onClick={handleAddToWaitlist}
-              className="df-btn-secondary py-2 text-xs cursor-pointer"
+              onClick={() => setNewApptOpen(false)}
+              className="df-btn-secondary px-4 py-2 text-xs font-semibold cursor-pointer"
             >
-              Add to waitlist
+              Cancel
             </button>
             <button
               type="button"
-              onClick={handleBookSlot}
-              className="df-btn-primary py-2 text-xs cursor-pointer"
+              onClick={handleBookAppointment}
+              className="df-btn-primary px-5 py-2 text-xs font-semibold cursor-pointer"
             >
-              Book {selectedSlot}
+              Book appointment
             </button>
           </div>
         </div>
-      </div>
+      </DentflowDrawer>
+
+      {/* "Video Consultation" Modal */}
+      {videoModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="df-card w-full max-w-lg p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--df-border)] pb-2.5">
+              <div className="flex items-center gap-2">
+                <Video className="h-4 w-4 text-[var(--df-teal)]" />
+                <h3 className="font-bold text-sm text-[var(--df-text)]">
+                  Tele-Dentistry Video Consultations
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(false)}
+                className="p-1 rounded-lg text-[var(--df-text-muted)] hover:bg-[var(--df-surface-muted)] cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* 3 Tabs */}
+            <div className="flex border-b border-[var(--df-border)] gap-2 pb-1 text-xs">
+              {(["Today", "Schedule", "Start now"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setVideoTab(tab)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold cursor-pointer transition-colors ${
+                    videoTab === tab
+                      ? "bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]"
+                      : "text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
+                  }`}
+                >
+                  {tab === "Today" ? "Today's Consults (3)" : tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab: Today's Consults List */}
+            {videoTab === "Today" && (
+              <div className="space-y-2.5">
+                {videoConsults.map((consult) => (
+                  <div
+                    key={consult.id}
+                    className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[var(--df-text)]">{consult.patientName}</span>
+                        <DentflowStatusPill
+                          label={consult.status}
+                          tone={consult.status === "Live" ? "red" : consult.status === "Scheduled" ? "blue" : "green"}
+                        />
+                      </div>
+                      <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">
+                        {consult.time} · {consult.doctorName}
+                      </p>
+                      <p className="text-[11px] text-[var(--df-text-secondary)] mt-0.5 italic">
+                        “{consult.reason}”
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStartCall(consult)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer shrink-0 inline-flex items-center gap-1 ${
+                        consult.status === "Live"
+                          ? "bg-red-600 text-white animate-pulse"
+                          : "df-btn-primary"
+                      }`}
+                    >
+                      <Video className="h-3.5 w-3.5" />
+                      <span>{consult.status === "Live" ? "Join Live" : "Start Call"}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Tab: Schedule */}
+            {videoTab === "Schedule" && (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Patient</label>
+                  <select aria-label="Select patient for video" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2">
+                    <option>Priya Deshmukh (DF-10482)</option>
+                    <option>Rohan Mehta (DF-10519)</option>
+                    <option>Kavya Reddy (DF-10910)</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold mb-1 text-[var(--df-text)]">Date</label>
+                    <input type="date" defaultValue="2026-10-01" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1 text-[var(--df-text)]">Time</label>
+                    <input type="time" defaultValue="14:00" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Reason for consultation</label>
+                  <input type="text" placeholder="e.g. Aligner tracking check & post-op sensitivity" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer text-[11px] text-[var(--df-text-secondary)]">
+                  <input type="checkbox" defaultChecked className="h-3.5 w-3.5 rounded text-[var(--df-teal)]" />
+                  <span>Send meeting link via WhatsApp and SMS to patient</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoModalOpen(false);
+                    toast.success("Tele-dentistry consultation scheduled and link dispatched!");
+                  }}
+                  className="w-full df-btn-primary py-2 text-xs font-semibold cursor-pointer mt-2"
+                >
+                  Schedule Video Consult
+                </button>
+              </div>
+            )}
+
+            {/* Tab: Start now */}
+            {videoTab === "Start now" && (
+              <div className="space-y-3 text-xs text-center py-4">
+                <p className="text-[var(--df-text-secondary)]">
+                  Launch an instant video room and send a direct join link to the patient's phone.
+                </p>
+                <div className="max-w-xs mx-auto text-left space-y-2">
+                  <label className="block font-semibold text-[var(--df-text)]">Patient</label>
+                  <select aria-label="Select patient for instant video" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2">
+                    <option>Priya Deshmukh · +91 98220 11210</option>
+                    <option>Rohan Mehta · +91 98220 33441</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStartCall({
+                      id: `vc-${Date.now()}`,
+                      patientName: "Priya Deshmukh",
+                      doctorName: "Dr. Sneha Kulkarni",
+                      time: "Now",
+                      status: "Live",
+                      reason: "Instant clinical consultation",
+                    });
+                  }}
+                  className="df-btn-primary px-6 py-2.5 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer mt-2"
+                >
+                  <Video className="h-4 w-4" />
+                  <span>Launch Instant Room</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tele-Dentistry Live Call Screen / Overlay */}
+      {activeCall && (
+        <div className="fixed inset-0 z-50 bg-[#0F172A] text-white flex flex-col">
+          {/* Top Bar of Call */}
+          <div className="h-14 border-b border-slate-700 bg-slate-900/90 px-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+              <div>
+                <p className="font-bold text-xs">Tele-Consult · {activeCall.patientName}</p>
+                <p className="text-[10px] text-slate-400">{activeCall.doctorName} · Duration: 04:12</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">
+                HD Encrypted (WebRTC)
+              </span>
+              <button
+                type="button"
+                onClick={handleEndCall}
+                className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <PhoneOff className="h-3.5 w-3.5" />
+                <span>End Call</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Main Call View */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left: Video Tiles */}
+            <div className="flex-1 p-4 flex flex-col items-center justify-center relative bg-black/40">
+              {/* Patient Main Tile */}
+              <div className="w-full h-full max-h-[500px] max-w-2xl rounded-2xl bg-slate-800 border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="h-24 w-24 rounded-full bg-teal-800 text-teal-200 text-3xl font-bold flex items-center justify-center">
+                  {activeCall.patientName.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <p className="font-semibold text-sm mt-3">{activeCall.patientName} (Patient)</p>
+                <p className="text-xs text-slate-400">Microphone active · Camera connected</p>
+
+                {/* Self View (Doctor Preview Pip) */}
+                <div className="absolute bottom-4 right-4 h-32 w-48 rounded-xl bg-slate-900 border-2 border-teal-500 overflow-hidden flex flex-col items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs">
+                    Dr
+                  </div>
+                  <span className="text-[10px] text-slate-300 mt-1">You (Dr. Sneha)</span>
+                </div>
+              </div>
+
+              {/* In-Call Action Toolbar */}
+              <div className="absolute bottom-6 flex items-center gap-3 bg-slate-900/90 border border-slate-700 p-2 rounded-2xl backdrop-blur shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setCallMuted((v) => !v)}
+                  className={`p-3 rounded-xl cursor-pointer ${callMuted ? "bg-red-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-white"}`}
+                >
+                  {callMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCallVideoOff((v) => !v)}
+                  className={`p-3 rounded-xl cursor-pointer ${callVideoOff ? "bg-red-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-white"}`}
+                >
+                  {callVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toast.info("Screen sharing initiated")}
+                  className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white cursor-pointer"
+                  title="Share Screen"
+                >
+                  <Share2 className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleEndCall}
+                  className="px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <PhoneOff className="h-4 w-4" />
+                  <span>Leave</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: In-Call Clinical Chat & Notes Sidebar */}
+            <div className="w-80 border-l border-slate-700 bg-slate-900 flex flex-col">
+              <div className="p-3 border-b border-slate-700 font-bold text-xs flex items-center justify-between">
+                <span>In-Call Notes & Chat</span>
+                <Link
+                  href="/app/prescriptions"
+                  target="_blank"
+                  className="text-[11px] font-semibold text-teal-400 hover:underline"
+                >
+                  + Rx
+                </Link>
+              </div>
+
+              <div className="flex-1 p-3 space-y-2 overflow-y-auto text-xs">
+                {callChatMessages.map((m, i) => (
+                  <div key={i} className="p-2 rounded-lg bg-slate-800 border border-slate-700">
+                    <span className="font-bold text-[10px] text-teal-400">{m.sender}: </span>
+                    <span className="text-[11px] text-slate-200">{m.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!callInputChat.trim()) return;
+                  setCallChatMessages((prev) => [...prev, { sender: "Dr. Sneha", text: callInputChat.trim() }]);
+                  setCallInputChat("");
+                }}
+                className="p-2 border-t border-slate-700 flex gap-1.5"
+              >
+                <input
+                  type="text"
+                  value={callInputChat}
+                  onChange={(e) => setCallInputChat(e.target.value)}
+                  placeholder="Send note or link..."
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-[var(--df-text-muted)]">Loading calendar...</div>}>
+      <CalendarPageInner />
+    </Suspense>
+  );
+}
