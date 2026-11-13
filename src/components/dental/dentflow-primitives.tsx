@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Activity,
   BarChart3,
@@ -17,9 +18,11 @@ import {
   FlaskConical,
   Home,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Megaphone,
   Menu,
+  Moon,
   Package,
   PhoneCall,
   Receipt,
@@ -28,7 +31,9 @@ import {
   Settings,
   ShieldCheck,
   Stethoscope,
+  Sun,
   TrendingUp,
+  User,
   UserCheck,
   Users,
   Video,
@@ -183,6 +188,23 @@ export function DentflowPageHeader({
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    try {
+      await fetch("/api/dentflow/session", { method: "DELETE" });
+    } catch {}
+    toast.success("Logged out successfully");
+    router.push("/login");
+    router.refresh();
+  };
+
+  const toggleDarkMode = () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    setIsDarkMode(isDark);
+  };
 
   const displayedBranch = defaultBranch || state.activeBranch;
   const userProfile = defaultUserOverride || ROLE_USER_PROFILES[state.activeRole];
@@ -248,7 +270,7 @@ export function DentflowPageHeader({
         </div>
 
         {/* Search patient, phone, invoice */}
-        <div className="relative hidden md:block w-56">
+        <div className="relative hidden md:block w-64">
           <Search className="h-3.5 w-3.5 text-[var(--df-text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -259,9 +281,12 @@ export function DentflowPageHeader({
               setSearchQuery(e.target.value);
               setSearchOpen(true);
             }}
-            placeholder="Search patient, phone, invo..."
-            className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[var(--df-text)] placeholder:text-[var(--df-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--df-teal)]/20"
+            placeholder="Search patients, appointments..."
+            className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-8 pr-8 py-1.5 text-xs text-[var(--df-text)] placeholder:text-[var(--df-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--df-teal)]/20"
           />
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--df-text-muted)] bg-[var(--df-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--df-border)] font-mono pointer-events-none">
+            /
+          </kbd>
           {searchOpen && searchResults.length > 0 && (
             <div className="absolute right-0 mt-1.5 w-72 df-card p-1.5 z-50 shadow-lg">
               {searchResults.map((r) => (
@@ -279,6 +304,17 @@ export function DentflowPageHeader({
           )}
         </div>
 
+        {/* Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleDarkMode}
+          aria-label="Toggle color theme"
+          className="h-8 w-8 rounded-xl bg-[var(--df-surface)] border border-[var(--df-border)] flex items-center justify-center text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)] cursor-pointer"
+          title="Toggle color theme"
+        >
+          {isDarkMode ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5" />}
+        </button>
+
         {/* Notification Bell */}
         <div className="relative">
           <button
@@ -288,9 +324,9 @@ export function DentflowPageHeader({
             className="relative h-8 w-8 rounded-xl bg-[var(--df-surface)] border border-[var(--df-border)] flex items-center justify-center text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)] cursor-pointer"
           >
             <Bell className="h-3.5 w-3.5" />
-            {activeAlertsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[var(--df-alert-red-accent)]" />
-            )}
+            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-[#EF4444] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+              9+
+            </span>
           </button>
           {notifOpen && (
             <div className="absolute right-0 mt-1.5 w-80 df-card p-3 z-50 shadow-lg">
@@ -346,15 +382,95 @@ export function DentflowPageHeader({
           <ChevronDown className="h-3 w-3 text-[var(--df-teal)] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
-        {/* User Chip */}
-        <div className="flex items-center gap-2 bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2.5 py-1">
-          <div className="h-6 w-6 rounded-full bg-[var(--df-teal)] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-            {userProfile.initials}
-          </div>
-          <div className="leading-tight hidden sm:block">
-            <p className="text-xs font-semibold text-[var(--df-text)]">{userProfile.name}</p>
-            <p className="text-[10px] text-[var(--df-text-muted)]">{userProfile.subtitle}</p>
-          </div>
+        {/* User Profile & Account Dropdown (matching reference image) */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setUserMenuOpen((v) => !v)}
+            aria-label="User account menu"
+            className="flex items-center gap-2 bg-[var(--df-surface)] border border-[var(--df-border)] rounded-full sm:rounded-xl px-1 sm:px-2.5 py-1 hover:border-[var(--df-teal-border)] transition-colors cursor-pointer group"
+          >
+            <div className="h-7 w-7 rounded-full bg-[#0EA5E9] text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+              {userProfile.initials || "DS"}
+            </div>
+            <div className="leading-tight hidden sm:block text-left pr-1">
+              <p className="text-xs font-semibold text-[var(--df-text)]">{userProfile.name}</p>
+              <p className="text-[10px] text-[var(--df-text-muted)]">{userProfile.subtitle}</p>
+            </div>
+          </button>
+
+          {/* Popup Dropdown Card matching image exactly */}
+          {userMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setUserMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <div className="absolute right-0 mt-2 w-64 df-card p-3.5 z-50 shadow-2xl rounded-2xl border border-[var(--df-border)] bg-[var(--df-surface)] animate-in fade-in zoom-in-95 duration-100">
+                {/* User info & badge */}
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-[var(--df-text)]">
+                    {userProfile.name || "Dr. Sneha Kulkarni"}
+                  </p>
+                  <p className="text-xs text-[var(--df-text-muted)]">
+                    admin@demo-dental.com
+                  </p>
+                  <div>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EF4444] text-white tracking-wide shadow-xs">
+                      Admin
+                    </span>
+                  </div>
+                </div>
+
+                <div className="my-2.5 border-t border-[var(--df-border)]" />
+
+                {/* Profile & Settings Navigation */}
+                <div className="space-y-0.5">
+                  <Link
+                    href="/app/settings"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <User className="h-4 w-4 text-[var(--df-text-muted)]" />
+                    <span>Profile</span>
+                  </Link>
+
+                  <Link
+                    href="/app/settings"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <Settings className="h-4 w-4 text-[var(--df-text-muted)]" />
+                    <span>Settings</span>
+                  </Link>
+                </div>
+
+                <div className="my-2.5 border-t border-[var(--df-border)]" />
+
+                {/* Log out action */}
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-semibold text-[#EF4444] hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 text-[#EF4444]" />
+                    <span>Log out</span>
+                  </button>
+
+                  <Link
+                    href="/login"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <LogIn className="h-3.5 w-3.5 text-[var(--df-text-muted)]" />
+                    <span>Log in as different user</span>
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>
