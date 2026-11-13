@@ -490,32 +490,35 @@ export function DentflowSidebar({
         </button>
       </div>
 
-      {/* Navigation Sections with Dropdowns on every group */}
+      {/* Navigation Sections with Dropdowns on groups */}
       <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-2">
-        {DENTFLOW_SIDEBAR_SECTIONS.map((section) => {
+        {DENTFLOW_SIDEBAR_SECTIONS.map((section, idx) => {
           const visibleItems = section.items.filter((item) =>
             canRoleAccessNavItem(state.activeRole, item, state.rolePermissions),
           );
           if (visibleItems.length === 0) return null;
 
-          const isCollapsed = Boolean(collapsedGroups[section.title]);
+          const hasTitle = Boolean(section.title && section.title.trim().length > 0);
+          const isCollapsed = hasTitle && Boolean(collapsedGroups[section.title]);
 
           return (
-            <div key={section.title} className="space-y-0.5">
-              {/* Group Title with Dropdown Option */}
-              <button
-                type="button"
-                onClick={() => toggleGroup(section.title)}
-                className="w-full flex items-center justify-between px-2.5 py-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)] hover:text-white rounded transition-colors cursor-pointer group"
-                aria-expanded={!isCollapsed}
-              >
-                <span>{section.title}</span>
-                <ChevronDown
-                  className={`h-3 w-3 text-[var(--df-sidebar-muted)] group-hover:text-white transition-transform duration-200 ${
-                    isCollapsed ? "-rotate-90" : "rotate-0"
-                  }`}
-                />
-              </button>
+            <div key={section.title || `section-${idx}`} className="space-y-0.5">
+              {/* Group Title with Dropdown Option (only when title is present) */}
+              {hasTitle && (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(section.title)}
+                  className="w-full flex items-center justify-between px-2.5 py-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)] hover:text-white rounded transition-colors cursor-pointer group"
+                  aria-expanded={!isCollapsed}
+                >
+                  <span>{section.title}</span>
+                  <ChevronDown
+                    className={`h-3 w-3 text-[var(--df-sidebar-muted)] group-hover:text-white transition-transform duration-200 ${
+                      isCollapsed ? "-rotate-90" : "rotate-0"
+                    }`}
+                  />
+                </button>
+              )}
 
               {/* Group Items */}
               {!isCollapsed && (

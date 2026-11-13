@@ -246,7 +246,7 @@ export interface SidebarNavSection {
 
 export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
   {
-    title: "FRONT DESK",
+    title: "",
     items: [
       { id: "dashboard", label: "Dashboard", slug: "today" },
       {
