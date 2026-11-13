@@ -68,8 +68,8 @@ const INITIAL_BLOCKS: AppointmentBlock[] = [
   { id: "cb-9", chair: "C2", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", endTimeLabel: "5:15", patientId: "pat-deepak", patientName: "Deepak More", procedure: "RCT 11", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
   { id: "cb-10", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Sealants + fluoride", doctor: "Dr. Arjun M.", status: "Late 10 min", anxietyBufferMin: 0, flags: ["New"] },
-  { id: "cb-11", chair: "C3", startHour: 12.0, durationHours: 0.55, timeLabel: "12:00", endTimeLabel: "12:35", patientId: "pat-kavya", patientName: "Kavya Reddy", procedure: "Aligner check 10", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Anxious"] },
-  { id: "cb-12", chair: "C3", startHour: 12.6, durationHours: 0.55, timeLabel: "12:35", endTimeLabel: "1:10", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Braces adjustment", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-11", chair: "C3", startHour: 12.0, durationHours: 0.58, timeLabel: "12:00", endTimeLabel: "12:35", patientId: "pat-kavya", patientName: "Kavya Reddy", procedure: "Aligner check 10", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Anxious"] },
+  { id: "cb-12", chair: "C3", startHour: 12.5833, durationHours: 0.58, timeLabel: "12:35", endTimeLabel: "1:10", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Braces adjustment", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
   { id: "cb-13", chair: "C3", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-riya", patientName: "Riya Das", procedure: "Aligner 3D scan", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
   { id: "cb-14", chair: "C4", startHour: 11.0, durationHours: 0.8, timeLabel: "11:00", endTimeLabel: "11:50", patientId: "pat-fatima", patientName: "Fatima Shaikh", procedure: "Implant review", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
@@ -109,6 +109,46 @@ const INITIAL_VIDEO_CONSULTS: VideoConsultationItem[] = [
   { id: "vc-1", patientName: "Priya Deshmukh", doctorName: "Dr. Sneha Kulkarni", time: "11:30 AM", status: "Scheduled", reason: "Crown color preview & shade verification" },
   { id: "vc-2", patientName: "Rohan Mehta", doctorName: "Dr. Arjun Mehta", time: "1:00 PM", status: "Live", reason: "Day 3 post-op extraction pain check" },
   { id: "vc-3", patientName: "Ananya Iyer", doctorName: "Dr. Karan Shah", time: "9:00 AM", status: "Completed", reason: "Aligner tray 12 fitting assessment" },
+];
+
+interface WaitlistItem {
+  id: string;
+  patientId: string;
+  name: string;
+  phone: string;
+  type: "Walk-in" | "Priority Waitlist";
+  arrivedTime: string;
+  waitingInfo: string;
+  procedure: string;
+  preferredDoctor: string;
+  preferredChair: string;
+}
+
+const WAITLIST_QUEUE: WaitlistItem[] = [
+  {
+    id: "wl-1",
+    patientId: "pat-amit",
+    name: "Amit Deshpande",
+    phone: "+91 98220 98112",
+    type: "Walk-in",
+    arrivedTime: "10:15 AM",
+    waitingInfo: "In lounge · 20m",
+    procedure: "Scaling & polish",
+    preferredDoctor: "Dr. Arjun M.",
+    preferredChair: "Chair 1 or 2",
+  },
+  {
+    id: "wl-2",
+    patientId: "pat-sunita",
+    name: "Sunita Rao",
+    phone: "+91 98220 67890",
+    type: "Priority Waitlist",
+    arrivedTime: "11:00 AM",
+    waitingInfo: "On call · 10m away",
+    procedure: "Crown consult",
+    preferredDoctor: "Dr. Sneha K.",
+    preferredChair: "Chair 2",
+  },
 ];
 
 function CalendarPageInner() {
@@ -399,28 +439,34 @@ function CalendarPageInner() {
         <div className="df-card overflow-hidden">
           {/* Chair Headers */}
           <div className="grid grid-cols-12 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-xs font-bold divide-x divide-[var(--df-border)]">
-            <div className="col-span-1 p-2.5 text-center text-[11px] text-[var(--df-text-muted)]">Time</div>
+            <div className="col-span-1 p-2.5 text-center text-[11px] text-[var(--df-text-muted)] font-semibold">Time</div>
             {chairs.map((c) => (
               <div key={c.id} className="col-span-2 p-2.5">
-                <p className="text-[var(--df-text)]">{c.label}</p>
+                <p className="text-[var(--df-text)] font-semibold">{c.label}</p>
                 <p className="text-[10px] text-[var(--df-text-muted)] font-normal">{c.doc}</p>
               </div>
             ))}
-            <div className="col-span-3 p-2.5 text-right text-[11px] text-[var(--df-text-muted)] pr-3">
-              Waitlist & Walk-in queue (2)
+            <div className="col-span-3 p-2.5 text-[11px] text-[var(--df-text-muted)] px-3 flex items-center justify-between">
+              <span className="font-bold text-[var(--df-text)]">Waitlist & Walk-in queue</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)]">
+                {WAITLIST_QUEUE.length} active
+              </span>
             </div>
           </div>
 
           {/* Time Rows Grid */}
-          <div className="relative min-h-[580px] bg-[var(--df-surface)]">
+          <div className="relative min-h-[720px] bg-[var(--df-surface)]">
             {/* Horizontal Hour Lines */}
-            {hours.map((h, i) => (
+            {hours.map((h) => (
               <div
                 key={h}
-                className="grid grid-cols-12 border-b border-[var(--df-border)]/60 text-[10px] text-[var(--df-text-muted)] h-14 divide-x divide-[var(--df-border)]/40"
+                className="grid grid-cols-12 border-b border-[var(--df-border)]/60 text-[10px] text-[var(--df-text-muted)] h-20 divide-x divide-[var(--df-border)]/40 relative z-0"
               >
-                <div className="col-span-1 p-1 text-center font-mono">
-                  {h > 12 ? `${h - 12}:00` : `${h}:00`}
+                <div className="col-span-1 p-2 text-center flex flex-col items-center justify-start pt-1 font-mono text-[11px] font-semibold text-[var(--df-text-muted)] select-none">
+                  <span>{h > 12 ? `${h - 12}:00` : `${h}:00`}</span>
+                  <span className="text-[9px] font-sans text-[var(--df-text-muted)]/70 uppercase">
+                    {h >= 12 ? "PM" : "AM"}
+                  </span>
                 </div>
                 <div className="col-span-2" />
                 <div className="col-span-2" />
@@ -432,8 +478,9 @@ function CalendarPageInner() {
 
             {/* Render Appointment Blocks */}
             {filteredBlocks.map((b) => {
-              const topOffset = (b.startHour - 9.0) * 56; // 56px per hour
-              const height = Math.max(b.durationHours * 56, 42);
+              const HOUR_HEIGHT = 80; // 80px per hour matches h-20
+              const topOffset = (b.startHour - 9.0) * HOUR_HEIGHT;
+              const height = Math.max(b.durationHours * HOUR_HEIGHT, 46);
 
               let colClass = "left-[8.33%] w-[16.66%]";
               if (b.chair === "C2") colClass = "left-[25%] w-[16.66%]";
@@ -445,31 +492,31 @@ function CalendarPageInner() {
                   key={b.id}
                   onClick={() => handleOpenBlock(b)}
                   style={{ top: `${topOffset}px`, height: `${height}px` }}
-                  className={`absolute ${colClass} p-1 z-10`}
+                  className={`absolute ${colClass} p-1 z-20`}
                 >
                   <div
                     className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-pointer ${
                       b.status === "Done"
                         ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
                         : b.status === "In chair"
-                        ? "bg-[var(--df-teal-soft)] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                        ? "bg-[#E3F3EE] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
                         : b.status === "Late 10 min"
-                        ? "bg-amber-50 border-amber-300 text-amber-900"
-                        : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
+                        ? "bg-[#FEF3DC] border-[#F8DFAA] text-[#9A5B00]"
+                        : "bg-white border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
                     }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold truncate">{b.patientName}</span>
+                        <span className="font-bold truncate text-xs">{b.patientName}</span>
                         <span className="text-[10px] font-mono shrink-0">{b.timeLabel}</span>
                       </div>
                       <p className="text-[10.5px] truncate opacity-90 mt-0.5">{b.procedure}</p>
                     </div>
 
-                    <div className="flex items-center justify-between gap-1 pt-1">
-                      <span className="text-[10px] opacity-75">{b.doctor}</span>
+                    <div className="flex items-center justify-between gap-1 pt-0.5">
+                      <span className="text-[10px] opacity-75 truncate">{b.doctor}</span>
                       {b.anxietyBufferMin > 0 && (
-                        <span className="px-1 py-0.2 rounded-full text-[9px] font-bold bg-amber-200 text-amber-900">
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA]">
                           +{b.anxietyBufferMin}m
                         </span>
                       )}
@@ -478,6 +525,66 @@ function CalendarPageInner() {
                 </div>
               );
             })}
+
+            {/* Waitlist & Walk-in Queue Column (Right 25%) */}
+            <div className="absolute right-0 top-0 bottom-0 w-[25%] p-3 bg-[var(--df-surface-muted)]/40 border-l border-[var(--df-border)] overflow-y-auto space-y-3 z-10">
+              <div className="flex items-center justify-between text-[11px] text-[var(--df-text-muted)] px-0.5">
+                <span className="font-semibold uppercase tracking-wider text-[10px]">Queue · Priority</span>
+                <span className="text-[10px] text-[var(--df-teal)] font-medium">Auto-match on</span>
+              </div>
+
+              {WAITLIST_QUEUE.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] shadow-xs hover:border-[var(--df-teal-border)] transition-all space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div>
+                      <p className="font-bold text-xs text-[var(--df-text)]">{item.name}</p>
+                      <p className="text-[10px] text-[var(--df-text-muted)]">{item.phone}</p>
+                    </div>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
+                        item.type === "Walk-in"
+                          ? "bg-amber-100 text-amber-800 border border-amber-200"
+                          : "bg-blue-50 text-blue-700 border border-blue-200"
+                      }`}
+                    >
+                      {item.type}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] font-medium text-[var(--df-text-secondary)]">
+                    {item.procedure}
+                  </p>
+
+                  <div className="flex items-center justify-between text-[10px] text-[var(--df-text-muted)] pt-1 border-t border-[var(--df-border)]/60">
+                    <span>{item.waitingInfo}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPatientId(item.patientId);
+                        setSelectedProcedure(item.procedure);
+                        setSelectedDoctor(item.preferredDoctor);
+                        setNewApptOpen(true);
+                      }}
+                      className="df-btn-primary px-2.5 py-1 text-[10px] font-semibold cursor-pointer rounded-lg inline-flex items-center gap-1 shadow-xs"
+                    >
+                      Seat in Chair
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setNewApptOpen(true)}
+                className="w-full py-2.5 border border-dashed border-[var(--df-border-strong)] rounded-xl text-[11px] font-semibold text-[var(--df-text-muted)] hover:text-[var(--df-teal)] hover:border-[var(--df-teal)] bg-[var(--df-surface)]/60 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>+ Add Walk-in / Waitlist</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
