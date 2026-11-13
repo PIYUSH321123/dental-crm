@@ -574,12 +574,6 @@ export function DentflowSidebar({
 
   const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
 
-  const handleLogout = async () => {
-    await fetch("/api/dentflow/session", { method: "DELETE" }).catch(() => {});
-    router.push("/login");
-    router.refresh();
-  };
-
   const sidebarContent = (
     <aside className="w-[236px] shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none">
       {/* Brand Header */}
@@ -744,18 +738,6 @@ export function DentflowSidebar({
           );
         })}
       </nav>
-
-      {/* Session Footer */}
-      <div className="px-2.5 py-2 border-t border-[var(--df-sidebar-border)]">
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--df-sidebar-hover)] hover:bg-[var(--df-sidebar-active)] text-white text-[11px] font-semibold cursor-pointer transition-colors"
-        >
-          <LogOut className="h-3 w-3 text-[#FCA5A5]" />
-          <span>Log out · Smile Studio</span>
-        </button>
-      </div>
     </aside>
   );
 
