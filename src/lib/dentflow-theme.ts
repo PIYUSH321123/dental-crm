@@ -221,6 +221,13 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
   },
 ];
 
+export interface SidebarSubTab {
+  id: string;
+  label: string;
+  slug: string;
+  badgeText?: string;
+}
+
 export interface SidebarNavItem {
   id: string;
   label: string;
@@ -229,6 +236,7 @@ export interface SidebarNavItem {
   badgeText?: string;
   requiredPermission?: PermissionRowKey;
   ownerGroupOnly?: boolean;
+  subTabs?: SidebarSubTab[];
 }
 
 export interface SidebarNavSection {
@@ -240,18 +248,31 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
   {
     title: "FRONT DESK",
     items: [
-      { id: "today", label: "Today", slug: "today" },
-      {
-        id: "calendar",
-        label: "Calendar",
-        slug: "calendar",
-        requiredPermission: "book_move_appointments",
-      },
+      { id: "dashboard", label: "Dashboard", slug: "today" },
       {
         id: "patients",
         label: "Patients",
         slug: "patients",
         requiredPermission: "view_patient_records",
+        subTabs: [
+          { id: "pat-overview", label: "Overview", slug: "patients" },
+          { id: "pat-chart", label: "Chart & Plans", slug: "dental-chart" },
+          { id: "pat-imaging", label: "Imaging", slug: "dental-chart?tab=imaging" },
+        ],
+      },
+      {
+        id: "calendar",
+        label: "Appointments",
+        slug: "calendar",
+        requiredPermission: "book_move_appointments",
+      },
+      {
+        id: "video-consult",
+        label: "Video consultation",
+        slug: "video-consult",
+        badgeType: "unique",
+        badgeText: "Live",
+        requiredPermission: "book_move_appointments",
       },
       {
         id: "gap-filler",
@@ -263,7 +284,7 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
       },
       {
         id: "ai-receptionist",
-        label: "AI receptionist",
+        label: "AI assistant",
         slug: "ai-receptionist",
         badgeType: "unique",
         badgeText: "Unique",
@@ -275,30 +296,15 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     title: "CLINICAL",
     items: [
       {
-        id: "dental-chart",
-        label: "Dental chart",
-        slug: "dental-chart",
-        requiredPermission: "view_patient_records",
-      },
-      {
         id: "treatment-plans",
         label: "Treatment plans",
         slug: "treatment-plans",
         requiredPermission: "view_patient_records",
-      },
-      {
-        id: "explainers",
-        label: "Explainers",
-        slug: "explainers",
-        badgeType: "unique",
-        badgeText: "Unique",
-        requiredPermission: "view_patient_records",
-      },
-      {
-        id: "prescriptions",
-        label: "Prescriptions",
-        slug: "prescriptions",
-        requiredPermission: "write_prescriptions",
+        subTabs: [
+          { id: "plan-plans", label: "Plans", slug: "treatment-plans" },
+          { id: "plan-explainer", label: "Explainer", slug: "explainers" },
+          { id: "plan-recovery", label: "Recovery", slug: "treatment-recovery" },
+        ],
       },
       {
         id: "post-op",
@@ -308,10 +314,16 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         badgeText: "2",
         requiredPermission: "view_patient_records",
       },
+      {
+        id: "prescriptions",
+        label: "Prescriptions",
+        slug: "prescriptions",
+        requiredPermission: "write_prescriptions",
+      },
     ],
   },
   {
-    title: "REVENUE & GROWTH",
+    title: "FINANCE",
     items: [
       {
         id: "billing",
@@ -332,6 +344,25 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         label: "Recall & campaigns",
         slug: "recall-campaigns",
         requiredPermission: "send_campaigns",
+      },
+    ],
+  },
+  {
+    title: "GROWTH",
+    items: [
+      {
+        id: "patient-insights",
+        label: "Patient insights",
+        slug: "patient-insights",
+        badgeType: "new",
+        badgeText: "New",
+        requiredPermission: "see_all_branch_revenue",
+      },
+      {
+        id: "group-dashboard",
+        label: "All branches",
+        slug: "group-dashboard",
+        requiredPermission: "see_all_branch_revenue",
       },
     ],
   },
@@ -365,22 +396,8 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
     ],
   },
   {
-    title: "GROUP (OWNER)",
+    title: "SETTINGS & REPORTS",
     items: [
-      {
-        id: "group-dashboard",
-        label: "All branches",
-        slug: "group-dashboard",
-        requiredPermission: "see_all_branch_revenue",
-      },
-      {
-        id: "patient-insights",
-        label: "Patient insights",
-        slug: "patient-insights",
-        badgeType: "new",
-        badgeText: "New",
-        requiredPermission: "see_all_branch_revenue",
-      },
       {
         id: "visiting-specialists",
         label: "Visiting specialists",
@@ -421,9 +438,12 @@ export function canRoleAccessAppSlug(
   slug: string,
   matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
 ): boolean {
-  const cleanSlug = slug.replace(/^\/app\/?/, "").split("/")[0] || "today";
+  const cleanSlug = slug.replace(/^\/app\/?/, "").split("/")[0].split("?")[0] || "today";
+  if (cleanSlug === "dashboard" || cleanSlug === "today") return true;
   for (const section of DENTFLOW_SIDEBAR_SECTIONS) {
-    const found = section.items.find((i) => i.slug === cleanSlug);
+    const found = section.items.find(
+      (i) => i.slug === cleanSlug || i.subTabs?.some((st) => st.slug.split("?")[0] === cleanSlug)
+    );
     if (found) {
       return canRoleAccessNavItem(role, found, matrix);
     }

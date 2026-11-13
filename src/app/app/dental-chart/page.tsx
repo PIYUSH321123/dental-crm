@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, Check, X, Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Sparkles,
+  Check,
+  X,
+  Upload,
+  ChevronLeft,
+  ChevronRight,
+  Activity,
+  Camera,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowChromeTabs,
   DentflowDrawer,
   DentflowPageHeader,
   DentflowStatusPill,
@@ -51,8 +62,10 @@ const TOOTH_STATUS_STYLES: Record<OdontogramTooth["status"], { box: string; badg
   },
 };
 
-export default function DentalChartPage() {
+function DentalChartContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") === "imaging" ? "imaging" : "chart";
   const { logPatientRead } = useDentflow();
 
   const [dentitionType, setDentitionType] = useState<"adult" | "child" | "mixed">("adult");
@@ -189,6 +202,18 @@ export default function DentalChartPage() {
         title="Dental chart · Priya Deshmukh"
         subtitle="FDI numbering · last charted 12 Sep by Dr. Sneha"
       />
+
+      {/* Chrome-style Tab Bar for Patient Section */}
+      <div className="mb-4">
+        <DentflowChromeTabs
+          activeId={currentTab === "imaging" ? "imaging" : "chart"}
+          tabs={[
+            { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
+            { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
+            { id: "imaging", label: "Imaging", href: "/app/dental-chart?tab=imaging", icon: Camera },
+          ]}
+        />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
         {/* Left 8-col area: Odontogram + Periodontal + Imaging */}
@@ -710,6 +735,20 @@ export default function DentalChartPage() {
         </div>
       </DentflowDrawer>
     </div>
+  );
+}
+
+export default function DentalChartPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-[var(--df-text-muted)]">
+          Loading dental chart...
+        </div>
+      }
+    >
+      <DentalChartContent />
+    </Suspense>
   );
 }
 

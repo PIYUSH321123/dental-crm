@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { ClipboardList, FilePlay, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowChromeTabs,
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
@@ -73,6 +75,18 @@ export default function RecoveryPage() {
         title="Treatment recovery"
         subtitle="Plans that were proposed or started but not finished"
       />
+
+      {/* Chrome-style Tab Bar for Clinical Treatment Plans Section */}
+      <div className="mb-4">
+        <DentflowChromeTabs
+          activeId="recovery"
+          tabs={[
+            { id: "plans", label: "Plans", href: "/app/treatment-plans", icon: ClipboardList },
+            { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
+            { id: "recovery", label: "Recovery", href: "/app/treatment-recovery", icon: RefreshCw },
+          ]}
+        />
+      </div>
 
       {/* 4 Summary Bucket Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 mb-5">

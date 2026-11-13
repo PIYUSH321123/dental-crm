@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, X } from "lucide-react";
+import { ClipboardList, FilePlay, Play, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
-import { DentflowPageHeader } from "@/components/dental/dentflow-primitives";
+import { DentflowChromeTabs, DentflowPageHeader } from "@/components/dental/dentflow-primitives";
 import { useDentflow } from "@/lib/dentflow-store";
 import { EXPLAINER_LANGUAGES } from "@/lib/mock/dentflow";
 
@@ -93,6 +93,18 @@ export default function ExplainersPage() {
         title="Treatment explainer · Priya Deshmukh"
         subtitle="Built from IOPA 36 and plan TP-2231 · doctor approval required before patient send"
       />
+
+      {/* Chrome-style Tab Bar for Clinical Treatment Plans Section */}
+      <div className="mb-4">
+        <DentflowChromeTabs
+          activeId="explainer"
+          tabs={[
+            { id: "plans", label: "Plans", href: "/app/treatment-plans", icon: ClipboardList },
+            { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
+            { id: "recovery", label: "Recovery", href: "/app/treatment-recovery", icon: RefreshCw },
+          ]}
+        />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
         {/* Left 8-col card */}

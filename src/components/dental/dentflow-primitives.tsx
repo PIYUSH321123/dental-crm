@@ -16,6 +16,7 @@ import {
   FileText,
   FlaskConical,
   Home,
+  LayoutDashboard,
   LogOut,
   Megaphone,
   Menu,
@@ -30,6 +31,7 @@ import {
   TrendingUp,
   UserCheck,
   Users,
+  Video,
   X,
 } from "lucide-react";
 import {
@@ -46,7 +48,9 @@ import { BranchName } from "@/types/dentflow";
 
 const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   today: Home,
+  dashboard: LayoutDashboard,
   calendar: Calendar,
+  "video-consult": Video,
   patients: Users,
   "gap-filler": Clock,
   "ai-receptionist": PhoneCall,
@@ -357,6 +361,68 @@ export function DentflowPageHeader({
   );
 }
 
+export interface ChromeTabItem {
+  id: string;
+  label: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  badge?: string;
+}
+
+export function DentflowChromeTabs({
+  tabs,
+  activeId,
+  className = "",
+}: {
+  tabs: ChromeTabItem[];
+  activeId: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex items-end gap-1.5 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)]/50 pt-2 px-3 rounded-t-xl overflow-x-auto ${className}`}
+    >
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeId;
+        const Icon = tab.icon;
+        return (
+          <Link
+            key={tab.id}
+            href={tab.href}
+            className={`group relative flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all border-t-2 border-x -mb-[1px] select-none ${
+              isActive
+                ? "bg-[var(--df-surface)] text-[var(--df-teal)] border-t-[var(--df-teal)] border-x-[var(--df-border)] shadow-xs z-10"
+                : "border-transparent text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface)]/70 hover:border-x-[var(--df-border)]/40"
+            }`}
+          >
+            {Icon && (
+              <Icon
+                className={`h-3.5 w-3.5 transition-colors ${
+                  isActive
+                    ? "text-[var(--df-teal)]"
+                    : "text-[var(--df-text-muted)] group-hover:text-[var(--df-text)]"
+                }`}
+              />
+            )}
+            <span className="whitespace-nowrap">{tab.label}</span>
+            {tab.badge && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isActive
+                    ? "bg-[var(--df-teal-soft)] text-[var(--df-teal)]"
+                    : "bg-[var(--df-border)] text-[var(--df-text-muted)]"
+                }`}
+              >
+                {tab.badge}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export function DentflowSidebar({
   mobileOpen,
   onCloseMobile,
@@ -418,24 +484,35 @@ export function DentflowSidebar({
               <ul className="space-y-0.5">
                 {visibleItems.map((item) => {
                   const href = `/app/${item.slug}`;
-                  const isActive = pathname === href || pathname?.startsWith(`${href}/`);
+                  const isItemExactActive = pathname === href || pathname?.startsWith(`${href}/`);
+                  const isFamilyActive =
+                    isItemExactActive ||
+                    Boolean(
+                      item.subTabs &&
+                        item.subTabs.some((st) => {
+                          const clean = st.slug.split("?")[0];
+                          return pathname === `/app/${clean}` || pathname?.startsWith(`/app/${clean}/`);
+                        }),
+                    );
                   const Icon = NAV_ICONS[item.id] || Home;
 
                   return (
-                    <li key={item.id}>
+                    <li key={item.id} className="space-y-1">
                       <Link
                         href={href}
                         onClick={onCloseMobile}
                         className={`flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                          isActive
+                          isItemExactActive && !item.subTabs
                             ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
+                            : isFamilyActive
+                            ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
                             : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
                         }`}
                       >
                         <span className="flex items-center gap-2 min-w-0">
                           <Icon
                             className={`h-3.5 w-3.5 shrink-0 ${
-                              isActive ? "text-white" : "text-[var(--df-sidebar-muted)]"
+                              isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)]"
                             }`}
                           />
                           <span className="truncate">{item.label}</span>
@@ -448,6 +525,36 @@ export function DentflowSidebar({
                           </span>
                         )}
                       </Link>
+
+                      {/* Chrome-style Sub-tabs in sidebar */}
+                      {item.subTabs && item.subTabs.length > 0 && (
+                        <div className="ml-3 pl-2 border-l border-[var(--df-sidebar-border)]/50 py-0.5">
+                          <div className="grid grid-flow-col auto-cols-fr gap-0.5 p-0.5 bg-[var(--df-sidebar-bg)] rounded-md border border-[var(--df-sidebar-border)]">
+                            {item.subTabs.map((tab) => {
+                              const tabHref = `/app/${tab.slug}`;
+                              const tabClean = tab.slug.split("?")[0];
+                              const isTabActive =
+                                pathname === `/app/${tabClean}` ||
+                                (tab.slug.includes("?") && pathname?.startsWith(`/app/${tabClean}`));
+                              return (
+                                <Link
+                                  key={tab.id}
+                                  href={tabHref}
+                                  onClick={onCloseMobile}
+                                  className={`px-1 py-1 text-[10px] font-medium rounded text-center truncate transition-colors ${
+                                    isTabActive
+                                      ? "bg-[var(--df-teal)] text-white font-semibold shadow-xs"
+                                      : "text-[var(--df-sidebar-text)]/75 hover:text-white hover:bg-[var(--df-sidebar-hover)]"
+                                  }`}
+                                  title={tab.label}
+                                >
+                                  {tab.label}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </li>
                   );
                 })}

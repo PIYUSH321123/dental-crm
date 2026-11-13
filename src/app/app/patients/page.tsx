@@ -4,8 +4,10 @@ import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  Activity,
   AlertCircle,
   Calendar,
+  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -26,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowChromeTabs,
   DentflowDrawer,
   DentflowPageHeader,
   DentflowStatusPill,
@@ -320,6 +323,16 @@ function PatientsPageInner() {
           </button>
         </div>
       </div>
+
+      {/* Chrome-style Tab Bar for Patient Section */}
+      <DentflowChromeTabs
+        activeId="overview"
+        tabs={[
+          { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
+          { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
+          { id: "imaging", label: "Imaging", href: "/app/dental-chart?tab=imaging", icon: Camera },
+        ]}
+      />
 
       {/* Filter Card */}
       <div className="df-card p-3 sm:p-4 space-y-3">

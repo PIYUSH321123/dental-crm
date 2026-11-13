@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, Printer, Send } from "lucide-react";
+import { Check, ClipboardList, FilePlay, Plus, Printer, RefreshCw, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowChromeTabs,
   DentflowDrawer,
   DentflowPageHeader,
   DentflowStatusPill,
@@ -117,6 +118,18 @@ export default function TreatmentPlansPage() {
         title={`Treatment plan ${plan.planCode} · ${plan.patientName}`}
         subtitle={`Proposed by ${plan.proposedBy} on ${plan.proposedDate}`}
       />
+
+      {/* Chrome-style Tab Bar for Clinical Treatment Plans Section */}
+      <div className="mb-4">
+        <DentflowChromeTabs
+          activeId="plans"
+          tabs={[
+            { id: "plans", label: "Plans", href: "/app/treatment-plans", icon: ClipboardList },
+            { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
+            { id: "recovery", label: "Recovery", href: "/app/treatment-recovery", icon: RefreshCw },
+          ]}
+        />
+      </div>
 
       {/* 6-step Pipeline Card */}
       <div className="df-card p-3.5 mb-5">
