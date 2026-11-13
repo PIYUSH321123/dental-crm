@@ -206,11 +206,10 @@ function DentalChartContent() {
       {/* Chrome-style Tab Bar for Patient Section */}
       <div className="mb-4">
         <DentflowChromeTabs
-          activeId={currentTab === "imaging" ? "imaging" : "chart"}
+          activeId="chart"
           tabs={[
             { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
             { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
-            { id: "imaging", label: "Imaging", href: "/app/dental-chart?tab=imaging", icon: Camera },
           ]}
         />
       </div>

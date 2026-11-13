@@ -330,7 +330,6 @@ function PatientsPageInner() {
         tabs={[
           { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
           { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
-          { id: "imaging", label: "Imaging", href: "/app/dental-chart?tab=imaging", icon: Camera },
         ]}
       />
 

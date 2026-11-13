@@ -257,7 +257,6 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         subTabs: [
           { id: "pat-overview", label: "Overview", slug: "patients" },
           { id: "pat-chart", label: "Chart & Plans", slug: "dental-chart" },
-          { id: "pat-imaging", label: "Imaging", slug: "dental-chart?tab=imaging" },
         ],
       },
       {
