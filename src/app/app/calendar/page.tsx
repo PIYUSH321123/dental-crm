@@ -67,7 +67,7 @@ const INITIAL_BLOCKS: AppointmentBlock[] = [
   { id: "cb-8", chair: "C2", startHour: 13.0, durationHours: 0.75, timeLabel: "1:00", endTimeLabel: "1:45", patientId: "pat-neha", patientName: "Neha Gupta", procedure: "Crown fit 46", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
   { id: "cb-9", chair: "C2", startHour: 16.5, durationHours: 0.75, timeLabel: "4:30", endTimeLabel: "5:15", patientId: "pat-deepak", patientName: "Deepak More", procedure: "RCT 11", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 
-  { id: "cb-10", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Sealants + fluoride", doctor: "Dr. Arjun M.", status: "Late 10 min", anxietyBufferMin: 0, flags: ["New"] },
+  { id: "cb-10", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Sealants + fluoride", doctor: "Dr. Karan S.", status: "Late 10 min", anxietyBufferMin: 0, flags: ["New"] },
   { id: "cb-11", chair: "C3", startHour: 12.0, durationHours: 0.58, timeLabel: "12:00", endTimeLabel: "12:35", patientId: "pat-kavya", patientName: "Kavya Reddy", procedure: "Aligner check 10", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Anxious"] },
   { id: "cb-12", chair: "C3", startHour: 12.5833, durationHours: 0.58, timeLabel: "12:35", endTimeLabel: "1:10", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Braces adjustment", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
   { id: "cb-13", chair: "C3", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-riya", patientName: "Riya Das", procedure: "Aligner 3D scan", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
@@ -439,95 +439,123 @@ function CalendarPageInner() {
         <div className="df-card overflow-hidden">
           {/* Chair Headers */}
           <div className="grid grid-cols-12 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-xs font-bold divide-x divide-[var(--df-border)]">
-            <div className="col-span-1 p-2.5 text-center text-[11px] text-[var(--df-text-muted)] font-semibold">Time</div>
+            <div className="col-span-1 p-3 text-center text-[11px] text-[var(--df-text-muted)] font-semibold flex items-center justify-center">
+              Time
+            </div>
             {chairs.map((c) => (
-              <div key={c.id} className="col-span-2 p-2.5">
-                <p className="text-[var(--df-text)] font-semibold">{c.label}</p>
-                <p className="text-[10px] text-[var(--df-text-muted)] font-normal">{c.doc}</p>
+              <div key={c.id} className="col-span-2 p-3">
+                <p className="text-[var(--df-text)] font-semibold text-xs">{c.label}</p>
+                <p className="text-[11px] text-[var(--df-text-muted)] font-normal mt-0.5">{c.doc}</p>
               </div>
             ))}
-            <div className="col-span-3 p-2.5 text-[11px] text-[var(--df-text-muted)] px-3 flex items-center justify-between">
-              <span className="font-bold text-[var(--df-text)]">Waitlist & Walk-in queue</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)]">
+            <div className="col-span-3 p-3 text-[11px] text-[var(--df-text-muted)] flex items-center justify-between">
+              <span className="font-bold text-[var(--df-text)] text-xs">Waitlist & Walk-in queue</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]">
                 {WAITLIST_QUEUE.length} active
               </span>
             </div>
           </div>
 
-          {/* Time Rows Grid */}
-          <div className="relative min-h-[720px] bg-[var(--df-surface)]">
-            {/* Horizontal Hour Lines */}
-            {hours.map((h) => (
-              <div
-                key={h}
-                className="grid grid-cols-12 border-b border-[var(--df-border)]/60 text-[10px] text-[var(--df-text-muted)] h-20 divide-x divide-[var(--df-border)]/40 relative z-0"
-              >
-                <div className="col-span-1 p-2 text-center flex flex-col items-center justify-start pt-1 font-mono text-[11px] font-semibold text-[var(--df-text-muted)] select-none">
-                  <span>{h > 12 ? `${h - 12}:00` : `${h}:00`}</span>
-                  <span className="text-[9px] font-sans text-[var(--df-text-muted)]/70 uppercase">
+          {/* Time Rows Grid: 12-Column Matching Layout */}
+          <div className="grid grid-cols-12 divide-x divide-[var(--df-border)] bg-[var(--df-surface)] relative min-h-[720px]">
+            {/* 1. Time Column (col-span-1) */}
+            <div className="col-span-1 select-none">
+              {hours.map((h) => (
+                <div
+                  key={h}
+                  style={{ height: "80px" }}
+                  className="border-b border-[var(--df-border)]/50 p-2 text-center flex flex-col items-center justify-start pt-2"
+                >
+                  <span className="font-mono text-xs font-semibold text-[var(--df-text)]">
+                    {h > 12 ? `${h - 12}:00` : `${h}:00`}
+                  </span>
+                  <span className="text-[10px] font-sans font-medium text-[var(--df-text-muted)] uppercase">
                     {h >= 12 ? "PM" : "AM"}
                   </span>
                 </div>
-                <div className="col-span-2" />
-                <div className="col-span-2" />
-                <div className="col-span-2" />
-                <div className="col-span-2" />
-                <div className="col-span-3" />
-              </div>
-            ))}
+              ))}
+            </div>
 
-            {/* Render Appointment Blocks */}
-            {filteredBlocks.map((b) => {
-              const HOUR_HEIGHT = 80; // 80px per hour matches h-20
-              const topOffset = (b.startHour - 9.0) * HOUR_HEIGHT;
-              const height = Math.max(b.durationHours * HOUR_HEIGHT, 46);
-
-              let colClass = "left-[8.33%] w-[16.66%]";
-              if (b.chair === "C2") colClass = "left-[25%] w-[16.66%]";
-              if (b.chair === "C3") colClass = "left-[41.66%] w-[16.66%]";
-              if (b.chair === "C4") colClass = "left-[58.33%] w-[16.66%]";
+            {/* 2. Chair Columns (col-span-2 each for C1, C2, C3, C4) */}
+            {chairs.map((c) => {
+              const chairBlocks = filteredBlocks.filter((b) => b.chair === c.id);
+              const HOUR_HEIGHT = 80;
 
               return (
-                <div
-                  key={b.id}
-                  onClick={() => handleOpenBlock(b)}
-                  style={{ top: `${topOffset}px`, height: `${height}px` }}
-                  className={`absolute ${colClass} p-1 z-20`}
-                >
-                  <div
-                    className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-pointer ${
-                      b.status === "Done"
-                        ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
-                        : b.status === "In chair"
-                        ? "bg-[#E3F3EE] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
-                        : b.status === "Late 10 min"
-                        ? "bg-[#FEF3DC] border-[#F8DFAA] text-[#9A5B00]"
-                        : "bg-white border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold truncate text-xs">{b.patientName}</span>
-                        <span className="text-[10px] font-mono shrink-0">{b.timeLabel}</span>
-                      </div>
-                      <p className="text-[10.5px] truncate opacity-90 mt-0.5">{b.procedure}</p>
-                    </div>
+                <div key={c.id} className="col-span-2 relative">
+                  {/* Hour background guide lines */}
+                  {hours.map((h) => (
+                    <div
+                      key={h}
+                      style={{ height: "80px" }}
+                      className="border-b border-[var(--df-border)]/50 hover:bg-[var(--df-surface-muted)]/30 transition-colors"
+                    />
+                  ))}
 
-                    <div className="flex items-center justify-between gap-1 pt-0.5">
-                      <span className="text-[10px] opacity-75 truncate">{b.doctor}</span>
-                      {b.anxietyBufferMin > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA]">
-                          +{b.anxietyBufferMin}m
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  {/* Appointment cards for this chair */}
+                  {chairBlocks.map((b) => {
+                    const topOffset = (b.startHour - 9.0) * HOUR_HEIGHT;
+                    const height = Math.max(b.durationHours * HOUR_HEIGHT, 48);
+
+                    return (
+                      <div
+                        key={b.id}
+                        onClick={() => handleOpenBlock(b)}
+                        style={{
+                          top: `${topOffset}px`,
+                          height: `${height}px`,
+                        }}
+                        className="absolute left-1.5 right-1.5 p-0.5 z-20"
+                      >
+                        <div
+                          className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-pointer ${
+                            b.status === "Done"
+                              ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
+                              : b.status === "In chair"
+                              ? "bg-[#E3F3EE] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                              : b.status === "Late 10 min"
+                              ? "bg-[#FEF3DC] border-[#F8DFAA] text-[#9A5B00]"
+                              : "bg-white border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
+                          }`}
+                        >
+                          {/* Top Row: Patient Name & Time Badge */}
+                          <div className="flex items-center justify-between gap-1 leading-none">
+                            <span className="font-bold text-xs truncate text-[var(--df-text)]">
+                              {b.patientName}
+                            </span>
+                            <span className="text-[10px] font-mono font-semibold text-[var(--df-text-muted)] bg-[var(--df-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--df-border)]/80 shrink-0">
+                              {b.timeLabel}
+                            </span>
+                          </div>
+
+                          {/* Middle Row: Procedure Description */}
+                          <p className="text-[11px] font-medium text-[var(--df-text-secondary)] truncate my-0.5 leading-snug">
+                            {b.procedure}
+                          </p>
+
+                          {/* Bottom Row: Doctor & Status / Buffer */}
+                          <div className="flex items-center justify-between gap-1 text-[10px] text-[var(--df-text-muted)] leading-none pt-0.5 border-t border-[var(--df-border)]/40">
+                            <span className="truncate font-medium">{b.doctor}</span>
+                            {b.anxietyBufferMin > 0 ? (
+                              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA] shrink-0">
+                                +{b.anxietyBufferMin}m
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-semibold text-[var(--df-text-muted)]/70 uppercase tracking-wider shrink-0">
+                                {b.status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
 
-            {/* Waitlist & Walk-in Queue Column (Right 25%) */}
-            <div className="absolute right-0 top-0 bottom-0 w-[25%] p-3 bg-[var(--df-surface-muted)]/40 border-l border-[var(--df-border)] overflow-y-auto space-y-3 z-10">
+            {/* 3. Waitlist & Walk-in Queue Column (col-span-3) */}
+            <div className="col-span-3 bg-[var(--df-surface-muted)]/30 p-3 space-y-3">
               <div className="flex items-center justify-between text-[11px] text-[var(--df-text-muted)] px-0.5">
                 <span className="font-semibold uppercase tracking-wider text-[10px]">Queue · Priority</span>
                 <span className="text-[10px] text-[var(--df-teal)] font-medium">Auto-match on</span>
