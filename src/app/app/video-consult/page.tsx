@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowKpiCard,
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
@@ -114,103 +115,104 @@ export default function VideoConsultPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <DentflowPageHeader
-          title="Video Consultation"
-          subtitle="Tele-dentistry consultations, live patient reviews, and instant encrypted video rooms"
+      {/* Clean Full-Width Header */}
+      <DentflowPageHeader
+        title="Video Consultation"
+        subtitle="Tele-dentistry consultations, live patient reviews, and instant encrypted video rooms"
+      />
+
+      {/* KPI Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <DentflowKpiCard
+          label="Today's Video Consults"
+          value="3"
+          subtext="1 In Progress"
+          subtextTone="green"
+          highlighted
         />
-        <div className="flex items-center gap-2 self-start sm:self-center">
-          <button
-            type="button"
-            onClick={() => setActiveTab("instant")}
-            className="df-btn-secondary flex items-center gap-1.5 cursor-pointer text-xs"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-[var(--df-teal)]" />
-            Instant Room
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("schedule")}
-            className="df-btn-primary flex items-center gap-1.5 cursor-pointer text-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Schedule Consult
-          </button>
-        </div>
+        <DentflowKpiCard
+          label="Scheduled Next 7 Days"
+          value="14"
+          subtext="+4 vs last week"
+          subtextTone="muted"
+        />
+        <DentflowKpiCard
+          label="Completed Tele-Visits"
+          value="128"
+          subtext="96% Satisfaction"
+          subtextTone="green"
+        />
+        <DentflowKpiCard
+          label="Average Call Time"
+          value="11m 40s"
+          subtext="Buffer safe"
+          subtextTone="teal"
+        />
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="df-card p-4 space-y-1">
-          <p className="text-xs text-[var(--df-text-muted)] font-medium">Today&apos;s Video Consults</p>
-          <div className="flex items-baseline justify-between">
-            <p className="text-2xl font-bold df-serif text-[var(--df-text)]">3</p>
-            <span className="text-xs text-[var(--df-teal)] font-medium">1 In Progress</span>
-          </div>
-        </div>
-        <div className="df-card p-4 space-y-1">
-          <p className="text-xs text-[var(--df-text-muted)] font-medium">Scheduled Next 7 Days</p>
-          <div className="flex items-baseline justify-between">
-            <p className="text-2xl font-bold df-serif text-[var(--df-text)]">14</p>
-            <span className="text-xs text-[var(--df-text-muted)] font-medium">+4 vs last week</span>
-          </div>
-        </div>
-        <div className="df-card p-4 space-y-1">
-          <p className="text-xs text-[var(--df-text-muted)] font-medium">Completed Tele-Visits</p>
-          <div className="flex items-baseline justify-between">
-            <p className="text-2xl font-bold df-serif text-[var(--df-text)]">128</p>
-            <span className="text-xs text-green-600 font-medium">96% Satisfaction</span>
-          </div>
-        </div>
-        <div className="df-card p-4 space-y-1">
-          <p className="text-xs text-[var(--df-text-muted)] font-medium">Average Call Time</p>
-          <div className="flex items-baseline justify-between">
-            <p className="text-2xl font-bold df-serif text-[var(--df-text)]">11m 40s</p>
-            <span className="text-xs text-[var(--df-text-muted)] font-medium">Buffer safe</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Container with Tabs */}
+      {/* Main Container with Tabs & Actions */}
       <div className="df-card">
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-[var(--df-border)] px-4 pt-3 bg-[var(--df-surface-muted)]/40 rounded-t-xl">
-          <button
-            type="button"
-            onClick={() => setActiveTab("consults")}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeTab === "consults"
-                ? "border-[var(--df-teal)] text-[var(--df-teal)]"
-                : "border-transparent text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
-            }`}
-          >
-            <Video className="h-3.5 w-3.5" />
-            Today&apos;s Consults (3)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("schedule")}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeTab === "schedule"
-                ? "border-[var(--df-teal)] text-[var(--df-teal)]"
-                : "border-transparent text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
-            }`}
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            Schedule New Consult
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("instant")}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              activeTab === "instant"
-                ? "border-[var(--df-teal)] text-[var(--df-teal)]"
-                : "border-transparent text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Instant Room Generator
-          </button>
+        {/* Navigation Tabs + Action Buttons Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--df-border)] px-4 py-2.5 bg-[var(--df-surface-muted)]/30 rounded-t-xl">
+          {/* Left: Tab Selectors */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab("consults")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === "consults"
+                  ? "bg-[var(--df-surface)] text-[var(--df-teal)] shadow-xs border border-[var(--df-border)] font-bold"
+                  : "text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)]"
+              }`}
+            >
+              <Video className="h-3.5 w-3.5" />
+              <span>Today&apos;s Consults (3)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("schedule")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === "schedule"
+                  ? "bg-[var(--df-surface)] text-[var(--df-teal)] shadow-xs border border-[var(--df-border)] font-bold"
+                  : "text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)]"
+              }`}
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Schedule New Consult</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("instant")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === "instant"
+                  ? "bg-[var(--df-surface)] text-[var(--df-teal)] shadow-xs border border-[var(--df-border)] font-bold"
+                  : "text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)]"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Instant Room Generator</span>
+            </button>
+          </div>
+
+          {/* Right: Quick Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("instant")}
+              className="df-btn-secondary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] text-[var(--df-text)] shadow-xs transition-colors"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+              <span>Instant Room</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("schedule")}
+              className="df-btn-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer rounded-xl text-white bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] shadow-xs transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Schedule Consult</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab 1: Today's Consults */}
@@ -238,7 +240,7 @@ export default function VideoConsultPage() {
                       Reason: {vc.reason}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 self-end sm:self-center">
+                  <div className="flex items-center gap-2.5 self-end sm:self-center">
                     <button
                       type="button"
                       onClick={() => {
@@ -247,10 +249,10 @@ export default function VideoConsultPage() {
                         );
                         toast.success("Meeting link copied to clipboard");
                       }}
-                      className="df-btn-secondary text-xs flex items-center gap-1.5 cursor-pointer py-1.5"
+                      className="df-btn-secondary px-3.5 py-2 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] text-[var(--df-text)] shadow-xs transition-colors"
                     >
-                      <Copy className="h-3.5 w-3.5" />
-                      Copy Link
+                      <Copy className="h-3.5 w-3.5 text-[var(--df-text-muted)]" />
+                      <span>Copy Link</span>
                     </button>
                     <button
                       type="button"
@@ -263,10 +265,10 @@ export default function VideoConsultPage() {
                           reason: vc.reason,
                         });
                       }}
-                      className="df-btn-primary text-xs flex items-center gap-1.5 cursor-pointer py-1.5"
+                      className="df-btn-primary px-4 py-2 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer rounded-xl text-white bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] shadow-xs transition-colors"
                     >
                       <Video className="h-3.5 w-3.5" />
-                      Join Call Room
+                      <span>Join Call Room</span>
                     </button>
                   </div>
                 </div>
