@@ -653,54 +653,51 @@ export function DentflowSidebar({
 
                     return (
                       <li key={item.id} className="space-y-0.5">
-                        <div className="flex items-center">
-                          <Link
-                            href={href}
-                            onClick={onCloseMobile}
-                            className={`flex-1 flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
-                              isItemExactActive && !item.subTabs
-                                ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
-                                : isFamilyActive
-                                ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
-                                : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2 min-w-0">
-                              <Icon
-                                className={`h-3.5 w-3.5 shrink-0 ${
-                                  isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)]"
-                                }`}
-                              />
-                              <span className="truncate">{item.label}</span>
-                            </span>
+                        <Link
+                          href={href}
+                          onClick={() => {
+                            if (item.subTabs && item.subTabs.length > 0) {
+                              setExpandedItems((prev) => ({
+                                ...prev,
+                                [item.id]: !prev[item.id],
+                              }));
+                            }
+                            onCloseMobile();
+                          }}
+                          className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors group cursor-pointer ${
+                            isItemExactActive && !item.subTabs
+                              ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
+                              : isFamilyActive
+                              ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
+                              : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Icon
+                              className={`h-3.5 w-3.5 shrink-0 ${
+                                isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)] group-hover:text-white"
+                              }`}
+                            />
+                            <span className="truncate">{item.label}</span>
+                          </span>
 
-                            <span className="flex items-center gap-1.5 shrink-0">
-                              {item.badgeType === "unique" && <DentflowUniquePill dark />}
-                              {item.badgeType === "new" && <DentflowNewPill dark />}
-                              {item.badgeType === "count" && (
-                                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)]">
-                                  {postOpAlertCount || item.badgeText}
-                                </span>
-                              )}
-                            </span>
-                          </Link>
-
-                          {/* Dropdown chevron toggle for items with subTabs */}
-                          {item.subTabs && item.subTabs.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={(e) => toggleItem(item.id, e)}
-                              className="p-1 text-[var(--df-sidebar-muted)] hover:text-white rounded hover:bg-[var(--df-sidebar-hover)] ml-0.5 cursor-pointer"
-                              aria-label={`Toggle ${item.label} sub-items`}
-                            >
+                          <span className="flex items-center gap-1.5 shrink-0">
+                            {item.badgeType === "unique" && <DentflowUniquePill dark />}
+                            {item.badgeType === "new" && <DentflowNewPill dark />}
+                            {item.badgeType === "count" && (
+                              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)]">
+                                {postOpAlertCount || item.badgeText}
+                              </span>
+                            )}
+                            {item.subTabs && item.subTabs.length > 0 && (
                               <ChevronDown
-                                className={`h-3 w-3 transition-transform duration-150 ${
+                                className={`h-3 w-3 text-[var(--df-sidebar-muted)] group-hover:text-white transition-transform duration-200 ${
                                   isItemExpanded ? "rotate-0" : "-rotate-90"
                                 }`}
                               />
-                            </button>
-                          )}
-                        </div>
+                            )}
+                          </span>
+                        </Link>
 
                         {/* Clean vertical sub-menu dropdown matching sidebar layout */}
                         {item.subTabs && isItemExpanded && (
