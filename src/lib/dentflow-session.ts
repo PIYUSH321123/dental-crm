@@ -12,6 +12,7 @@ export type DentflowAuthRole =
   | "owner"
   | "branch_manager"
   | "dentist"
+  | "visiting"
   | "front_desk"
   | "assistant"
   | "accounts"
@@ -38,6 +39,9 @@ export function authRoleToStaffRoleKey(role: DentflowAuthRole): DentflowRoleKey 
       return "Branch mgr";
     case "dentist":
       return "Dentist";
+    case "visiting":
+    case "specialist":
+      return "Visiting";
     case "front_desk":
       return "Front desk";
     case "assistant":
@@ -57,6 +61,7 @@ export function getDefaultRedirectForSession(session: DentflowSessionPayload): s
       return session.setupCompleted ? "/app/group-dashboard" : "/setup";
     case "branch_manager":
     case "dentist":
+    case "visiting":
     case "front_desk":
     case "assistant":
     case "accounts":

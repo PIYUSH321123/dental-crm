@@ -166,8 +166,8 @@ export default function GapFillerPage() {
               What the patient receives
             </h3>
             <div className="p-3.5 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] text-xs text-[var(--df-text)] leading-relaxed">
-              नमस्ते {firstName} जी, आज 3:30 बजे Dr. Sneha के साथ एक स्लॉट खाली हुआ है — आपके
-              क्राउन के लिए। चाहिए तो 10 मिनट में &quot;हाँ&quot; भेजें।
+              Hello {firstName}, a 3:30 PM slot just opened today with Dr. Sneha — for your
+              crown. Reply &quot;Yes&quot; within 10 minutes if you would like to book it.
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -175,7 +175,7 @@ export default function GapFillerPage() {
                 onClick={() => handleConfirmYes(selectedCandidate.rank)}
                 className="df-btn-secondary py-1.5 text-xs text-[var(--df-teal)] font-bold cursor-pointer"
               >
-                हाँ, बुक करें
+                Yes, book slot
               </button>
               <button
                 type="button"
@@ -184,7 +184,7 @@ export default function GapFillerPage() {
                 }
                 className="df-btn-secondary py-1.5 text-xs cursor-pointer"
               >
-                नहीं
+                Decline
               </button>
             </div>
           </div>

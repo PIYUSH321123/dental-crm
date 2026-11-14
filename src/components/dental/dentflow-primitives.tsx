@@ -65,6 +65,7 @@ const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   prescriptions: FileText,
   "post-op": Activity,
   billing: Receipt,
+  insurance: ShieldCheck,
   "treatment-recovery": RefreshCw,
   "recall-campaigns": Megaphone,
   inventory: Package,
@@ -459,14 +460,20 @@ export function DentflowPageHeader({
                     <span>Log out</span>
                   </button>
 
-                  <Link
-                    href="/login"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setUserMenuOpen(false);
+                      try {
+                        await fetch("/api/dentflow/session", { method: "DELETE" });
+                      } catch {}
+                      window.location.href = "/login";
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors cursor-pointer"
                   >
                     <LogIn className="h-3.5 w-3.5 text-[var(--df-text-muted)]" />
                     <span>Log in as different user</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             </>

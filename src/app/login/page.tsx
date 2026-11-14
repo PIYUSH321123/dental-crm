@@ -10,60 +10,74 @@ import { DentflowAuthRole } from "@/lib/dentflow-session";
 const ROLE_OPTIONS: {
   role: DentflowAuthRole;
   label: string;
+  doctorName?: string;
+  email: string;
   sublabel: string;
   setupCompleted?: boolean;
 }[] = [
   {
     role: "owner",
-    label: "Clinic owner (active)",
-    sublabel: "Opens All branches group dashboard",
+    label: "Dr. Sneha Kulkarni (Owner)",
+    doctorName: "Dr. Sneha Kulkarni",
+    email: "sneha@smilestudio.in",
+    sublabel: "Principal dentist · Opens group dashboard",
     setupCompleted: true,
   },
   {
-    role: "owner",
-    label: "Clinic owner (first time)",
-    sublabel: "Opens mandatory 8-step setup wizard",
-    setupCompleted: false,
+    role: "dentist",
+    label: "Dr. Arjun Mehta (Associate Dentist)",
+    doctorName: "Dr. Arjun Mehta",
+    email: "arjun@smilestudio.in",
+    sublabel: "Dentist · Opens Today clinical schedule",
+  },
+  {
+    role: "visiting",
+    label: "Dr. Farhan Ali (Visiting Specialist)",
+    doctorName: "Dr. Farhan Ali",
+    email: "farhan@smilestudio.in",
+    sublabel: "Oral & maxillofacial surgeon · Opens schedule",
   },
   {
     role: "branch_manager",
-    label: "Branch manager",
+    label: "Prakash Jha (Branch Manager)",
+    email: "prakash@smilestudio.in",
     sublabel: "Opens Today front-desk & operations",
   },
   {
-    role: "dentist",
-    label: "Dentist",
-    sublabel: "Opens Today clinical schedule & charting",
-  },
-  {
     role: "front_desk",
-    label: "Front desk",
+    label: "Anita Pawar (Front Desk)",
+    email: "anita@smilestudio.in",
     sublabel: "Opens Today queue, calendar & billing",
   },
   {
     role: "assistant",
-    label: "Dental assistant",
+    label: "Ravi Gaikwad (Dental Assistant)",
+    email: "ravi@smilestudio.in",
     sublabel: "Opens Today queue, sterilisation & inventory",
   },
   {
     role: "accounts",
-    label: "Accounts & billing",
+    label: "Meenakshi Joshi (Accounts & Billing)",
+    email: "accounts@smilestudio.in",
     sublabel: "Opens Today billing, P&L & payroll",
   },
   {
     role: "specialist",
-    label: "Visiting specialist",
-    sublabel: "Opens Specialist portal",
+    label: "Visiting Specialist External Portal",
+    email: "specialist@smilestudio.in",
+    sublabel: "Opens Specialist referral cases portal",
   },
   {
     role: "lab",
-    label: "Dental lab partner",
-    sublabel: "Opens Dental lab portal",
+    label: "Precision Dental Lab Partner",
+    email: "lab@precisionlab.in",
+    sublabel: "Opens Dental lab CAD/CAM cases portal",
   },
   {
     role: "platform_admin",
-    label: "Platform admin",
-    sublabel: "Opens SaaS Admin portal",
+    label: "Platform Admin",
+    email: "admin@dentflow.in",
+    sublabel: "Opens SaaS Admin multi-clinic portal",
   },
 ];
 
@@ -79,6 +93,7 @@ function LoginFormInner() {
     role: DentflowAuthRole,
     setupCompleted?: boolean,
     customEmail?: string,
+    doctorName?: string,
   ) => {
     setLoading(true);
     try {
@@ -90,13 +105,13 @@ function LoginFormInner() {
           role,
           setupCompleted,
           email: customEmail || email,
+          name: doctorName,
         }),
       });
       const data = await res.json();
       if (data?.redirectTo) {
         toast.success(`Signed in as ${data.session?.name || role}`);
-        router.push(data.redirectTo);
-        router.refresh();
+        window.location.href = data.redirectTo;
       }
     } finally {
       setLoading(false);
@@ -105,8 +120,27 @@ function LoginFormInner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const chosen = ROLE_OPTIONS[selectedIdx] || ROLE_OPTIONS[0];
-    await signInAs(chosen.role, chosen.setupCompleted, email);
+    const lower = email.toLowerCase().trim();
+    let chosen = ROLE_OPTIONS[selectedIdx] || ROLE_OPTIONS[0];
+
+    // Smart doctor matching if user typed email
+    if (lower.includes("arjun")) {
+      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Arjun")) || chosen;
+    } else if (lower.includes("farhan")) {
+      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Farhan")) || chosen;
+    } else if (lower.includes("sneha")) {
+      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Sneha")) || chosen;
+    } else if (lower.includes("prakash")) {
+      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Prakash")) || chosen;
+    } else if (lower.includes("anita")) {
+      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Anita")) || chosen;
+    } else if (lower.includes("ravi")) {
+      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Ravi")) || chosen;
+    } else if (lower.includes("accounts") || lower.includes("meenakshi")) {
+      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Meenakshi")) || chosen;
+    }
+
+    await signInAs(chosen.role, chosen.setupCompleted, email, chosen.doctorName);
   };
 
   return (
@@ -187,7 +221,11 @@ function LoginFormInner() {
               <select
                 aria-label="Account role"
                 value={selectedIdx}
-                onChange={(e) => setSelectedIdx(Number(e.target.value))}
+                onChange={(e) => {
+                  const idx = Number(e.target.value);
+                  setSelectedIdx(idx);
+                  setEmail(ROLE_OPTIONS[idx].email);
+                }}
                 className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 font-medium"
               >
                 {ROLE_OPTIONS.map((opt, idx) => (
@@ -232,7 +270,7 @@ function LoginFormInner() {
                 key={`${opt.role}-${opt.label}`}
                 type="button"
                 disabled={loading}
-                onClick={() => signInAs(opt.role, opt.setupCompleted)}
+                onClick={() => signInAs(opt.role, opt.setupCompleted, opt.email, opt.doctorName)}
                 className="text-left p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] hover:border-[var(--df-teal)] hover:bg-[var(--df-teal-soft)]/35 transition-colors cursor-pointer"
               >
                 <p className="text-xs font-bold text-[var(--df-text)]">{opt.label}</p>

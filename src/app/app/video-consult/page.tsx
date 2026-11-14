@@ -63,14 +63,24 @@ export default function VideoConsultPage() {
   // Instant room link
   const instantRoomUrl = "https://meet.dentflow.in/room/df-tele-instant-942";
 
-  const videoConsultsList = [
+  interface VideoConsultItem {
+    id: string;
+    patientName: string;
+    patientPhone: string;
+    doctorName: string;
+    time: string;
+    status: "In Progress" | "Scheduled" | "Completed";
+    reason: string;
+  }
+
+  const [consults, setConsults] = useState<VideoConsultItem[]>([
     {
       id: "vc-1",
       patientName: "Priya Deshmukh",
       patientPhone: "+91 98220 44100",
       doctorName: "Dr. Sneha Kulkarni",
       time: "10:30 AM",
-      status: "In Progress" as const,
+      status: "In Progress",
       reason: "Tooth 36 deep caries review & treatment options discussion",
     },
     {
@@ -79,7 +89,7 @@ export default function VideoConsultPage() {
       patientPhone: "+91 98220 12345",
       doctorName: "Dr. Arjun Mehta",
       time: "02:00 PM",
-      status: "Scheduled" as const,
+      status: "Scheduled",
       reason: "Post-extraction day 3 bleeding check",
     },
     {
@@ -88,10 +98,29 @@ export default function VideoConsultPage() {
       patientPhone: "+91 98220 67890",
       doctorName: "Dr. Sneha Kulkarni",
       time: "04:30 PM",
-      status: "Scheduled" as const,
+      status: "Scheduled",
       reason: "Clear aligner fit verification & attachment check",
     },
-  ];
+  ]);
+
+  const handleScheduleConsult = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const pat = state.patients.find((p) => p.id === schedulePatientId) || state.patients[0];
+    const newConsult: VideoConsultItem = {
+      id: `vc-${Date.now()}`,
+      patientName: pat ? pat.name : "Scheduled Patient",
+      patientPhone: pat ? pat.phone : "+91 98220 12345",
+      doctorName: scheduleDoctor,
+      time: scheduleTime || "11:30 AM",
+      status: "Scheduled",
+      reason: scheduleReason || "Tele-dentistry review",
+    };
+    setConsults((prev) => [newConsult, ...prev]);
+    toast.success(
+      `Video consultation scheduled for ${newConsult.patientName} at ${newConsult.time}. WhatsApp invite sent to patient.`,
+    );
+    setActiveTab("consults");
+  };
 
   const formatTimer = (totalSecs: number) => {
     const mins = Math.floor(totalSecs / 60);
@@ -125,7 +154,7 @@ export default function VideoConsultPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <DentflowKpiCard
           label="Today's Video Consults"
-          value="3"
+          value={String(consults.length)}
           subtext="1 In Progress"
           subtextTone="green"
           highlighted
@@ -166,7 +195,7 @@ export default function VideoConsultPage() {
               }`}
             >
               <Video className="h-3.5 w-3.5" />
-              <span>Today&apos;s Consults (3)</span>
+              <span>Today&apos;s Consults ({consults.length})</span>
             </button>
             <button
               type="button"
@@ -219,7 +248,7 @@ export default function VideoConsultPage() {
         {activeTab === "consults" && (
           <div className="p-4 sm:p-6 space-y-4">
             <div className="space-y-3">
-              {videoConsultsList.map((vc) => (
+              {consults.map((vc) => (
                 <div
                   key={vc.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal-border)] transition-colors gap-4"
@@ -355,12 +384,7 @@ export default function VideoConsultPage() {
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    toast.success(
-                      `Video consultation scheduled for ${scheduleTime}. WhatsApp invite sent to patient.`,
-                    );
-                    setActiveTab("consults");
-                  }}
+                  onClick={handleScheduleConsult}
                   className="w-full df-btn-primary flex items-center justify-center gap-2 py-2.5 text-xs font-semibold cursor-pointer"
                 >
                   <Video className="h-4 w-4" />

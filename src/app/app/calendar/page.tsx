@@ -155,12 +155,67 @@ function CalendarPageInner() {
   const searchParams = useSearchParams();
   const { state, updateState } = useDentflow();
 
-  // Calendar View Controls
-  const [viewMode, setViewMode] = useState<"Day" | "Week" | "List">("Day");
-  const [selectedDate, setSelectedDate] = useState("Thursday, 1 Oct 2026");
+  // Calendar View Controls - defaults to "List" so booked appointment list is shown first
+  const [viewMode, setViewMode] = useState<"List" | "Day" | "Week">("List");
+  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 9, 1)); // 1 Oct 2026
   const [doctorFilter, setDoctorFilter] = useState("All Doctors");
   const [chairFilter, setChairFilter] = useState("All Chairs");
   const [statusFilter, setStatusFilter] = useState("All Status");
+
+  // Date shifting handlers
+  const handlePrevDate = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      if (viewMode === "Week") {
+        next.setDate(next.getDate() - 7);
+      } else {
+        next.setDate(next.getDate() - 1);
+      }
+      return next;
+    });
+  };
+
+  const handleNextDate = () => {
+    setCurrentDate((prev) => {
+      const next = new Date(prev);
+      if (viewMode === "Week") {
+        next.setDate(next.getDate() + 7);
+      } else {
+        next.setDate(next.getDate() + 1);
+      }
+      return next;
+    });
+  };
+
+  const formattedSelectedDate = useMemo(() => {
+    if (viewMode === "Week") {
+      const start = new Date(currentDate);
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(start.setDate(diff));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return `Week: ${monday.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
+    }
+    return currentDate.toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }, [currentDate, viewMode]);
+
+  const weekDays = useMemo(() => {
+    const start = new Date(currentDate);
+    const day = start.getDay();
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(start.setDate(diff));
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
+  }, [currentDate]);
 
   // Appointments State
   const [blocks, setBlocks] = useState<AppointmentBlock[]>(INITIAL_BLOCKS);
@@ -356,36 +411,59 @@ function CalendarPageInner() {
       <div className="df-card p-3 flex flex-wrap items-center justify-between gap-3">
         {/* Left: View Mode Toggle */}
         <div className="flex items-center gap-1 bg-[var(--df-surface-muted)] p-1 rounded-xl border border-[var(--df-border)]">
-          {(["Day", "Week", "List"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                viewMode === mode
-                  ? "bg-[var(--df-surface)] text-[var(--df-text)] shadow-xs"
-                  : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => setViewMode("List")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+              viewMode === "List"
+                ? "bg-[var(--df-surface)] text-[var(--df-teal)] font-bold shadow-xs border border-[var(--df-border)]"
+                : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
+            }`}
+          >
+            Booked appointments list
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("Day")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+              viewMode === "Day"
+                ? "bg-[var(--df-surface)] text-[var(--df-teal)] font-bold shadow-xs border border-[var(--df-border)]"
+                : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
+            }`}
+          >
+            Day calendar
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("Week")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+              viewMode === "Week"
+                ? "bg-[var(--df-surface)] text-[var(--df-teal)] font-bold shadow-xs border border-[var(--df-border)]"
+                : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
+            }`}
+          >
+            Week calendar
+          </button>
         </div>
 
-        {/* Center: Date Navigator */}
+        {/* Center: Date Navigator with working arrow buttons */}
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] cursor-pointer text-[var(--df-text-muted)]"
+            onClick={handlePrevDate}
+            aria-label="Previous date"
+            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] hover:text-[var(--df-text)] cursor-pointer text-[var(--df-text-muted)] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs font-bold text-[var(--df-text)] px-1">
-            {selectedDate}
+          <span className="text-xs font-bold text-[var(--df-text)] px-1 select-none">
+            {formattedSelectedDate}
           </span>
           <button
             type="button"
-            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] cursor-pointer text-[var(--df-text-muted)]"
+            onClick={handleNextDate}
+            aria-label="Next date"
+            className="p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:bg-[var(--df-surface-hover)] hover:text-[var(--df-text)] cursor-pointer text-[var(--df-text-muted)] transition-colors"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -687,16 +765,62 @@ function CalendarPageInner() {
 
       {/* Week View */}
       {viewMode === "Week" && (
-        <div className="df-card p-6 text-center space-y-3">
-          <p className="font-bold text-sm text-[var(--df-text)]">Week Overview (Oct 1 - Oct 7, 2026)</p>
-          <div className="grid grid-cols-7 gap-2 pt-2">
-            {["Thu 1", "Fri 2", "Sat 3", "Sun 4", "Mon 5", "Tue 6", "Wed 7"].map((d, i) => (
-              <div key={d} className={`p-3 rounded-xl border ${i === 0 ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)]" : "bg-[var(--df-surface-muted)]"}`}>
-                <p className="font-bold text-xs">{d}</p>
-                <p className="text-xl font-bold mt-1">{i === 0 ? "16" : i === 3 ? "Closed" : "12-14"}</p>
-                <p className="text-[10px] text-[var(--df-text-muted)] mt-0.5">{i === 3 ? "Sunday" : "slots full"}</p>
-              </div>
-            ))}
+        <div className="df-card p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-bold text-sm text-[var(--df-text)]">
+                {formattedSelectedDate}
+              </p>
+              <p className="text-xs text-[var(--df-text-muted)] mt-0.5">
+                Click any day below to open its full chair schedule
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setViewMode("Day")}
+              className="df-btn-secondary px-3 py-1 text-xs cursor-pointer"
+            >
+              Open Day View
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
+            {weekDays.map((d, i) => {
+              const isSunday = d.getDay() === 0;
+              const isSelectedDay =
+                d.getDate() === currentDate.getDate() &&
+                d.getMonth() === currentDate.getMonth();
+              const dayLabel = d.toLocaleDateString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              });
+              const bookedCount = isSunday ? 0 : i === 0 || i === 3 ? 16 : 12 + ((i * 3) % 4);
+
+              return (
+                <button
+                  key={d.toISOString()}
+                  type="button"
+                  onClick={() => {
+                    setCurrentDate(d);
+                    setViewMode("Day");
+                  }}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer hover:border-[var(--df-teal)] hover:shadow-xs ${
+                    isSelectedDay
+                      ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                      : "bg-[var(--df-surface-muted)] border-[var(--df-border)]"
+                  }`}
+                >
+                  <p className="font-bold text-xs text-[var(--df-text)]">{dayLabel}</p>
+                  <p className="text-xl font-bold mt-2 text-[var(--df-text)]">
+                    {isSunday ? "Closed" : bookedCount}
+                  </p>
+                  <p className="text-[10px] text-[var(--df-text-muted)] mt-0.5">
+                    {isSunday ? "Sunday closure" : `${bookedCount} appointments`}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

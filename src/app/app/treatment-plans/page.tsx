@@ -32,6 +32,18 @@ export default function TreatmentPlansPage() {
   const [newProcTooth, setNewProcTooth] = useState("36");
   const [newProcFee, setNewProcFee] = useState("3500");
 
+  // Stage booking drawer state
+  const [bookingStage, setBookingStage] = useState<{
+    id: string;
+    stageNum: number;
+    procedure: string;
+    doctor: string;
+  } | null>(null);
+  const [bookingDate, setBookingDate] = useState("Tue 6 Oct 2026");
+  const [bookingTime, setBookingTime] = useState("10:30 AM");
+  const [bookingDoctor, setBookingDoctor] = useState("Dr. Sneha Kulkarni");
+  const [bookingChair, setBookingChair] = useState("Chair 2");
+
   const handleSelectOption = (code: "A" | "B" | "C") => {
     updateState((prev) => ({
       ...prev,
@@ -56,7 +68,12 @@ export default function TreatmentPlansPage() {
     toast.success(`Option ${code} selected on ${plan.planCode}`);
   };
 
-  const handleBookStage3 = () => {
+  const handleConfirmStageBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookingStage) return;
+
+    const visitLabel = `${bookingDate.split(" ")[0]} ${bookingDate.split(" ")[1]} ${bookingDate.split(" ")[2] || ""}, ${bookingTime}`;
+
     updateState((prev) => ({
       ...prev,
       treatmentPlans: prev.treatmentPlans.map((tp) =>
@@ -65,14 +82,46 @@ export default function TreatmentPlansPage() {
           : {
               ...tp,
               stages: tp.stages.map((st) =>
-                st.status === "Not booked"
-                  ? { ...st, status: "Booked", visitLabel: "Tue 6 Oct, 10:30" }
+                st.id === bookingStage.id
+                  ? {
+                      ...st,
+                      status: "Booked" as const,
+                      visitLabel,
+                      doctor: bookingDoctor.split(" ")[1] || bookingDoctor,
+                    }
                   : st,
               ),
             },
       ),
+      patients: prev.patients.map((p) =>
+        p.id !== plan.patientId
+          ? p
+          : {
+              ...p,
+              openPlanSummary: p.openPlanSummary
+                ? {
+                    ...p.openPlanSummary,
+                    nextSitting: `next sitting ${visitLabel}`,
+                  }
+                : undefined,
+            },
+      ),
     }));
-    toast.success("Stage 3 (Zirconia crown) booked for Tue 6 Oct, 10:30 am");
+
+    toast.success(
+      `Stage ${bookingStage.stageNum} (${bookingStage.procedure}) booked for ${visitLabel} with ${bookingDoctor}!`,
+    );
+    setBookingStage(null);
+  };
+
+  const handleBookStage3 = () => {
+    const stage3 = plan.stages.find((st) => st.stageNum === 3) || plan.stages[plan.stages.length - 1];
+    if (stage3) {
+      setBookingStage(stage3);
+      setBookingDoctor("Dr. Sneha Kulkarni");
+      setBookingDate("Tue 6 Oct 2026");
+      setBookingTime("10:30 AM");
+    }
   };
 
   const handleAddProcedure = (e: React.FormEvent) => {
@@ -126,7 +175,6 @@ export default function TreatmentPlansPage() {
           tabs={[
             { id: "plans", label: "Plans", href: "/app/treatment-plans", icon: ClipboardList },
             { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
-            { id: "recovery", label: "Recovery", href: "/app/treatment-recovery", icon: RefreshCw },
           ]}
         />
       </div>
@@ -263,7 +311,8 @@ export default function TreatmentPlansPage() {
                     <th className="py-2 px-2 text-left">Doctor</th>
                     <th className="py-2 px-2 text-left">Visit</th>
                     <th className="py-2 px-2 text-right">Fee</th>
-                    <th className="py-2 pl-2 text-right">Status</th>
+                    <th className="py-2 px-2 text-right">Status</th>
+                    <th className="py-2 pl-2 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,7 +337,7 @@ export default function TreatmentPlansPage() {
                           ? "incl."
                           : `₹${st.fee.toLocaleString("en-IN")}`}
                       </td>
-                      <td className="py-2.5 pl-2 text-right">
+                      <td className="py-2.5 px-2 text-right">
                         <DentflowStatusPill
                           label={st.status}
                           tone={
@@ -299,6 +348,33 @@ export default function TreatmentPlansPage() {
                               : "amber"
                           }
                         />
+                      </td>
+                      <td className="py-2.5 pl-2 text-right">
+                        {st.status === "Not booked" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBookingStage(st);
+                              setBookingDoctor(st.doctor.includes("Arjun") ? "Dr. Arjun Mehta" : "Dr. Sneha Kulkarni");
+                            }}
+                            className="df-btn-primary px-2.5 py-1 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
+                          >
+                            Book sitting
+                          </button>
+                        ) : st.status === "Booked" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBookingStage(st);
+                              setBookingDoctor(st.doctor.includes("Arjun") ? "Dr. Arjun Mehta" : "Dr. Sneha Kulkarni");
+                            }}
+                            className="df-btn-secondary px-2 py-0.5 text-[11px] font-medium cursor-pointer whitespace-nowrap"
+                          >
+                            Reschedule
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-[var(--df-text-muted)]">Completed</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -463,6 +539,104 @@ export default function TreatmentPlansPage() {
           </button>
         </form>
       </DentflowDrawer>
+
+      {/* Book Sitting / Stage Planner Drawer */}
+      {bookingStage && (
+        <DentflowDrawer
+          open={Boolean(bookingStage)}
+          onClose={() => setBookingStage(null)}
+          title={`Book Sitting · Stage ${bookingStage.stageNum}`}
+          subtitle={`${plan.planCode} · ${plan.patientName} · ${bookingStage.procedure}`}
+        >
+          <form onSubmit={handleConfirmStageBooking} className="space-y-4 text-xs">
+            <div className="p-3 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] space-y-1">
+              <p className="font-bold text-[var(--df-teal)]">Clinical Sitting Details</p>
+              <p className="text-[11px] text-[var(--df-text-secondary)]">
+                Procedure: <strong className="text-[var(--df-text)]">{bookingStage.procedure}</strong>
+              </p>
+              <p className="text-[11px] text-[var(--df-text-muted)]">
+                Patient comfort anxiety buffer: +15 mins automatically allocated
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[var(--df-text-secondary)] mb-1">
+                Attending Dentist
+              </label>
+              <select
+                value={bookingDoctor}
+                onChange={(e) => setBookingDoctor(e.target.value)}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+              >
+                <option value="Dr. Sneha Kulkarni">Dr. Sneha Kulkarni (Principal / Endo)</option>
+                <option value="Dr. Arjun Mehta">Dr. Arjun Mehta (Associate Dentist)</option>
+                <option value="Dr. Farhan Ali">Dr. Farhan Ali (Visiting Surgeon)</option>
+                <option value="Dr. Karan Shah">Dr. Karan Shah (Orthodontist)</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-[var(--df-text-secondary)] mb-1">
+                  Operatory Chair
+                </label>
+                <select
+                  value={bookingChair}
+                  onChange={(e) => setBookingChair(e.target.value)}
+                  className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+                >
+                  <option value="Chair 1">Chair 1 · General</option>
+                  <option value="Chair 2">Chair 2 · Surgery/Endo</option>
+                  <option value="Chair 3">Chair 3 · Ortho</option>
+                  <option value="Chair 4">Chair 4 · Implant Suite</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[var(--df-text-secondary)] mb-1">
+                  Sitting Slot
+                </label>
+                <select
+                  value={bookingTime}
+                  onChange={(e) => setBookingTime(e.target.value)}
+                  className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+                >
+                  <option value="09:30 AM">09:30 AM</option>
+                  <option value="10:30 AM">10:30 AM</option>
+                  <option value="11:30 AM">11:30 AM</option>
+                  <option value="01:00 PM">01:00 PM</option>
+                  <option value="02:30 PM">02:30 PM</option>
+                  <option value="03:30 PM">03:30 PM</option>
+                  <option value="04:30 PM">04:30 PM</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[var(--df-text-secondary)] mb-1">
+                Appointment Date
+              </label>
+              <input
+                type="text"
+                required
+                value={bookingDate}
+                onChange={(e) => setBookingDate(e.target.value)}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs font-mono"
+                placeholder="e.g. Tue 6 Oct 2026"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="w-full df-btn-primary py-2.5 text-xs font-semibold cursor-pointer shadow-xs"
+              >
+                Confirm Sitting &amp; Add to Calendar
+              </button>
+            </div>
+          </form>
+        </DentflowDrawer>
+      )}
     </div>
   );
 }

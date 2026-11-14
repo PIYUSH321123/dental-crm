@@ -322,6 +322,12 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         requiredPermission: "collect_payments_refunds",
       },
       {
+        id: "insurance",
+        label: "Insurance & TPA",
+        slug: "insurance",
+        requiredPermission: "collect_payments_refunds",
+      },
+      {
         id: "treatment-recovery",
         label: "Treatment recovery",
         slug: "treatment-recovery",

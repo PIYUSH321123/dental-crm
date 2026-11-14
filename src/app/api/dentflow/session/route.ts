@@ -40,6 +40,7 @@ const DEFAULT_NAMES: Record<DentflowAuthRole, string> = {
   owner: "Dr. Sneha Kulkarni",
   branch_manager: "Prakash Jha",
   dentist: "Dr. Arjun Mehta",
+  visiting: "Dr. Farhan Ali",
   front_desk: "Anita Pawar",
   assistant: "Ravi Gaikwad",
   accounts: "Meenakshi Joshi",

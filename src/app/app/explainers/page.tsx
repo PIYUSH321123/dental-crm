@@ -101,7 +101,6 @@ export default function ExplainersPage() {
           tabs={[
             { id: "plans", label: "Plans", href: "/app/treatment-plans", icon: ClipboardList },
             { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
-            { id: "recovery", label: "Recovery", href: "/app/treatment-recovery", icon: RefreshCw },
           ]}
         />
       </div>
