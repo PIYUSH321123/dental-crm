@@ -551,24 +551,11 @@ export function DentflowSidebar({
   const { state } = useDentflow();
 
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
-    patients: true,
-    "treatment-plans": true,
-  });
 
   const toggleGroup = (title: string) => {
     setCollapsedGroups((prev) => ({
       ...prev,
       [title]: !prev[title],
-    }));
-  };
-
-  const toggleItem = (itemId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpandedItems((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
     }));
   };
 
@@ -600,7 +587,7 @@ export function DentflowSidebar({
         </button>
       </div>
 
-      {/* Navigation Sections with Dropdowns on groups */}
+      {/* Navigation Sections with Dropdowns strictly on group title buttons */}
       <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-2">
         {DENTFLOW_SIDEBAR_SECTIONS.map((section, idx) => {
           const visibleItems = section.items.filter((item) =>
@@ -630,7 +617,7 @@ export function DentflowSidebar({
                 </button>
               )}
 
-              {/* Group Items */}
+              {/* Group Items - clean uniform links without separate dropdown buttons */}
               {!isCollapsed && (
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
@@ -638,34 +625,19 @@ export function DentflowSidebar({
                     const isItemExactActive = pathname === href || pathname?.startsWith(`${href}/`);
                     const isFamilyActive =
                       isItemExactActive ||
-                      Boolean(
-                        item.subTabs &&
-                          item.subTabs.some((st) => {
-                            const clean = st.slug.split("?")[0];
-                            return (
-                              pathname === `/app/${clean}` ||
-                              pathname?.startsWith(`/app/${clean}/`)
-                            );
-                          }),
-                      );
+                      (item.slug === "patients" && pathname?.startsWith("/app/dental-chart")) ||
+                      (item.slug === "treatment-plans" &&
+                        (pathname?.startsWith("/app/explainers") ||
+                          pathname?.startsWith("/app/treatment-recovery")));
                     const Icon = NAV_ICONS[item.id] || Home;
-                    const isItemExpanded = Boolean(expandedItems[item.id]);
 
                     return (
-                      <li key={item.id} className="space-y-0.5">
+                      <li key={item.id}>
                         <Link
                           href={href}
-                          onClick={() => {
-                            if (item.subTabs && item.subTabs.length > 0) {
-                              setExpandedItems((prev) => ({
-                                ...prev,
-                                [item.id]: !prev[item.id],
-                              }));
-                            }
-                            onCloseMobile();
-                          }}
+                          onClick={onCloseMobile}
                           className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors group cursor-pointer ${
-                            isItemExactActive && !item.subTabs
+                            isItemExactActive
                               ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
                               : isFamilyActive
                               ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
@@ -675,7 +647,9 @@ export function DentflowSidebar({
                           <span className="flex items-center gap-2 min-w-0">
                             <Icon
                               className={`h-3.5 w-3.5 shrink-0 ${
-                                isFamilyActive ? "text-white" : "text-[var(--df-sidebar-muted)] group-hover:text-white"
+                                isFamilyActive
+                                  ? "text-white"
+                                  : "text-[var(--df-sidebar-muted)] group-hover:text-white"
                               }`}
                             />
                             <span className="truncate">{item.label}</span>
@@ -689,43 +663,8 @@ export function DentflowSidebar({
                                 {postOpAlertCount || item.badgeText}
                               </span>
                             )}
-                            {item.subTabs && item.subTabs.length > 0 && (
-                              <ChevronDown
-                                className={`h-3 w-3 text-[var(--df-sidebar-muted)] group-hover:text-white transition-transform duration-200 ${
-                                  isItemExpanded ? "rotate-0" : "-rotate-90"
-                                }`}
-                              />
-                            )}
                           </span>
                         </Link>
-
-                        {/* Clean vertical sub-menu dropdown matching sidebar layout */}
-                        {item.subTabs && isItemExpanded && (
-                          <ul className="pl-6 pr-1 py-0.5 space-y-0.5 border-l border-[var(--df-sidebar-border)]/40 ml-4">
-                            {item.subTabs.map((tab) => {
-                              const tabHref = `/app/${tab.slug}`;
-                              const tabClean = tab.slug.split("?")[0];
-                              const isTabActive =
-                                pathname === `/app/${tabClean}` ||
-                                (tab.slug.includes("?") && pathname?.startsWith(`/app/${tabClean}`));
-                              return (
-                                <li key={tab.id}>
-                                  <Link
-                                    href={tabHref}
-                                    onClick={onCloseMobile}
-                                    className={`flex items-center justify-between px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                                      isTabActive
-                                        ? "bg-[var(--df-teal)] text-white font-semibold shadow-xs"
-                                        : "text-[var(--df-sidebar-text)]/75 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
-                                    }`}
-                                  >
-                                    <span className="truncate">{tab.label}</span>
-                                  </Link>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
                       </li>
                     );
                   })}

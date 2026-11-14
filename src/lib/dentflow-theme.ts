@@ -254,10 +254,6 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         label: "Patients",
         slug: "patients",
         requiredPermission: "view_patient_records",
-        subTabs: [
-          { id: "pat-overview", label: "Overview", slug: "patients" },
-          { id: "pat-chart", label: "Chart & Plans", slug: "dental-chart" },
-        ],
       },
       {
         id: "calendar",
@@ -299,11 +295,6 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         label: "Treatment plans",
         slug: "treatment-plans",
         requiredPermission: "view_patient_records",
-        subTabs: [
-          { id: "plan-plans", label: "Plans", slug: "treatment-plans" },
-          { id: "plan-explainer", label: "Explainer", slug: "explainers" },
-          { id: "plan-recovery", label: "Recovery", slug: "treatment-recovery" },
-        ],
       },
       {
         id: "post-op",
@@ -439,10 +430,12 @@ export function canRoleAccessAppSlug(
 ): boolean {
   const cleanSlug = slug.replace(/^\/app\/?/, "").split("/")[0].split("?")[0] || "today";
   if (cleanSlug === "dashboard" || cleanSlug === "today") return true;
+  if (cleanSlug === "dental-chart" || cleanSlug === "explainers") {
+    const row = matrix.find((r) => r.key === "view_patient_records");
+    return !row || row.levels[role] !== "-";
+  }
   for (const section of DENTFLOW_SIDEBAR_SECTIONS) {
-    const found = section.items.find(
-      (i) => i.slug === cleanSlug || i.subTabs?.some((st) => st.slug.split("?")[0] === cleanSlug)
-    );
+    const found = section.items.find((i) => i.slug === cleanSlug);
     if (found) {
       return canRoleAccessNavItem(role, found, matrix);
     }
