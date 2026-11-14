@@ -146,11 +146,11 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
     label: "See all-branch revenue",
     levels: {
       Owner: "F",
-      "Branch mgr": "-",
-      Dentist: "-",
-      Visiting: "-",
-      Assistant: "-",
-      "Front desk": "-",
+      "Branch mgr": "V",
+      Dentist: "V",
+      Visiting: "V",
+      Assistant: "V",
+      "Front desk": "V",
       Accounts: "V",
     },
   },
@@ -159,11 +159,11 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
     label: "Commission & payroll",
     levels: {
       Owner: "F",
-      "Branch mgr": "-",
-      Dentist: "-",
+      "Branch mgr": "V",
+      Dentist: "V",
       Visiting: "O",
-      Assistant: "-",
-      "Front desk": "-",
+      Assistant: "V",
+      "Front desk": "V",
       Accounts: "F",
     },
   },
@@ -173,11 +173,11 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
     levels: {
       Owner: "F",
       "Branch mgr": "F",
-      Dentist: "-",
-      Visiting: "-",
-      Assistant: "-",
+      Dentist: "V",
+      Visiting: "V",
+      Assistant: "V",
       "Front desk": "V",
-      Accounts: "-",
+      Accounts: "V",
     },
   },
   {
@@ -187,9 +187,9 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
       Owner: "F",
       "Branch mgr": "F",
       Dentist: "V",
-      Visiting: "-",
+      Visiting: "V",
       Assistant: "F",
-      "Front desk": "-",
+      "Front desk": "V",
       Accounts: "V",
     },
   },
@@ -200,10 +200,10 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
       Owner: "F",
       "Branch mgr": "V",
       Dentist: "V",
-      Visiting: "-",
+      Visiting: "V",
       Assistant: "F",
-      "Front desk": "-",
-      Accounts: "-",
+      "Front desk": "V",
+      Accounts: "V",
     },
   },
   {
@@ -211,12 +211,12 @@ export const INITIAL_ROLE_PERMISSIONS: RolePermissionRow[] = [
     label: "Export patient data",
     levels: {
       Owner: "F",
-      "Branch mgr": "-",
-      Dentist: "-",
-      Visiting: "-",
-      Assistant: "-",
-      "Front desk": "-",
-      Accounts: "-",
+      "Branch mgr": "V",
+      Dentist: "V",
+      Visiting: "V",
+      Assistant: "V",
+      "Front desk": "V",
+      Accounts: "V",
     },
   },
 ];
@@ -410,23 +410,18 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         id: "settings",
         label: "Settings",
         slug: "settings",
-        ownerGroupOnly: true,
       },
     ],
   },
 ];
 
 export function canRoleAccessNavItem(
-  role: DentflowRoleKey,
-  item: SidebarNavItem,
-  matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
+  _role: DentflowRoleKey,
+  _item: SidebarNavItem,
+  _matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
 ): boolean {
-  if (role === "Owner") return true;
-  if (item.ownerGroupOnly) return role === "Branch mgr";
-  if (!item.requiredPermission) return true;
-  const row = matrix.find((r) => r.key === item.requiredPermission);
-  if (!row) return true;
-  return row.levels[role] !== "-";
+  // All clinic sections are accessible across all user roles
+  return true;
 }
 
 export function canRoleAccessAppSlug(
@@ -434,18 +429,6 @@ export function canRoleAccessAppSlug(
   slug: string,
   matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
 ): boolean {
-  const cleanSlug = slug.replace(/^\/app\/?/, "").split("/")[0].split("?")[0] || "today";
-  if (cleanSlug === "dashboard" || cleanSlug === "today") return true;
-  if (cleanSlug === "dental-chart" || cleanSlug === "explainers") {
-    const row = matrix.find((r) => r.key === "view_patient_records");
-    return !row || row.levels[role] !== "-";
-  }
-  for (const section of DENTFLOW_SIDEBAR_SECTIONS) {
-    const found = section.items.find((i) => i.slug === cleanSlug);
-    if (found) {
-      return canRoleAccessNavItem(role, found, matrix);
-    }
-  }
   return true;
 }
 

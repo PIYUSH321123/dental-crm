@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
+import { INITIAL_ROLE_PERMISSIONS } from "@/lib/dentflow-theme";
 import {
   authRoleToStaffRoleKey,
   DENTFLOW_SESSION_COOKIE,
@@ -20,7 +21,11 @@ function readState(): DentflowAppState {
   try {
     if (!fs.existsSync(STATE_FILE)) return INITIAL_DENTFLOW_STATE;
     const parsed = JSON.parse(fs.readFileSync(STATE_FILE, "utf-8")) as DentflowAppState;
-    return { ...INITIAL_DENTFLOW_STATE, ...parsed };
+    return {
+      ...INITIAL_DENTFLOW_STATE,
+      ...parsed,
+      rolePermissions: INITIAL_ROLE_PERMISSIONS,
+    };
   } catch {
     return INITIAL_DENTFLOW_STATE;
   }

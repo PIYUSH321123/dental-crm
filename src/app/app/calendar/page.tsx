@@ -77,6 +77,101 @@ const INITIAL_BLOCKS: AppointmentBlock[] = [
   { id: "cb-16", chair: "C4", startHour: 15.5, durationHours: 0.85, timeLabel: "3:30", endTimeLabel: "4:20", patientId: "pat-anil", patientName: "Anil Bhosale", procedure: "Implant placement 46", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
 ];
 
+const OCT_2_BLOCKS: AppointmentBlock[] = [
+  { id: "cb-201", chair: "C1", startHour: 9.5, durationHours: 0.65, timeLabel: "9:30", endTimeLabel: "10:10", patientId: "pat-amit", patientName: "Amit Deshpande", procedure: "Scaling & root planing", doctor: "Dr. Arjun M.", status: "Done", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-202", chair: "C1", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-sneha-p", patientName: "Sneha Patel", procedure: "Composite restoration 24", doctor: "Dr. Arjun M.", status: "Checked in", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-203", chair: "C1", startHour: 12.0, durationHours: 0.75, timeLabel: "12:00", endTimeLabel: "12:45", patientId: "pat-rajiv", patientName: "Rajiv Kapoor", procedure: "Crown cementation 16", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-204", chair: "C1", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-priya-s", patientName: "Priya Sharma", procedure: "OPG & consult", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-205", chair: "C1", startHour: 16.0, durationHours: 0.6, timeLabel: "4:00", endTimeLabel: "4:35", patientId: "pat-anand", patientName: "Anand Verma", procedure: "Post-op review", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+  { id: "cb-206", chair: "C2", startHour: 10.0, durationHours: 1.25, timeLabel: "10:00", endTimeLabel: "11:15", patientId: "pat-rohan", patientName: "Rohan Mehta", procedure: "Re-RCT 46 sitting 1", doctor: "Dr. Sneha K.", status: "In chair", anxietyBufferMin: 15, flags: ["Anxious"] },
+  { id: "cb-207", chair: "C2", startHour: 11.5, durationHours: 0.85, timeLabel: "11:30", endTimeLabel: "12:20", patientId: "pat-sunita", patientName: "Sunita Rao", procedure: "Porcelain veneer prep", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-208", chair: "C2", startHour: 13.5, durationHours: 0.75, timeLabel: "1:30", endTimeLabel: "2:15", patientId: "pat-rajesh", patientName: "Rajesh Shinde", procedure: "Complete denture bite trial", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-209", chair: "C2", startHour: 15.5, durationHours: 0.75, timeLabel: "3:30", endTimeLabel: "4:15", patientId: "pat-manisha", patientName: "Manisha Kadam", procedure: "Aesthetic bonding 11, 21", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+  { id: "cb-210", chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Aligner check stage 4", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-211", chair: "C3", startHour: 12.0, durationHours: 0.75, timeLabel: "12:00", endTimeLabel: "12:45", patientId: "pat-devika", patientName: "Devika Nair", procedure: "Fixed appliance archwire change", doctor: "Dr. Karan S.", status: "Late 10 min", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-212", chair: "C3", startHour: 15.0, durationHours: 0.75, timeLabel: "3:00", endTimeLabel: "3:45", patientId: "pat-yash", patientName: "Yash Singhal", procedure: "Retainer delivery", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+  { id: "cb-213", chair: "C4", startHour: 11.0, durationHours: 0.8, timeLabel: "11:00", endTimeLabel: "11:50", patientId: "pat-vikram", patientName: "Vikram Singh", procedure: "Implant stage 2 uncovery 36", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-214", chair: "C4", startHour: 14.5, durationHours: 1.0, timeLabel: "2:30", endTimeLabel: "3:30", patientId: "pat-rekha", patientName: "Rekha Bansal", procedure: "Sinus lift & implant placement 26", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-215", chair: "C4", startHour: 15.75, durationHours: 0.75, timeLabel: "3:45", endTimeLabel: "4:30", patientId: "pat-suresh", patientName: "Suresh Patil", procedure: "Implant prosthesis review", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+];
+
+const OCT_3_BLOCKS: AppointmentBlock[] = [
+  { id: "cb-301", chair: "C1", startHour: 9.5, durationHours: 0.6, timeLabel: "9:30", endTimeLabel: "10:05", patientId: "pat-meera", patientName: "Meera Nair", procedure: "Polish & sensitivity coating", doctor: "Dr. Arjun M.", status: "Done", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-302", chair: "C1", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-varun", patientName: "Varun Dhawan", procedure: "Composite filling 36", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-303", chair: "C1", startHour: 12.0, durationHours: 0.75, timeLabel: "12:00", endTimeLabel: "12:45", patientId: "pat-alok", patientName: "Alok Nath", procedure: "Intraoral scan & consult", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-304", chair: "C1", startHour: 15.0, durationHours: 0.75, timeLabel: "3:00", endTimeLabel: "3:45", patientId: "pat-shweta", patientName: "Shweta Tiwari", procedure: "Teeth whitening sitting 1", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+  { id: "cb-305", chair: "C2", startHour: 10.0, durationHours: 1.0, timeLabel: "10:00", endTimeLabel: "11:00", patientId: "pat-suresh", patientName: "Suresh Patil", procedure: "Final denture insertion", doctor: "Dr. Sneha K.", status: "In chair", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-306", chair: "C2", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", endTimeLabel: "12:15", patientId: "pat-neha", patientName: "Neha Gupta", procedure: "Crown finish 46", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-307", chair: "C2", startHour: 13.0, durationHours: 0.75, timeLabel: "1:00", endTimeLabel: "1:45", patientId: "pat-fatima", patientName: "Fatima Shaikh", procedure: "Crown prep 14", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-308", chair: "C2", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-nitin", patientName: "Nitin Gadgil", procedure: "Endodontic emergency 21", doctor: "Dr. Sneha K.", status: "Checked in", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-309", chair: "C2", startHour: 16.0, durationHours: 0.75, timeLabel: "4:00", endTimeLabel: "4:45", patientId: "pat-priya", patientName: "Priya Deshmukh", procedure: "Obturation 36", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Anxious"] },
+
+  { id: "cb-310", chair: "C3", startHour: 10.0, durationHours: 0.75, timeLabel: "10:00", endTimeLabel: "10:45", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Bracket bonding lower arch", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-311", chair: "C3", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", endTimeLabel: "12:15", patientId: "pat-riya", patientName: "Riya Das", procedure: "Clear aligner attachment placement", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-312", chair: "C3", startHour: 14.0, durationHours: 0.75, timeLabel: "2:00", endTimeLabel: "2:45", patientId: "pat-siddharth", patientName: "Siddharth Roy", procedure: "Expansion appliance check", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-313", chair: "C3", startHour: 15.5, durationHours: 0.75, timeLabel: "3:30", endTimeLabel: "4:15", patientId: "pat-rohit", patientName: "Rohit Deshmukh", procedure: "Lingual retainer fit", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+  { id: "cb-314", chair: "C4", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-anil", patientName: "Anil Bhosale", procedure: "Implant suture removal 46", doctor: "Dr. Farhan A.", status: "Done", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-315", chair: "C4", startHour: 12.0, durationHours: 0.75, timeLabel: "12:00", endTimeLabel: "12:45", patientId: "pat-geeta", patientName: "Geeta Menon", procedure: "Immediate implant consult 11", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  { id: "cb-316", chair: "C4", startHour: 14.5, durationHours: 0.8, timeLabel: "2:30", endTimeLabel: "3:20", patientId: "pat-imran", patientName: "Imran Khan", procedure: "Surgical extraction 48", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+];
+
+const OCT_4_BLOCKS: AppointmentBlock[] = [
+  { id: "cb-401", chair: "C1", startHour: 10.0, durationHours: 0.75, timeLabel: "10:00", endTimeLabel: "10:45", patientId: "pat-alok", patientName: "Alok Nath", procedure: "Anterior trauma emergency", doctor: "Dr. Arjun M.", status: "Done", anxietyBufferMin: 0, flags: ["Trauma"] },
+  { id: "cb-402", chair: "C2", startHour: 11.0, durationHours: 0.75, timeLabel: "11:00", endTimeLabel: "11:45", patientId: "pat-seema", patientName: "Seema Trivedi", procedure: "Acute pulpitis flare-up", doctor: "Dr. Sneha K.", status: "In chair", anxietyBufferMin: 15, flags: ["Severe pain"] },
+  { id: "cb-403", chair: "C2", startHour: 12.5, durationHours: 0.5, timeLabel: "12:30", endTimeLabel: "1:00", patientId: "pat-rahul", patientName: "Rahul Verma", procedure: "Suture check & dry socket dressing", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+];
+
+function getDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function getBaseScheduleForDate(date: Date): AppointmentBlock[] {
+  const key = getDateKey(date);
+  if (key === "2026-10-01") return INITIAL_BLOCKS;
+  if (key === "2026-10-02") return OCT_2_BLOCKS;
+  if (key === "2026-10-03") return OCT_3_BLOCKS;
+  if (key === "2026-10-04") return OCT_4_BLOCKS;
+
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 0) {
+    return [
+      { id: `gen-${key}-1`, chair: "C1", startHour: 10.0, durationHours: 0.75, timeLabel: "10:00", endTimeLabel: "10:45", patientId: "pat-alok", patientName: "Alok Nath", procedure: "Emergency trauma review", doctor: "Dr. Arjun M.", status: "Done", anxietyBufferMin: 0, flags: [] },
+      { id: `gen-${key}-2`, chair: "C2", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", endTimeLabel: "12:15", patientId: "pat-seema", patientName: "Seema Trivedi", procedure: "Acute pulpitis access opening", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 15, flags: ["Urgent"] },
+      { id: `gen-${key}-3`, chair: "C2", startHour: 13.0, durationHours: 0.5, timeLabel: "1:00", endTimeLabel: "1:30", patientId: "pat-rahul", patientName: "Rahul Verma", procedure: "Emergency dressing change", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    ];
+  }
+
+  const isWeekend = dayOfWeek === 6;
+  return [
+    { id: `gen-${key}-1`, chair: "C1", startHour: 9.5, durationHours: 0.6, timeLabel: "9:30", endTimeLabel: "10:05", patientId: "pat-meera", patientName: "Meera Nair", procedure: "Scaling & polish", doctor: "Dr. Arjun M.", status: "Done", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-2`, chair: "C1", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-rahul", patientName: "Rahul Verma", procedure: "Composite restoration", doctor: "Dr. Arjun M.", status: "Checked in", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-3`, chair: "C1", startHour: 12.0, durationHours: 0.75, timeLabel: "12:00", endTimeLabel: "12:45", patientId: "pat-imran", patientName: "Imran Khan", procedure: "Consultation & X-ray", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-4`, chair: "C1", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-pooja", patientName: "Pooja Jain", procedure: "Crown preparation", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-5`, chair: "C1", startHour: 16.0, durationHours: 0.6, timeLabel: "4:00", endTimeLabel: "4:35", patientId: "pat-ajay", patientName: "Ajay Rao", procedure: "Post-op review", doctor: "Dr. Arjun M.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+    { id: `gen-${key}-6`, chair: "C2", startHour: 10.0, durationHours: 1.0, timeLabel: "10:00", endTimeLabel: "11:00", patientId: "pat-priya", patientName: "Priya Deshmukh", procedure: "Endodontic therapy", doctor: "Dr. Sneha K.", status: "In chair", anxietyBufferMin: 15, flags: ["Anxious"] },
+    { id: `gen-${key}-7`, chair: "C2", startHour: 11.5, durationHours: 0.75, timeLabel: "11:30", endTimeLabel: "12:15", patientId: "pat-suresh", patientName: "Suresh Patil", procedure: "Denture check & bite adjustment", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-8`, chair: "C2", startHour: 13.0, durationHours: 0.75, timeLabel: "1:00", endTimeLabel: "1:45", patientId: "pat-neha", patientName: "Neha Gupta", procedure: "Porcelain crown seating", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-9`, chair: "C2", startHour: 15.0, durationHours: 0.75, timeLabel: "3:00", endTimeLabel: "3:45", patientId: "pat-deepak", patientName: "Deepak More", procedure: "RCT sitting", doctor: "Dr. Sneha K.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+    { id: `gen-${key}-10`, chair: "C3", startHour: 10.5, durationHours: 0.75, timeLabel: "10:30", endTimeLabel: "11:15", patientId: "pat-aarav", patientName: "Aarav Joshi", procedure: "Paediatric check & fluoride", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-11`, chair: "C3", startHour: 12.0, durationHours: 0.6, timeLabel: "12:00", endTimeLabel: "12:35", patientId: "pat-kavya", patientName: "Kavya Reddy", procedure: "Aligner scan & progress check", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-12`, chair: "C3", startHour: 14.5, durationHours: 0.75, timeLabel: "2:30", endTimeLabel: "3:15", patientId: "pat-tanvi", patientName: "Tanvi Shah", procedure: "Orthodontic archwire adjustment", doctor: "Dr. Karan S.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+
+    { id: `gen-${key}-13`, chair: "C4", startHour: 11.0, durationHours: 0.8, timeLabel: "11:00", endTimeLabel: "11:50", patientId: "pat-fatima", patientName: "Fatima Shaikh", procedure: "Implant review & radiograph", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-14`, chair: "C4", startHour: 14.5, durationHours: 0.8, timeLabel: "2:30", endTimeLabel: "3:20", patientId: "pat-vikram", patientName: "Vikram Singh", procedure: "Surgical extraction", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+    { id: `gen-${key}-15`, chair: "C4", startHour: 15.5, durationHours: 0.85, timeLabel: "3:30", endTimeLabel: "4:20", patientId: "pat-anil", patientName: "Anil Bhosale", procedure: isWeekend ? "Implant surgery 46" : "Post-op review", doctor: "Dr. Farhan A.", status: "Confirmed", anxietyBufferMin: 0, flags: [] },
+  ];
+}
+
 const SUGGESTED_SLOTS = [
   "9:30 AM",
   "11:00 AM",
@@ -217,8 +312,14 @@ function CalendarPageInner() {
     });
   }, [currentDate]);
 
-  // Appointments State
-  const [blocks, setBlocks] = useState<AppointmentBlock[]>(INITIAL_BLOCKS);
+  // Dynamic Date-Based Appointments State
+  const [customAppointments, setCustomAppointments] = useState<Record<string, AppointmentBlock[]>>({});
+  const activeDateKey = useMemo(() => getDateKey(currentDate), [currentDate]);
+
+  const activeDayBlocks = useMemo(() => {
+    return customAppointments[activeDateKey] || getBaseScheduleForDate(currentDate);
+  }, [customAppointments, activeDateKey, currentDate]);
+
   const [selectedBlock, setSelectedBlock] = useState<AppointmentBlock | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
@@ -237,6 +338,11 @@ function CalendarPageInner() {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [videoTab, setVideoTab] = useState<"Schedule" | "Start now" | "Today">("Today");
   const [videoConsults, setVideoConsults] = useState<VideoConsultationItem[]>(INITIAL_VIDEO_CONSULTS);
+  const [videoPatientId, setVideoPatientId] = useState("pat-priya");
+  const [videoDoctor, setVideoDoctor] = useState("Dr. Sneha Kulkarni");
+  const [videoDate, setVideoDate] = useState("2026-10-01");
+  const [videoTime, setVideoTime] = useState("11:30 AM");
+  const [videoReason, setVideoReason] = useState("Aligner tracking check & post-op sensitivity");
   const [activeCall, setActiveCall] = useState<VideoConsultationItem | null>(null);
   const [callMuted, setCallMuted] = useState(false);
   const [callVideoOff, setCallVideoOff] = useState(false);
@@ -260,15 +366,23 @@ function CalendarPageInner() {
 
   const anxietyBuffer = selectedPatient?.comfortProfile?.autoBufferMin || 0;
 
-  // Filtered blocks for Day Calendar
+  // Filtered blocks for Day Calendar & List View
   const filteredBlocks = useMemo(() => {
-    return blocks.filter((b) => {
+    return activeDayBlocks.filter((b) => {
       if (doctorFilter !== "All Doctors" && !b.doctor.includes(doctorFilter.split(" ")[1] || "")) return false;
       if (chairFilter !== "All Chairs" && b.chair !== chairFilter) return false;
       if (statusFilter !== "All Status" && b.status !== statusFilter) return false;
       return true;
     });
-  }, [blocks, doctorFilter, chairFilter, statusFilter]);
+  }, [activeDayBlocks, doctorFilter, chairFilter, statusFilter]);
+
+  // Dynamic KPI counts for active date
+  const totalDayAppointments = activeDayBlocks.length;
+  const confirmedCount = activeDayBlocks.filter((b) => b.status === "Confirmed").length;
+  const doneCount = activeDayBlocks.filter((b) => b.status === "Done").length;
+  const inChairOrWaitingCount = activeDayBlocks.filter(
+    (b) => b.status === "In chair" || b.status === "Checked in" || b.status === "Late 10 min",
+  ).length;
 
   // Chair column setup
   const chairs = [
@@ -288,9 +402,15 @@ function CalendarPageInner() {
 
   const handleUpdateStatus = (newStatus: ClinicAppointment["status"]) => {
     if (!selectedBlock) return;
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === selectedBlock.id ? { ...b, status: newStatus } : b)),
-    );
+    setCustomAppointments((prev) => {
+      const currentList = prev[activeDateKey] || getBaseScheduleForDate(currentDate);
+      return {
+        ...prev,
+        [activeDateKey]: currentList.map((b) =>
+          b.id === selectedBlock.id ? { ...b, status: newStatus } : b,
+        ),
+      };
+    });
     setSelectedBlock((prev) => (prev ? { ...prev, status: newStatus } : null));
     toast.success(`Appointment updated: ${newStatus}`);
   };
@@ -323,9 +443,32 @@ function CalendarPageInner() {
       flags: selectedPatient.flags,
     };
 
-    setBlocks((prev) => [...prev, newBlock]);
+    setCustomAppointments((prev) => {
+      const currentList = prev[activeDateKey] || getBaseScheduleForDate(currentDate);
+      return {
+        ...prev,
+        [activeDateKey]: [...currentList, newBlock],
+      };
+    });
     setNewApptOpen(false);
-    toast.success(`Appointment booked for ${selectedPatient.name} at ${selectedSlot}!`);
+    toast.success(`Appointment booked for ${selectedPatient.name} on ${formattedSelectedDate} at ${selectedSlot}!`);
+  };
+
+  // Schedule Video Consultation handler
+  const handleScheduleVideoConsult = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const pat = state.patients.find((p) => p.id === videoPatientId) || state.patients[0];
+    const newConsult: VideoConsultationItem = {
+      id: `vc-${Date.now()}`,
+      patientName: pat ? pat.name : "Patient",
+      doctorName: videoDoctor,
+      time: videoTime,
+      status: "Scheduled",
+      reason: videoReason || "Clinical tele-dentistry review",
+    };
+    setVideoConsults((prev) => [newConsult, ...prev]);
+    setVideoTab("Today");
+    toast.success(`Video consultation scheduled for ${newConsult.patientName} at ${newConsult.time}! Link sent via WhatsApp.`);
   };
 
   // Video call controls
@@ -381,28 +524,36 @@ function CalendarPageInner() {
       {/* Summary KPI Card Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <DentflowKpiCard
-          label="Total today"
-          value="16"
-          subtext="+2 vs yesterday"
+          label="Total on date"
+          value={String(totalDayAppointments)}
+          subtext={currentDate.getDay() === 0 ? "Emergency duty roster" : "Full operatory active"}
           subtextTone="green"
         />
         <DentflowKpiCard
           label="Confirmed"
-          value="11"
-          subtext="69% arrival rate"
+          value={String(confirmedCount)}
+          subtext={
+            totalDayAppointments > 0
+              ? `${Math.round((confirmedCount / totalDayAppointments) * 100)}% confirmation rate`
+              : "0% arrival"
+          }
           subtextTone="teal"
           highlighted
         />
         <DentflowKpiCard
           label="Completed"
-          value="3"
-          subtext="₹48,200 collected"
+          value={String(doneCount)}
+          subtext={`₹${(doneCount * 14500).toLocaleString("en-IN")} est. billed`}
           subtextTone="green"
         />
         <DentflowKpiCard
           label="In chair / Waiting"
-          value="2"
-          subtext="1 delayed 10m"
+          value={String(inChairOrWaitingCount)}
+          subtext={
+            inChairOrWaitingCount > 0
+              ? `${inChairOrWaitingCount} chair${inChairOrWaitingCount > 1 ? "s" : ""} active`
+              : "Chairs available"
+          }
           subtextTone="amber"
         />
       </div>
@@ -785,7 +936,7 @@ function CalendarPageInner() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
-            {weekDays.map((d, i) => {
+            {weekDays.map((d) => {
               const isSunday = d.getDay() === 0;
               const isSelectedDay =
                 d.getDate() === currentDate.getDate() &&
@@ -795,7 +946,9 @@ function CalendarPageInner() {
                 day: "numeric",
                 month: "short",
               });
-              const bookedCount = isSunday ? 0 : i === 0 || i === 3 ? 16 : 12 + ((i * 3) % 4);
+              const dayKey = getDateKey(d);
+              const dayBlocks = customAppointments[dayKey] || getBaseScheduleForDate(d);
+              const bookedCount = dayBlocks.length;
 
               return (
                 <button
@@ -813,10 +966,14 @@ function CalendarPageInner() {
                 >
                   <p className="font-bold text-xs text-[var(--df-text)]">{dayLabel}</p>
                   <p className="text-xl font-bold mt-2 text-[var(--df-text)]">
-                    {isSunday ? "Closed" : bookedCount}
+                    {isSunday ? (bookedCount > 0 ? `${bookedCount} Emg` : "Closed") : bookedCount}
                   </p>
                   <p className="text-[10px] text-[var(--df-text-muted)] mt-0.5">
-                    {isSunday ? "Sunday closure" : `${bookedCount} appointments`}
+                    {isSunday
+                      ? bookedCount > 0
+                        ? `${bookedCount} emergency cases`
+                        : "Sunday closure"
+                      : `${bookedCount} appointments`}
                   </p>
                 </button>
               );
@@ -1122,7 +1279,7 @@ function CalendarPageInner() {
                       : "text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
                   }`}
                 >
-                  {tab === "Today" ? "Today's Consults (3)" : tab}
+                  {tab === "Today" ? `Today's Consults (${videoConsults.length})` : tab}
                 </button>
               ))}
             </div>
@@ -1170,44 +1327,69 @@ function CalendarPageInner() {
 
             {/* Tab: Schedule */}
             {videoTab === "Schedule" && (
-              <div className="space-y-3 text-xs">
+              <form onSubmit={handleScheduleVideoConsult} className="space-y-3 text-xs">
                 <div>
                   <label className="block font-semibold mb-1 text-[var(--df-text)]">Patient</label>
-                  <select aria-label="Select patient for video" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2">
-                    <option>Priya Deshmukh (DF-10482)</option>
-                    <option>Rohan Mehta (DF-10519)</option>
-                    <option>Kavya Reddy (DF-10910)</option>
+                  <select
+                    aria-label="Select patient for video"
+                    value={videoPatientId}
+                    onChange={(e) => setVideoPatientId(e.target.value)}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 text-xs"
+                  >
+                    {state.patients.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.code}) · {p.phone}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold mb-1 text-[var(--df-text)]">Date</label>
-                    <input type="date" defaultValue="2026-10-01" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                    <label className="block font-semibold mb-1 text-[var(--df-text)]">Attending Doctor</label>
+                    <select
+                      aria-label="Select doctor for video"
+                      value={videoDoctor}
+                      onChange={(e) => setVideoDoctor(e.target.value)}
+                      className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 text-xs"
+                    >
+                      <option value="Dr. Sneha Kulkarni">Dr. Sneha Kulkarni</option>
+                      <option value="Dr. Arjun Mehta">Dr. Arjun Mehta</option>
+                      <option value="Dr. Karan Shah">Dr. Karan Shah</option>
+                      <option value="Dr. Farhan Ali">Dr. Farhan Ali</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block font-semibold mb-1 text-[var(--df-text)]">Time</label>
-                    <input type="time" defaultValue="14:00" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                    <input
+                      type="text"
+                      value={videoTime}
+                      onChange={(e) => setVideoTime(e.target.value)}
+                      placeholder="e.g. 11:30 AM"
+                      className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 text-xs"
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block font-semibold mb-1 text-[var(--df-text)]">Reason for consultation</label>
-                  <input type="text" placeholder="e.g. Aligner tracking check & post-op sensitivity" className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2" />
+                  <input
+                    type="text"
+                    value={videoReason}
+                    onChange={(e) => setVideoReason(e.target.value)}
+                    placeholder="e.g. Aligner tracking check & post-op sensitivity"
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2 text-xs"
+                  />
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer text-[11px] text-[var(--df-text-secondary)]">
                   <input type="checkbox" defaultChecked className="h-3.5 w-3.5 rounded text-[var(--df-teal)]" />
                   <span>Send meeting link via WhatsApp and SMS to patient</span>
                 </label>
                 <button
-                  type="button"
-                  onClick={() => {
-                    setVideoModalOpen(false);
-                    toast.success("Tele-dentistry consultation scheduled and link dispatched!");
-                  }}
-                  className="w-full df-btn-primary py-2 text-xs font-semibold cursor-pointer mt-2"
+                  type="submit"
+                  className="w-full df-btn-primary py-2.5 text-xs font-semibold cursor-pointer mt-2"
                 >
-                  Schedule Video Consult
+                  Schedule Video Consult &amp; Add to List
                 </button>
-              </div>
+              </form>
             )}
 
             {/* Tab: Start now */}
@@ -1226,14 +1408,16 @@ function CalendarPageInner() {
                 <button
                   type="button"
                   onClick={() => {
-                    handleStartCall({
+                    const instantItem: VideoConsultationItem = {
                       id: `vc-${Date.now()}`,
                       patientName: "Priya Deshmukh",
                       doctorName: "Dr. Sneha Kulkarni",
                       time: "Now",
                       status: "Live",
                       reason: "Instant clinical consultation",
-                    });
+                    };
+                    setVideoConsults((prev) => [instantItem, ...prev]);
+                    handleStartCall(instantItem);
                   }}
                   className="df-btn-primary px-6 py-2.5 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer mt-2"
                 >
