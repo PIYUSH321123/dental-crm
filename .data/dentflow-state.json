@@ -1,0 +1,2490 @@
+{
+  "activeRole": "Dentist",
+  "activeBranch": "All 3 branches",
+  "patients": [
+    {
+      "id": "pat-1794635443225",
+      "code": "DF-72170",
+      "name": "Joe John",
+      "age": 31,
+      "gender": "Male",
+      "phone": "+91 9822012359",
+      "homeBranch": "All 3es",
+      "patientSince": "Today",
+      "abhaLinked": false,
+      "abhaSharingEnabled": false,
+      "flags": [],
+      "allergies": [],
+      "allergyNote": "",
+      "conditions": "None",
+      "medication": "None",
+      "bloodThinners": "None",
+      "pregnancy": "No",
+      "habits": "Non-smoker",
+      "lastHba1c": "—",
+      "medicalUpdatedAt": "Registered today",
+      "comfortProfile": {
+        "anxietyScore": 5,
+        "triggers": [],
+        "whatHelps": [
+          "Explain each step before starting",
+          "Raise hand = stop signal"
+        ],
+        "autoBufferMin": 15
+      },
+      "familyMembers": [
+        {
+          "id": "pat-1794635443225",
+          "initials": "JJ",
+          "name": "Joe John",
+          "relation": "Me",
+          "age": 31
+        }
+      ],
+      "consents": [
+        {
+          "id": "c-1794635443225",
+          "title": "Medical history & consent",
+          "status": "Signed",
+          "dateOrNote": "Signed today"
+        },
+        {
+          "id": "c-dpdp-1794635443225",
+          "title": "DPDP privacy consent",
+          "status": "Signed",
+          "dateOrNote": "Signed today"
+        }
+      ],
+      "recentActivity": [
+        {
+          "date": "Today",
+          "text": "Patient registered at clinic front desk"
+        }
+      ],
+      "distanceKm": 2.1,
+      "language": "English",
+      "whatsappConsent": true,
+      "visitsCount": 1,
+      "lifetimeValue": 0,
+      "referredCount": 0
+    },
+    {
+      "id": "pat-priya",
+      "code": "DF-10482",
+      "name": "Priya Deshmukh",
+      "age": 34,
+      "gender": "Female",
+      "phone": "+91 98XXX XX210",
+      "homeBranch": "Station Road",
+      "patientSince": "Mar 2023",
+      "abhaLinked": true,
+      "abhaAddress": "priya.deshmukh@abdm",
+      "abhaNumber": "91-XXXX-XXXX-4821",
+      "abhaSharingEnabled": true,
+      "flags": [
+        "Anxious",
+        "Allergy"
+      ],
+      "allergies": [
+        "Penicillin"
+      ],
+      "allergyNote": "Penicillin (rash)",
+      "conditions": "Type 2 diabetes, controlled",
+      "medication": "Metformin 500 mg, twice daily",
+      "bloodThinners": "None",
+      "pregnancy": "No",
+      "habits": "Non-smoker · no gutka",
+      "lastHba1c": "6.9% · Aug 2026",
+      "medicalUpdatedAt": "Updated by patient · 27 Sep",
+      "comfortProfile": {
+        "anxietyScore": 7,
+        "triggers": [
+          "Injections",
+          "Drill sound",
+          "Gagging"
+        ],
+        "whatHelps": [
+          "Explain each step before starting",
+          "Raise hand = stop signal",
+          "Own headphones allowed",
+          "Morning slots, no waiting room time"
+        ],
+        "autoBufferMin": 15
+      },
+      "familyGroupId": "fam-deshmukh",
+      "familyMembers": [
+        {
+          "id": "pat-priya",
+          "initials": "PD",
+          "name": "Priya",
+          "relation": "Me",
+          "age": 34
+        },
+        {
+          "id": "pat-rohit",
+          "initials": "RD",
+          "name": "Rohit",
+          "relation": "Husband",
+          "age": 37
+        },
+        {
+          "id": "pat-aarav-d",
+          "initials": "AD",
+          "name": "Aarav",
+          "relation": "Son",
+          "age": 7
+        }
+      ],
+      "openPlanSummary": {
+        "planCode": "TP-2231",
+        "title": "RCT 36 + zirconia crown",
+        "total": 24000,
+        "stageLabel": "Stage 2 of 3 · ₹9,000 paid",
+        "nextSitting": "next sitting Thu 1 Oct"
+      },
+      "consents": [
+        {
+          "id": "c1",
+          "title": "Medical history form",
+          "status": "Signed",
+          "dateOrNote": "27 Sep"
+        },
+        {
+          "id": "c2",
+          "title": "RCT informed consent (e-sign)",
+          "status": "Signed",
+          "dateOrNote": "12 Sep"
+        },
+        {
+          "id": "c3",
+          "title": "Photo & X-ray sharing consent",
+          "status": "Signed",
+          "dateOrNote": "12 Sep"
+        },
+        {
+          "id": "c4",
+          "title": "Crown consent",
+          "status": "Due",
+          "dateOrNote": "Due before stage 3"
+        }
+      ],
+      "recentActivity": [
+        {
+          "date": "Today",
+          "text": "Sent doctor-approved explainer in English (30-day signed link)"
+        },
+        {
+          "date": "27 Sep",
+          "text": "Opened treatment explainer in Hindi (watched 2:10)"
+        },
+        {
+          "date": "26 Sep",
+          "text": "Paid ₹7,500 by UPI AutoPay · EMI 1 of 3"
+        },
+        {
+          "date": "12 Sep",
+          "text": "Scaling done · RCT 36 planned by Dr. Sneha"
+        },
+        {
+          "date": "10 Sep",
+          "text": "Self-check: photo triage \"see within 2–3 days\""
+        }
+      ],
+      "distanceKm": 1.8,
+      "language": "हिन्दी",
+      "whatsappConsent": true,
+      "visitsCount": 8,
+      "lifetimeValue": 42500,
+      "referredCount": 2
+    },
+    {
+      "id": "pat-rohan",
+      "code": "DF-10519",
+      "name": "Rohan Mehta",
+      "age": 41,
+      "gender": "Male",
+      "phone": "+91 98XXX XX412",
+      "homeBranch": "Station Road",
+      "patientSince": "Jun 2024",
+      "abhaLinked": false,
+      "abhaSharingEnabled": false,
+      "flags": [],
+      "allergies": [],
+      "conditions": "None",
+      "medication": "None",
+      "bloodThinners": "None",
+      "pregnancy": "No",
+      "habits": "Non-smoker",
+      "lastHba1c": "—",
+      "medicalUpdatedAt": "26 Sep",
+      "comfortProfile": {
+        "anxietyScore": 3,
+        "triggers": [],
+        "whatHelps": [
+          "Explain each step before starting"
+        ],
+        "autoBufferMin": 0
+      },
+      "familyMembers": [
+        {
+          "id": "pat-rohan",
+          "initials": "RM",
+          "name": "Rohan",
+          "relation": "Me",
+          "age": 41
+        }
+      ],
+      "consents": [
+        {
+          "id": "c5",
+          "title": "Extraction consent (e-sign)",
+          "status": "Signed",
+          "dateOrNote": "26 Sep"
+        }
+      ],
+      "recentActivity": [
+        {
+          "date": "29 Sep",
+          "text": "Day 3 post-op alert: pain 8/10, swelling reported"
+        }
+      ],
+      "distanceKm": 3.1,
+      "language": "English",
+      "whatsappConsent": true,
+      "visitsCount": 4,
+      "lifetimeValue": 18500,
+      "referredCount": 0
+    },
+    {
+      "id": "pat-meera",
+      "code": "DF-09821",
+      "name": "Meera Nair",
+      "age": 45,
+      "gender": "Female",
+      "phone": "+91 98XXX XX109",
+      "homeBranch": "Station Road",
+      "patientSince": "Jan 2019",
+      "abhaLinked": true,
+      "abhaSharingEnabled": true,
+      "flags": [
+        "VIP"
+      ],
+      "allergies": [],
+      "conditions": "None",
+      "medication": "None",
+      "bloodThinners": "None",
+      "pregnancy": "No",
+      "habits": "Non-smoker",
+      "lastHba1c": "—",
+      "medicalUpdatedAt": "29 Sep",
+      "comfortProfile": {
+        "anxietyScore": 2,
+        "triggers": [],
+        "whatHelps": [
+          "Morning slots"
+        ],
+        "autoBufferMin": 0
+      },
+      "familyMembers": [
+        {
+          "id": "pat-meera",
+          "initials": "MN",
+          "name": "Meera Nair",
+          "relation": "Me",
+          "age": 45
+        }
+      ],
+      "consents": [],
+      "recentActivity": [
+        {
+          "date": "29 Sep",
+          "text": "Scaling & polishing completed · ₹1,500 paid via UPI"
+        }
+      ],
+      "distanceKm": 2,
+      "language": "English",
+      "whatsappConsent": true,
+      "visitsCount": 31,
+      "lifetimeValue": 184000,
+      "referredCount": 6
+    },
+    {
+      "id": "pat-kavya",
+      "code": "DF-10910",
+      "name": "Kavya Reddy",
+      "age": 26,
+      "gender": "Female",
+      "phone": "+91 97XXX XX882",
+      "homeBranch": "Civil Lines",
+      "patientSince": "Feb 2021",
+      "abhaLinked": true,
+      "abhaSharingEnabled": true,
+      "flags": [
+        "Anxious"
+      ],
+      "allergies": [],
+      "conditions": "None",
+      "medication": "None",
+      "bloodThinners": "None",
+      "pregnancy": "No",
+      "habits": "Non-smoker",
+      "lastHba1c": "—",
+      "medicalUpdatedAt": "25 Sep",
+      "comfortProfile": {
+        "anxietyScore": 6,
+        "triggers": [
+          "Waiting"
+        ],
+        "whatHelps": [
+          "Own headphones allowed"
+        ],
+        "autoBufferMin": 15
+      },
+      "familyMembers": [
+        {
+          "id": "pat-kavya",
+          "initials": "KR",
+          "name": "Kavya",
+          "relation": "Me",
+          "age": 26
+        }
+      ],
+      "consents": [],
+      "recentActivity": [
+        {
+          "date": "29 Sep",
+          "text": "Aligner tray 10 of 24 · 20h 40m worn today"
+        }
+      ],
+      "distanceKm": 2.4,
+      "language": "English",
+      "whatsappConsent": true,
+      "visitsCount": 22,
+      "lifetimeValue": 210000,
+      "referredCount": 3
+    }
+  ],
+  "appointments": [
+    {
+      "id": "apt-1",
+      "time": "09:30",
+      "endTime": "10:15",
+      "durationMin": 45,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-meera",
+      "patientName": "Meera Nair",
+      "flags": [],
+      "procedure": "Scaling & polishing",
+      "doctor": "Dr. Sneha K.",
+      "chair": "C1",
+      "branch": "Station Road branch",
+      "status": "Done"
+    },
+    {
+      "id": "apt-2",
+      "time": "10:00",
+      "endTime": "11:15",
+      "durationMin": 60,
+      "anxietyBufferMin": 15,
+      "patientId": "pat-priya",
+      "patientName": "Priya Deshmukh",
+      "flags": [
+        "Anxious",
+        "Allergy"
+      ],
+      "procedure": "Root canal 36 · sitting 1",
+      "doctor": "Dr. Sneha K.",
+      "chair": "C2",
+      "branch": "Station Road branch",
+      "status": "In chair"
+    },
+    {
+      "id": "apt-3",
+      "time": "10:15",
+      "endTime": "10:55",
+      "durationMin": 40,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-rahul",
+      "patientName": "Rahul Verma",
+      "flags": [],
+      "procedure": "Composite filling 14",
+      "doctor": "Dr. Arjun M.",
+      "chair": "C1",
+      "branch": "Station Road branch",
+      "status": "Checked in"
+    },
+    {
+      "id": "apt-4",
+      "time": "10:30",
+      "endTime": "11:10",
+      "durationMin": 40,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-aarav",
+      "patientName": "Aarav Joshi (7y)",
+      "flags": [
+        "New"
+      ],
+      "procedure": "Sealants + fluoride",
+      "doctor": "Dr. Arjun M.",
+      "chair": "C3",
+      "branch": "Station Road branch",
+      "status": "Late 10 min"
+    },
+    {
+      "id": "apt-5",
+      "time": "11:00",
+      "endTime": "11:45",
+      "durationMin": 45,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-fatima",
+      "patientName": "Fatima Shaikh",
+      "flags": [],
+      "procedure": "Implant review",
+      "doctor": "Dr. Farhan A.",
+      "chair": "C4",
+      "branch": "Station Road branch",
+      "status": "Confirmed"
+    },
+    {
+      "id": "apt-6",
+      "time": "11:30",
+      "endTime": "12:15",
+      "durationMin": 45,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-suresh",
+      "patientName": "Suresh Patil",
+      "flags": [],
+      "procedure": "Denture trial",
+      "doctor": "Dr. Sneha K.",
+      "chair": "C2",
+      "branch": "Station Road branch",
+      "status": "Confirmed"
+    },
+    {
+      "id": "apt-7",
+      "time": "12:00",
+      "endTime": "12:45",
+      "durationMin": 30,
+      "anxietyBufferMin": 15,
+      "patientId": "pat-kavya",
+      "patientName": "Kavya Reddy",
+      "flags": [
+        "Anxious"
+      ],
+      "procedure": "Aligner tray 10 check",
+      "doctor": "Dr. Karan S.",
+      "chair": "C3",
+      "branch": "Station Road branch",
+      "status": "Confirmed"
+    },
+    {
+      "id": "apt-8",
+      "time": "12:30",
+      "endTime": "13:00",
+      "durationMin": 30,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-imran",
+      "patientName": "Imran Khan",
+      "flags": [],
+      "procedure": "Consultation · tooth pain",
+      "doctor": "Dr. Arjun M.",
+      "chair": "C1",
+      "branch": "Station Road branch",
+      "status": "Not confirmed"
+    },
+    {
+      "id": "apt-9",
+      "time": "13:00",
+      "endTime": "13:45",
+      "durationMin": 45,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-neha",
+      "patientName": "Neha Gupta",
+      "flags": [],
+      "procedure": "Zirconia crown fit 46",
+      "doctor": "Dr. Sneha K.",
+      "chair": "C2",
+      "branch": "Station Road branch",
+      "status": "Confirmed"
+    },
+    {
+      "id": "apt-10",
+      "time": "14:30",
+      "endTime": "15:15",
+      "durationMin": 45,
+      "anxietyBufferMin": 0,
+      "patientId": "pat-vikram",
+      "patientName": "Vikram Singh",
+      "flags": [],
+      "procedure": "Extraction 38",
+      "doctor": "Dr. Farhan A.",
+      "chair": "C4",
+      "branch": "Station Road branch",
+      "status": "Not confirmed"
+    }
+  ],
+  "needsAttention": [
+    {
+      "id": "att-1",
+      "title": "Pain rising — Rohan Mehta",
+      "subtitle": "Day 3 after extraction 48: pain 8/10, swelling reported",
+      "tone": "red",
+      "targetRoute": "post-op"
+    },
+    {
+      "id": "att-2",
+      "title": "3:30 pm slot freed on Chair 2",
+      "subtitle": "Offered to 3 waitlisted patients · 1 viewed",
+      "tone": "amber",
+      "targetRoute": "gap-filler"
+    },
+    {
+      "id": "att-3",
+      "title": "Crown for Neha Gupta arrives 12:15",
+      "subtitle": "Precision Dental Lab · fit booked at 1:00 pm",
+      "tone": "teal",
+      "targetRoute": "lab-cases"
+    },
+    {
+      "id": "att-4",
+      "title": "3 appointments not confirmed",
+      "subtitle": "Reminder sent 8:00 am · call before 11:00",
+      "tone": "blue",
+      "targetRoute": "calendar"
+    },
+    {
+      "id": "att-5",
+      "title": "Autoclave cycle #1424 not logged",
+      "subtitle": "Started 9:40 am on Autoclave B",
+      "tone": "amber",
+      "targetRoute": "sterilisation"
+    }
+  ],
+  "treatmentPlans": [
+    {
+      "id": "tp-1",
+      "planCode": "TP-2231",
+      "patientId": "pat-priya",
+      "patientName": "Priya Deshmukh",
+      "proposedBy": "Dr. Sneha Kulkarni",
+      "proposedDate": "12 Sep",
+      "pipelineStep": "In progress",
+      "pipelineDates": {
+        "Proposed": "12 Sep",
+        "Explained": "12 Sep · WhatsApp",
+        "Accepted": "14 Sep · e-sign",
+        "In progress": "Stage 2 of 3",
+        "Completed": "—",
+        "Review": "6-month recall"
+      },
+      "options": [
+        {
+          "code": "A",
+          "label": "Option A",
+          "title": "Root canal + zirconia crown",
+          "price": 22500,
+          "subtitle": "Saves the tooth · 3 visits · 2–3 weeks",
+          "recommended": true,
+          "patientChose": true
+        },
+        {
+          "code": "B",
+          "label": "Option B",
+          "title": "Extraction + implant",
+          "price": 42000,
+          "subtitle": "4–5 visits · 3–4 months healing"
+        },
+        {
+          "code": "C",
+          "label": "Option C",
+          "title": "Extraction only",
+          "price": 2500,
+          "subtitle": "Gap may shift nearby teeth over time"
+        }
+      ],
+      "stages": [
+        {
+          "id": "st-1",
+          "stageNum": 1,
+          "procedure": "Scaling & polishing",
+          "tooth": "All",
+          "doctor": "Dr. Sneha",
+          "visitLabel": "12 Sep",
+          "fee": 1500,
+          "status": "Done"
+        },
+        {
+          "id": "st-2",
+          "stageNum": 2,
+          "procedure": "Root canal · sitting 1",
+          "tooth": "36",
+          "doctor": "Dr. Sneha",
+          "visitLabel": "29 Sep",
+          "fee": 8000,
+          "status": "Done"
+        },
+        {
+          "id": "st-3",
+          "stageNum": 2,
+          "procedure": "Root canal · sitting 2",
+          "tooth": "36",
+          "doctor": "Dr. Sneha",
+          "visitLabel": "Thu 1 Oct, 10:00",
+          "fee": 0,
+          "includedInPrev": true,
+          "status": "Booked"
+        },
+        {
+          "id": "st-4",
+          "stageNum": 3,
+          "procedure": "Zirconia crown (lab)",
+          "tooth": "36",
+          "doctor": "Dr. Sneha",
+          "visitLabel": "Not scheduled",
+          "fee": 14500,
+          "status": "Not booked"
+        }
+      ],
+      "costSummary": {
+        "planTotal": 24000,
+        "discount": 0,
+        "insuranceEstimate": "Not covered",
+        "paidSoFar": 9000,
+        "balance": 15000,
+        "labCostInternal": 4200
+      },
+      "emiPlan": {
+        "active": true,
+        "installments": 3,
+        "amountPerMonth": 7500,
+        "debitDay": 26,
+        "lendingPartner": "Bajaj Finserv Health"
+      },
+      "engagement": {
+        "sentInfo": "Explainer sent 12 Sep in हिन्दी · opened 3 times · watched 2:10 of 2:30",
+        "watchedInfo": "2:10 of 2:30",
+        "acceptedInfo": "Accepted Option A by e-sign on 14 Sep"
+      }
+    }
+  ],
+  "prescriptions": [
+    {
+      "id": "rx-1",
+      "patientId": "pat-priya",
+      "patientName": "Priya Deshmukh",
+      "patientMeta": "34 F · DF-10482",
+      "date": "29 Sep 2026",
+      "contextSubtitle": "After RCT 36 sitting 1 · 29 Sep",
+      "template": "Post-RCT",
+      "diagnosis": "Irreversible pulpitis, 36 — RCT initiated",
+      "allergyAlert": {
+        "blockedDrug": "Amoxicillin",
+        "allergy": "penicillin allergy",
+        "alternative": "Azithromycin 500 mg",
+        "conditionNote": "Metformin noted — no interaction flagged with chosen drugs."
+      },
+      "medicines": [
+        {
+          "id": "m1",
+          "medicine": "Azithromycin",
+          "dose": "500 mg",
+          "frequency": "1-0-0",
+          "days": "3 days",
+          "instructions": "After food"
+        },
+        {
+          "id": "m2",
+          "medicine": "Ibuprofen + Paracetamol",
+          "dose": "400/325 mg",
+          "frequency": "1-0-1",
+          "days": "3 days",
+          "instructions": "After food, only if pain"
+        },
+        {
+          "id": "m3",
+          "medicine": "Chlorhexidine mouthwash",
+          "dose": "10 ml",
+          "frequency": "0-1-1",
+          "days": "7 days",
+          "instructions": "Rinse 30 sec, no water after"
+        }
+      ],
+      "advice": "Avoid chewing on the left side until the crown is fitted. Warm salt-water rinse twice a day. Call the clinic if swelling increases.",
+      "nextVisit": "Thu 1 Oct, 10:00",
+      "signedDigitally": true,
+      "sentOnWhatsApp": true
+    }
+  ],
+  "postOpCases": [
+    {
+      "id": "po-1",
+      "patientId": "pat-rohan",
+      "patientName": "Rohan Mehta",
+      "procedure": "Extraction 48",
+      "procedureDate": "26 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 3",
+      "checkInsCompleted": [
+        "D1",
+        "D3"
+      ],
+      "painScore": 8,
+      "painHistory": [
+        {
+          "day": "Day 1",
+          "score": 5
+        },
+        {
+          "day": "Day 2",
+          "score": 5
+        },
+        {
+          "day": "Day 3",
+          "score": 8
+        }
+      ],
+      "status": "Alert",
+      "replyTimestamp": "Day 3 reply · 9:12 am",
+      "symptomsSummary": "Pain up from 5 to 8 · swelling: yes · fever: no · bad taste: yes",
+      "hasPhoto": true,
+      "ruleMatched": "Rule matched: pain ≥ 7 or rising by 3+ → alert treating doctor and front desk."
+    },
+    {
+      "id": "po-2",
+      "patientId": "pat-sunita",
+      "patientName": "Sunita Rane",
+      "procedure": "Implant 36",
+      "procedureDate": "26 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 3",
+      "checkInsCompleted": [
+        "D1",
+        "D3"
+      ],
+      "painScore": 7,
+      "painHistory": [
+        {
+          "day": "Day 1",
+          "score": 4
+        },
+        {
+          "day": "Day 2",
+          "score": 5
+        },
+        {
+          "day": "Day 3",
+          "score": 7
+        }
+      ],
+      "status": "Alert",
+      "replyTimestamp": "Day 3 reply · 9:03 am",
+      "symptomsSummary": "Pain 7/10 · mild cheek swelling reported",
+      "hasPhoto": false,
+      "ruleMatched": "Rule matched: pain ≥ 7 → alert treating doctor and front desk."
+    },
+    {
+      "id": "po-3",
+      "patientId": "pat-deepak",
+      "patientName": "Deepak More",
+      "procedure": "RCT 11",
+      "procedureDate": "28 Sep",
+      "doctor": "Dr. Sneha K.",
+      "dayLabel": "Day 1",
+      "checkInsCompleted": [
+        "D1"
+      ],
+      "painScore": null,
+      "painHistory": [],
+      "status": "No reply"
+    },
+    {
+      "id": "po-4",
+      "patientId": "pat-arjun",
+      "patientName": "Arjun Nair",
+      "procedure": "Extraction 18",
+      "procedureDate": "26 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 3",
+      "checkInsCompleted": [
+        "D1",
+        "D3"
+      ],
+      "painScore": 3,
+      "painHistory": [
+        {
+          "day": "Day 1",
+          "score": 5
+        },
+        {
+          "day": "Day 2",
+          "score": 4
+        },
+        {
+          "day": "Day 3",
+          "score": 3
+        }
+      ],
+      "status": "No reply"
+    },
+    {
+      "id": "po-5",
+      "patientId": "pat-lata",
+      "patientName": "Lata Iyer",
+      "procedure": "Implant 46",
+      "procedureDate": "22 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 7",
+      "checkInsCompleted": [
+        "D1",
+        "D3",
+        "D7"
+      ],
+      "painScore": 2,
+      "painHistory": [],
+      "status": "No reply"
+    },
+    {
+      "id": "po-6",
+      "patientId": "pat-priya",
+      "patientName": "Priya Deshmukh",
+      "procedure": "RCT 36",
+      "procedureDate": "29 Sep",
+      "doctor": "Dr. Sneha K.",
+      "dayLabel": "Day 0",
+      "checkInsCompleted": [],
+      "painScore": null,
+      "painHistory": [],
+      "status": "On track"
+    },
+    {
+      "id": "po-7",
+      "patientId": "pat-manoj",
+      "patientName": "Manoj Tiwari",
+      "procedure": "Surgical ext. 38",
+      "procedureDate": "26 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 3",
+      "checkInsCompleted": [
+        "D1",
+        "D3"
+      ],
+      "painScore": 3,
+      "painHistory": [],
+      "status": "On track"
+    },
+    {
+      "id": "po-8",
+      "patientId": "pat-anjali",
+      "patientName": "Anjali Rao",
+      "procedure": "RCT 26",
+      "procedureDate": "22 Sep",
+      "doctor": "Dr. Sneha K.",
+      "dayLabel": "Day 7",
+      "checkInsCompleted": [
+        "D1",
+        "D3",
+        "D7"
+      ],
+      "painScore": 0,
+      "painHistory": [],
+      "status": "Closed"
+    },
+    {
+      "id": "po-9",
+      "patientId": "pat-harish",
+      "patientName": "Harish Menon",
+      "procedure": "Implant 15",
+      "procedureDate": "22 Sep",
+      "doctor": "Dr. Farhan A.",
+      "dayLabel": "Day 7",
+      "checkInsCompleted": [
+        "D1",
+        "D3",
+        "D7"
+      ],
+      "painScore": 1,
+      "painHistory": [],
+      "status": "Closed"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-1",
+      "invoiceNumber": "INV-SR-2026-04417",
+      "patientName": "Meera Nair",
+      "method": "UPI",
+      "amount": 1500,
+      "status": "Paid",
+      "date": "Today",
+      "branch": "Station Road branch"
+    },
+    {
+      "id": "inv-2",
+      "invoiceNumber": "INV-SR-2026-04416",
+      "patientName": "Priya Deshmukh",
+      "method": "UPI AutoPay · EMI 1/3",
+      "amount": 7500,
+      "status": "EMI",
+      "date": "Today",
+      "branch": "Station Road branch"
+    },
+    {
+      "id": "inv-3",
+      "invoiceNumber": "INV-SR-2026-04415",
+      "patientName": "Rahul Verma",
+      "method": "Card",
+      "amount": 1800,
+      "status": "Paid",
+      "date": "Today",
+      "branch": "Station Road branch"
+    },
+    {
+      "id": "inv-4",
+      "invoiceNumber": "INV-SR-2026-04414",
+      "patientName": "Suresh Patil",
+      "method": "Cash + UPI",
+      "amount": 6000,
+      "status": "Part paid",
+      "date": "Today",
+      "branch": "Station Road branch"
+    },
+    {
+      "id": "inv-5",
+      "invoiceNumber": "CN-SR-2026-00031",
+      "patientName": "Ajay Rao",
+      "method": "Credit note",
+      "amount": -500,
+      "status": "Refund",
+      "date": "Today",
+      "branch": "Station Road branch"
+    }
+  ],
+  "recoveryPlans": [
+    {
+      "id": "rec-1",
+      "patientId": "pat-rakesh",
+      "patientName": "Rakesh Jadhav",
+      "pendingTreatment": "Implant 36 + crown",
+      "value": 42000,
+      "idleDays": 31,
+      "reason": "Cost",
+      "bucket": "proposed",
+      "nextAutomaticStep": "Day 35 · EMI offer on WhatsApp",
+      "status": "Active",
+      "lastMessagedDaysAgo": 7
+    },
+    {
+      "id": "rec-2",
+      "patientId": "pat-snehal",
+      "patientName": "Snehal Pawar",
+      "pendingTreatment": "Aligners (upper + lower)",
+      "value": 85000,
+      "idleDays": 18,
+      "reason": "Unsure",
+      "bucket": "proposed",
+      "nextAutomaticStep": "Day 21 · doctor call task",
+      "status": "Active",
+      "lastMessagedDaysAgo": 6
+    },
+    {
+      "id": "rec-3",
+      "patientId": "pat-mohan",
+      "patientName": "Mohan Iyer",
+      "pendingTreatment": "RCT 16 + crown",
+      "value": 22500,
+      "idleDays": 12,
+      "reason": "Fear",
+      "bucket": "accepted",
+      "nextAutomaticStep": "Day 14 · comfort video + sedation info",
+      "status": "Active",
+      "lastMessagedDaysAgo": 5
+    },
+    {
+      "id": "rec-4",
+      "patientId": "pat-geeta",
+      "patientName": "Geeta Sharma",
+      "pendingTreatment": "Bridge 24–26",
+      "value": 36000,
+      "idleDays": 9,
+      "reason": "Time",
+      "bucket": "accepted",
+      "nextAutomaticStep": "Day 10 · Saturday slots offer",
+      "status": "Active",
+      "lastMessagedDaysAgo": 6
+    },
+    {
+      "id": "rec-5",
+      "patientId": "pat-nikhil",
+      "patientName": "Nikhil Bose",
+      "pendingTreatment": "Scaling + 3 fillings",
+      "value": 7400,
+      "idleDays": 44,
+      "reason": "Unknown",
+      "bucket": "proposed",
+      "nextAutomaticStep": "Final · \"Still need help?\" message",
+      "status": "Active",
+      "lastMessagedDaysAgo": 12
+    },
+    {
+      "id": "rec-6",
+      "patientId": "pat-ayesha",
+      "patientName": "Ayesha Qureshi",
+      "pendingTreatment": "Crown 26 (RCT done)",
+      "value": 14500,
+      "idleDays": 26,
+      "reason": "Cost",
+      "bucket": "started",
+      "nextAutomaticStep": "Day 28 · risk reminder: RCT tooth can crack",
+      "status": "Active",
+      "lastMessagedDaysAgo": 8
+    },
+    {
+      "id": "rec-7",
+      "patientId": "pat-sanjay",
+      "patientName": "Sanjay Kale",
+      "pendingTreatment": "Dentures (full)",
+      "value": 28000,
+      "idleDays": 7,
+      "reason": "Family",
+      "bucket": "proposed",
+      "nextAutomaticStep": "Day 7 · explainer resend to son",
+      "status": "Active",
+      "lastMessagedDaysAgo": 7
+    },
+    {
+      "id": "rec-8",
+      "patientId": "pat-ritu",
+      "patientName": "Ritu Malhotra",
+      "pendingTreatment": "Gum treatment",
+      "value": 9000,
+      "idleDays": 15,
+      "reason": "Unknown",
+      "bucket": "accepted",
+      "nextAutomaticStep": "Day 21 · doctor call task",
+      "status": "Active",
+      "lastMessagedDaysAgo": 6
+    },
+    {
+      "id": "rec-9",
+      "patientId": "pat-vijay",
+      "patientName": "Vijay Naik",
+      "pendingTreatment": "Extraction 38",
+      "value": 3500,
+      "idleDays": 5,
+      "reason": "Fear",
+      "bucket": "started",
+      "nextAutomaticStep": "Day 7 · anxiety prep message",
+      "status": "Active",
+      "lastMessagedDaysAgo": 5
+    }
+  ],
+  "gapFillerCandidates": [
+    {
+      "rank": 1,
+      "patientId": "pat-rashmi",
+      "patientName": "Rashmi Kulkarni",
+      "needs": "Crown prep 26 · 60 min",
+      "whyMatched": "Pending plan · 2 km",
+      "score": 96,
+      "offerStatus": "Viewed",
+      "wave": 1
+    },
+    {
+      "rank": 2,
+      "patientId": "pat-mohan",
+      "patientName": "Mohan Iyer",
+      "needs": "RCT 16 · 60 min",
+      "whyMatched": "Recovery list · asked for evenings",
+      "score": 92,
+      "offerStatus": "Sent",
+      "wave": 1
+    },
+    {
+      "rank": 3,
+      "patientId": "pat-kiran",
+      "patientName": "Kiran Desai",
+      "needs": "RCT 45 sitting 2",
+      "whyMatched": "Same doctor · waitlisted 3 days",
+      "score": 90,
+      "offerStatus": "Declined",
+      "wave": 1
+    },
+    {
+      "rank": 4,
+      "patientId": "pat-ayesha",
+      "patientName": "Ayesha Qureshi",
+      "needs": "Crown 26 · 45 min",
+      "whyMatched": "Recovery list · 26 days idle",
+      "score": 85,
+      "offerStatus": "Wave 2",
+      "wave": 2
+    },
+    {
+      "rank": 5,
+      "patientId": "pat-nitin",
+      "patientName": "Nitin Rao",
+      "needs": "Filling 36 + 37 · 40 min",
+      "whyMatched": "Flexible any day",
+      "score": 78,
+      "offerStatus": "Wave 2",
+      "wave": 2
+    },
+    {
+      "rank": 6,
+      "patientId": "pat-pallavi",
+      "patientName": "Pallavi Joshi",
+      "needs": "Scaling · 30 min",
+      "whyMatched": "Lives 1 km · short visit",
+      "score": 70,
+      "offerStatus": "Wave 2",
+      "wave": 2
+    },
+    {
+      "rank": 7,
+      "patientId": "pat-sameer",
+      "patientName": "Sameer Patel",
+      "needs": "Consult · 20 min",
+      "whyMatched": "New patient, tooth pain",
+      "score": 66,
+      "offerStatus": "Wave 2",
+      "wave": 2
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "cmp-1",
+      "name": "6-month cleaning recall",
+      "type": "Automation",
+      "audience": "Last scaling > 6 months",
+      "sent": 88,
+      "booked": 37,
+      "status": "Live"
+    },
+    {
+      "id": "cmp-2",
+      "name": "Birthday wishes + free check-up",
+      "type": "Automation",
+      "audience": "Birthday this week",
+      "sent": 14,
+      "booked": 3,
+      "status": "Live"
+    },
+    {
+      "id": "cmp-3",
+      "name": "Diwali smile check-up",
+      "type": "Broadcast",
+      "audience": "Active patients, 18+",
+      "sent": null,
+      "booked": null,
+      "status": "Scheduled"
+    },
+    {
+      "id": "cmp-4",
+      "name": "Aligner interest follow-up",
+      "type": "Sequence",
+      "audience": "Asked about aligners",
+      "sent": 42,
+      "booked": 6,
+      "status": "Live"
+    },
+    {
+      "id": "cmp-5",
+      "name": "Kids: first dental visit by age 1",
+      "type": "Automation",
+      "audience": "Family members aged 0–2",
+      "sent": 9,
+      "booked": 4,
+      "status": "Live"
+    },
+    {
+      "id": "cmp-6",
+      "name": "Diabetic gum-care reminder",
+      "type": "Automation",
+      "audience": "Diabetes on record",
+      "sent": 61,
+      "booked": 12,
+      "status": "Live"
+    },
+    {
+      "id": "cmp-7",
+      "name": "Win-back · 12 months away",
+      "type": "Sequence",
+      "audience": "No visit in 12+ months",
+      "sent": null,
+      "booked": null,
+      "status": "Draft"
+    },
+    {
+      "id": "cmp-8",
+      "name": "Monsoon sensitivity tips",
+      "type": "Broadcast",
+      "audience": "All with consent",
+      "sent": 1204,
+      "booked": 22,
+      "status": "Done"
+    }
+  ],
+  "inventoryItems": [
+    {
+      "id": "invt-1",
+      "item": "Composite A2 syringe 4 g",
+      "category": "Restorative",
+      "inStock": 16,
+      "reorderAt": 10,
+      "nearestExpiry": "Mar 2027",
+      "status": "OK",
+      "unitCost": 1450
+    },
+    {
+      "id": "invt-2",
+      "item": "Rotary files 25 mm (pack of 6)",
+      "category": "Endodontic",
+      "inStock": 14,
+      "reorderAt": 8,
+      "nearestExpiry": "—",
+      "status": "OK",
+      "unitCost": 1950
+    },
+    {
+      "id": "invt-3",
+      "item": "Lignocaine 2% + adrenaline",
+      "category": "Anaesthesia",
+      "inStock": 42,
+      "reorderAt": 30,
+      "nearestExpiry": "18 Oct 2026",
+      "status": "Expiring",
+      "unitCost": 42
+    },
+    {
+      "id": "invt-4",
+      "item": "Gutta-percha points F2",
+      "category": "Endodontic",
+      "inStock": 12,
+      "reorderAt": 6,
+      "nearestExpiry": "Jan 2027",
+      "status": "OK",
+      "unitCost": 380
+    },
+    {
+      "id": "invt-5",
+      "item": "Nitrile gloves M (100)",
+      "category": "Disposable",
+      "inStock": 18,
+      "reorderAt": 12,
+      "nearestExpiry": "—",
+      "status": "OK",
+      "unitCost": 420
+    },
+    {
+      "id": "invt-6",
+      "item": "Alginate impression 450 g",
+      "category": "Prosthodontic",
+      "inStock": 4,
+      "reorderAt": 3,
+      "nearestExpiry": "22 Oct 2026",
+      "status": "Expiring",
+      "unitCost": 650
+    },
+    {
+      "id": "invt-7",
+      "item": "Implant 4.2 × 10 mm",
+      "category": "Implant",
+      "inStock": 5,
+      "reorderAt": 4,
+      "nearestExpiry": "Aug 2029",
+      "status": "OK",
+      "unitCost": 9500
+    },
+    {
+      "id": "invt-8",
+      "item": "Sterilisation pouches 90×230",
+      "category": "Sterilisation",
+      "inStock": 600,
+      "reorderAt": 300,
+      "nearestExpiry": "—",
+      "status": "OK",
+      "unitCost": 3
+    },
+    {
+      "id": "invt-9",
+      "item": "Etchant 37% gel",
+      "category": "Restorative",
+      "inStock": 2,
+      "reorderAt": 3,
+      "nearestExpiry": "Dec 2026",
+      "status": "Transfer in",
+      "unitCost": 320
+    }
+  ],
+  "procedureProfits": [
+    {
+      "procedure": "Composite filling",
+      "profit": 700,
+      "marginPct": 39,
+      "breakdownNote": "Fee ₹1,800 · materials ₹310 · chair ₹250",
+      "materialsBarPct": 31,
+      "labBarPct": 0,
+      "doctorBarPct": 30,
+      "marginBarPct": 39
+    },
+    {
+      "procedure": "Root canal (molar)",
+      "profit": 3550,
+      "marginPct": 44,
+      "breakdownNote": "Fee ₹8,000 · files are single-use",
+      "materialsBarPct": 21,
+      "labBarPct": 0,
+      "doctorBarPct": 35,
+      "marginBarPct": 44
+    },
+    {
+      "procedure": "Zirconia crown",
+      "profit": 5300,
+      "marginPct": 37,
+      "breakdownNote": "Fee ₹14,500 · lab ₹4,200",
+      "materialsBarPct": 12,
+      "labBarPct": 29,
+      "doctorBarPct": 22,
+      "marginBarPct": 37
+    },
+    {
+      "procedure": "Implant (single)",
+      "profit": 11900,
+      "marginPct": 34,
+      "breakdownNote": "Fee ₹35,000 · implant + abutment ₹12,000",
+      "materialsBarPct": 14,
+      "labBarPct": 20,
+      "doctorBarPct": 32,
+      "marginBarPct": 34
+    },
+    {
+      "procedure": "Scaling & polishing",
+      "profit": 780,
+      "marginPct": 52,
+      "breakdownNote": "Fee ₹1,500 · highest margin per chair-hour",
+      "materialsBarPct": 18,
+      "labBarPct": 0,
+      "doctorBarPct": 30,
+      "marginBarPct": 52
+    },
+    {
+      "procedure": "Aligners (full)",
+      "profit": 22100,
+      "marginPct": 26,
+      "breakdownNote": "Fee ₹85,000 · aligner lab ₹38,000",
+      "materialsBarPct": 8,
+      "labBarPct": 45,
+      "doctorBarPct": 21,
+      "marginBarPct": 26
+    }
+  ],
+  "labCases": [
+    {
+      "id": "lc-1",
+      "caseNumber": "LC-8841",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Rakesh Jadhav",
+      "work": "Implant crown 36",
+      "tooth": "36",
+      "materialShade": "Zirconia · A2",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Overdue 2 days",
+      "isOverdue": true,
+      "status": "In fabrication",
+      "implantSystem": "Straumann BLX 4.2 mm",
+      "abutment": "Stock titanium",
+      "doctor": "Dr. Farhan Ali",
+      "clinicDueDate": "27 Sep (overdue)"
+    },
+    {
+      "id": "lc-2",
+      "caseNumber": "LC-8850",
+      "clinicBranch": "Smile Studio · Civil Lines",
+      "patientName": "Geeta Sharma",
+      "work": "PFM bridge 24–26",
+      "tooth": "24–26",
+      "materialShade": "PFM · B2",
+      "labPartner": "Crown Craft",
+      "dueLabel": "Due 2 Oct",
+      "status": "Sent to lab",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "2 Oct"
+    },
+    {
+      "id": "lc-3",
+      "caseNumber": "LC-8856",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Sanjay Kale",
+      "work": "Complete dentures",
+      "tooth": "Full",
+      "materialShade": "Acrylic · A3.5",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Due 6 Oct",
+      "status": "Sent to lab",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "6 Oct"
+    },
+    {
+      "id": "lc-4",
+      "caseNumber": "LC-8859",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Pooja Jain",
+      "work": "Zirconia crown 25",
+      "tooth": "25",
+      "materialShade": "Zirconia · A3",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Due 9 Oct",
+      "status": "Sent to lab",
+      "doctor": "Dr. Arjun M.",
+      "clinicDueDate": "9 Oct"
+    },
+    {
+      "id": "lc-5",
+      "caseNumber": "LC-8862",
+      "clinicBranch": "Apex Dental Care · Aundh",
+      "patientName": "Ayesha Qureshi",
+      "work": "Zirconia crown 26",
+      "tooth": "26",
+      "materialShade": "Zirconia · A2",
+      "labPartner": "Crown Craft",
+      "dueLabel": "Scan today",
+      "status": "Impression / scan",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "3 Oct"
+    },
+    {
+      "id": "lc-6",
+      "caseNumber": "LC-8864",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Riya Das",
+      "work": "Aligners U + L",
+      "tooth": "U + L",
+      "materialShade": "Clear aligner",
+      "labPartner": "ALIGNER PARTNER",
+      "dueLabel": "Scan today 2:30",
+      "status": "Impression / scan",
+      "doctor": "Dr. Karan Shah",
+      "clinicDueDate": "4 Oct"
+    },
+    {
+      "id": "lc-7",
+      "caseNumber": "LC-8868",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Kavya Reddy",
+      "work": "Aligners 11–16",
+      "tooth": "11–16",
+      "materialShade": "Clear aligner",
+      "labPartner": "ALIGNER PARTNER",
+      "dueLabel": "Due 14 Oct",
+      "status": "In fabrication",
+      "doctor": "Dr. Karan Shah",
+      "clinicDueDate": "14 Oct"
+    },
+    {
+      "id": "lc-8",
+      "caseNumber": "LC-8836",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Neha Gupta",
+      "work": "Zirconia crown 46",
+      "tooth": "46",
+      "materialShade": "Zirconia · A2",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Fit today 1:00 pm",
+      "status": "Received",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "29 Sep"
+    },
+    {
+      "id": "lc-9",
+      "caseNumber": "LC-8839",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Suresh Patil",
+      "work": "Denture trial base",
+      "tooth": "Full",
+      "materialShade": "Acrylic · A3",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Trial today 11:30",
+      "status": "Received",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "29 Sep"
+    },
+    {
+      "id": "lc-10",
+      "caseNumber": "LC-8821",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Lata Iyer",
+      "work": "Implant crown 46",
+      "tooth": "46",
+      "materialShade": "Zirconia · A2",
+      "labPartner": "Crown Craft",
+      "dueLabel": "Fitted 25 Sep",
+      "status": "Fitted / closed",
+      "doctor": "Dr. Farhan Ali",
+      "clinicDueDate": "25 Sep"
+    },
+    {
+      "id": "lc-11",
+      "caseNumber": "LC-8815",
+      "clinicBranch": "Smile Studio · Station Rd",
+      "patientName": "Anjali Rao",
+      "work": "Zirconia crown 26",
+      "tooth": "26",
+      "materialShade": "Zirconia · A1",
+      "labPartner": "Precision Dental Lab",
+      "dueLabel": "Fitted 22 Sep",
+      "status": "Fitted / closed",
+      "doctor": "Dr. Sneha K.",
+      "clinicDueDate": "22 Sep"
+    }
+  ],
+  "sterilisationCycles": [
+    {
+      "id": "cyc-1419",
+      "cycleNumber": "#1419",
+      "autoclave": "Autoclave A",
+      "startTime": "8:10 am",
+      "parameters": "134 °C · 2.1 bar · 4 min hold",
+      "kits": [
+        "E-07",
+        "E-02",
+        "S-04"
+      ],
+      "indicator": "Chemical ✓",
+      "result": "Pass"
+    },
+    {
+      "id": "cyc-1420",
+      "cycleNumber": "#1420",
+      "autoclave": "Autoclave B",
+      "startTime": "8:25 am",
+      "parameters": "134 °C · 2.1 bar · 4 min hold",
+      "kits": [
+        "G-11 to G-18"
+      ],
+      "indicator": "Chemical ✓",
+      "result": "Pass"
+    },
+    {
+      "id": "cyc-1421",
+      "cycleNumber": "#1421",
+      "autoclave": "Autoclave A",
+      "startTime": "9:05 am",
+      "parameters": "134 °C · 2.1 bar · 4 min hold",
+      "kits": [
+        "S-09",
+        "P-01"
+      ],
+      "indicator": "Chemical ✓",
+      "result": "Pass"
+    },
+    {
+      "id": "cyc-1422",
+      "cycleNumber": "#1422",
+      "autoclave": "Autoclave B",
+      "startTime": "9:15 am",
+      "parameters": "121 °C · 1.1 bar · 20 min hold",
+      "kits": [
+        "Handpieces H-1",
+        "H-2"
+      ],
+      "indicator": "Chemical ✓",
+      "result": "Pass"
+    },
+    {
+      "id": "cyc-1423",
+      "cycleNumber": "#1423",
+      "autoclave": "Autoclave A",
+      "startTime": "9:30 am",
+      "parameters": "In progress",
+      "kits": [
+        "E-05",
+        "G-19"
+      ],
+      "indicator": "—",
+      "result": "Running"
+    },
+    {
+      "id": "cyc-1424",
+      "cycleNumber": "#1424",
+      "autoclave": "Autoclave B",
+      "startTime": "9:40 am",
+      "parameters": "Not entered",
+      "kits": [
+        "E-03",
+        "S-11",
+        "G-21"
+      ],
+      "indicator": "—",
+      "result": "Not logged"
+    }
+  ],
+  "kitTraces": [
+    {
+      "kitCode": "E-07",
+      "kitCategory": "endodontic",
+      "cycleNumber": "#1419",
+      "cycleTime": "8:10 am",
+      "patients": [
+        {
+          "patientName": "Priya Deshmukh",
+          "procedure": "RCT 36",
+          "time": "10:00 am",
+          "chair": "Chair 2"
+        },
+        {
+          "patientName": "Deepak More",
+          "procedure": "RCT 11 (booked)",
+          "time": "4:30 pm",
+          "chair": "Chair 2"
+        }
+      ]
+    }
+  ],
+  "staffMembers": [
+    {
+      "id": "stf-sneha",
+      "name": "Dr. Sneha Kulkarni",
+      "role": "Owner dentist",
+      "branches": "All",
+      "todayStatus": "Present",
+      "collections": 612000,
+      "payModel": "Owner draw",
+      "payable": null,
+      "workingDetails": {
+        "subtitle": "Owner dentist · All branches",
+        "modelLabel": "Owner draw",
+        "sharePct": "100%",
+        "minimumMonth": "—",
+        "exceptions": [],
+        "collectionsPaid": 612000,
+        "lessLabCosts": 54000,
+        "netAmount": 558000,
+        "shareAmount": 558000,
+        "tdsNote": "Owner draw"
+      }
+    },
+    {
+      "id": "stf-arjun",
+      "name": "Dr. Arjun Mehta",
+      "role": "Associate dentist",
+      "branches": "Station Rd, Civil Lines",
+      "todayStatus": "Present",
+      "collections": 348000,
+      "payModel": "35% net of lab",
+      "payable": 109550,
+      "workingDetails": {
+        "subtitle": "Associate dentist · Station Road + Civil Lines",
+        "modelLabel": "% of collections, net of lab",
+        "sharePct": "35%",
+        "minimumMonth": "₹60,000",
+        "exceptions": [
+          {
+            "procedure": "Implant surgery",
+            "rule": "Not allowed"
+          },
+          {
+            "procedure": "Aligners",
+            "rule": "20% of net"
+          },
+          {
+            "procedure": "Free re-treatment",
+            "rule": "0%"
+          }
+        ],
+        "collectionsPaid": 348000,
+        "lessLabCosts": 35000,
+        "netAmount": 313000,
+        "shareAmount": 109550,
+        "tdsNote": "TDS (194J) shown on slip · ₹10,955 (10%)",
+        "approved": false
+      }
+    },
+    {
+      "id": "stf-farhan",
+      "name": "Dr. Farhan Ali",
+      "role": "Implantologist",
+      "branches": "Visiting · 3 branches",
+      "todayStatus": "Visiting",
+      "collections": 420000,
+      "payModel": "50% after implant + lab",
+      "payable": 164000,
+      "workingDetails": {
+        "subtitle": "Implantologist · Visiting 3 branches",
+        "modelLabel": "50% after implant + lab",
+        "sharePct": "50%",
+        "minimumMonth": "—",
+        "exceptions": [
+          {
+            "procedure": "Free re-treatment",
+            "rule": "0%"
+          }
+        ],
+        "collectionsPaid": 420000,
+        "lessLabCosts": 92000,
+        "netAmount": 328000,
+        "shareAmount": 164000,
+        "tdsNote": "TDS (194J) 10% · ₹16,400"
+      }
+    },
+    {
+      "id": "stf-karan",
+      "name": "Dr. Karan Shah",
+      "role": "Orthodontist",
+      "branches": "Visiting · 2 branches",
+      "todayStatus": "Off",
+      "collections": 285000,
+      "payModel": "45% after aligner lab",
+      "payable": 88400,
+      "workingDetails": {
+        "subtitle": "Orthodontist · Station Rd + Civil Lines",
+        "modelLabel": "45% of fee after aligner lab cost",
+        "sharePct": "45%",
+        "minimumMonth": "—",
+        "exceptions": [],
+        "collectionsPaid": 285000,
+        "lessLabCosts": 88500,
+        "netAmount": 196500,
+        "shareAmount": 88400,
+        "tdsNote": "TDS (194J) 10% · ₹8,840"
+      }
+    },
+    {
+      "id": "stf-meera",
+      "name": "Dr. Meera Iyer",
+      "role": "Endodontist",
+      "branches": "Visiting · Thursdays",
+      "todayStatus": "Off",
+      "collections": 136000,
+      "payModel": "₹2,500 per molar RCT",
+      "payable": 62500,
+      "workingDetails": {
+        "subtitle": "Endodontist · Visiting Thursdays",
+        "modelLabel": "Per procedure fixed",
+        "sharePct": "₹2,500 / molar RCT",
+        "minimumMonth": "—",
+        "exceptions": [],
+        "collectionsPaid": 136000,
+        "lessLabCosts": 0,
+        "netAmount": 136000,
+        "shareAmount": 62500,
+        "tdsNote": "TDS (194J) 10% · ₹6,250"
+      }
+    },
+    {
+      "id": "stf-anita",
+      "name": "Anita Pawar",
+      "role": "Front desk",
+      "branches": "Station Road",
+      "todayStatus": "Present",
+      "collections": null,
+      "payModel": "Salary + ₹50 / recall booked",
+      "payable": 24850,
+      "workingDetails": {
+        "subtitle": "Front desk · Station Road",
+        "modelLabel": "Salary + incentive",
+        "sharePct": "₹50 / recall",
+        "minimumMonth": "₹23,000",
+        "exceptions": [],
+        "collectionsPaid": 0,
+        "lessLabCosts": 0,
+        "netAmount": 24850,
+        "shareAmount": 24850,
+        "tdsNote": "Salary payroll"
+      }
+    },
+    {
+      "id": "stf-ravi",
+      "name": "Ravi Gaikwad",
+      "role": "Dental assistant",
+      "branches": "Station Road",
+      "todayStatus": "Present",
+      "collections": null,
+      "payModel": "Salary",
+      "payable": 19000,
+      "workingDetails": {
+        "subtitle": "Dental assistant · Station Road",
+        "modelLabel": "Fixed salary",
+        "sharePct": "—",
+        "minimumMonth": "₹19,000",
+        "exceptions": [],
+        "collectionsPaid": 0,
+        "lessLabCosts": 0,
+        "netAmount": 19000,
+        "shareAmount": 19000,
+        "tdsNote": "Salary payroll"
+      }
+    },
+    {
+      "id": "stf-shabana",
+      "name": "Shabana Sayyed",
+      "role": "Dental assistant",
+      "branches": "Station Road",
+      "todayStatus": "Leave",
+      "collections": null,
+      "payModel": "Salary",
+      "payable": 19000,
+      "workingDetails": {
+        "subtitle": "Dental assistant · Station Road",
+        "modelLabel": "Fixed salary",
+        "sharePct": "—",
+        "minimumMonth": "₹19,000",
+        "exceptions": [],
+        "collectionsPaid": 0,
+        "lessLabCosts": 0,
+        "netAmount": 19000,
+        "shareAmount": 19000,
+        "tdsNote": "Salary payroll"
+      }
+    },
+    {
+      "id": "stf-prakash",
+      "name": "Prakash Jha",
+      "role": "Branch manager",
+      "branches": "Civil Lines",
+      "todayStatus": "Present",
+      "collections": null,
+      "payModel": "Salary + 1% branch revenue",
+      "payable": 48700,
+      "workingDetails": {
+        "subtitle": "Branch manager · Civil Lines",
+        "modelLabel": "Salary + 1% branch revenue",
+        "sharePct": "1%",
+        "minimumMonth": "₹40,000",
+        "exceptions": [],
+        "collectionsPaid": 810000,
+        "lessLabCosts": 0,
+        "netAmount": 48700,
+        "shareAmount": 48700,
+        "tdsNote": "Salary payroll"
+      }
+    }
+  ],
+  "voiceCalls": [
+    {
+      "id": "vc-1",
+      "callerLabel": "Imran Khan",
+      "timeAndLang": "8:42 · Hindi",
+      "topic": "Tooth pain · new consult",
+      "outcome": "Booked",
+      "headerTitle": "Call from +91 97XXX XX431 · Imran Khan",
+      "headerMeta": "8:42 am · 2 min 51 s · Hindi · matched existing patient",
+      "tags": [
+        "Intent: tooth pain",
+        "Booked consult 12:30 pm",
+        "Self-check link sent"
+      ],
+      "messages": [
+        {
+          "sender": "AI receptionist",
+          "text": "नमस्ते, Smile Studio Dental में आपका स्वागत है। मैं क्लिनिक की AI सहायक हूँ। बताइए, कैसे मदद करूँ?"
+        },
+        {
+          "sender": "Caller",
+          "text": "दाँत में कल रात से बहुत दर्द है, नीचे की तरफ।"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "समझ गई। क्या चेहरे पर सूजन या बुखार है?"
+        },
+        {
+          "sender": "Caller",
+          "text": "नहीं, सूजन नहीं है। बस ठंडा पानी लगता है।"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "आज 12:30 बजे Dr. Arjun के साथ जाँच का समय खाली है। बुक कर दूँ?"
+        },
+        {
+          "sender": "Caller",
+          "text": "हाँ, कर दीजिए।"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "बुक हो गया। WhatsApp पर पुष्टि और एक छोटा सा सेल्फ़-चेक भेज रही हूँ।"
+        }
+      ]
+    },
+    {
+      "id": "vc-2",
+      "callerLabel": "Unknown · 99XXX",
+      "timeAndLang": "8:55 · Marathi",
+      "topic": "Fees for cleaning",
+      "outcome": "Answered",
+      "headerTitle": "Call from +91 99XXX XX108 · Unknown caller",
+      "headerMeta": "8:55 am · 1 min 14 s · Marathi",
+      "tags": [
+        "Intent: fees inquiry",
+        "Scaling ₹1,500 quoted"
+      ],
+      "messages": [
+        {
+          "sender": "AI receptionist",
+          "text": "नमस्कार, Smile Studio Dental मध्ये आपले स्वागत आहे. मी कशी मदत करू शकते?"
+        },
+        {
+          "sender": "Caller",
+          "text": "दात स्वच्छ करण्याचे किती शुल्क आहे?"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "स्केलिंग आणि पॉलिशिंगचे मानक शुल्क ₹1,500 आहे. मी आपली अपॉइंटमेंट बुक करू का?"
+        }
+      ]
+    },
+    {
+      "id": "vc-3",
+      "callerLabel": "Sunita Rane",
+      "timeAndLang": "9:03 · Marathi",
+      "topic": "Swelling after implant",
+      "outcome": "Urgent",
+      "headerTitle": "Call from +91 98XXX XX772 · Sunita Rane",
+      "headerMeta": "9:03 am · 48 s · Marathi · Escalated immediately",
+      "tags": [
+        "Red flag: swelling",
+        "Transferred to Dr. Farhan"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "इम्प्लांटनंतर गालावर सूजन वाढली आहे आणि थोडा तापही आहे."
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "कृपया काळजी करू नका. सूजन व तापासाठी मी आत्ताच तुमचा कॉल क्लिनिकच्या डॉक्टरांकडे जोडत आहे."
+        }
+      ]
+    },
+    {
+      "id": "vc-4",
+      "callerLabel": "Kavya Reddy",
+      "timeAndLang": "9:20 · English",
+      "topic": "Move aligner check",
+      "outcome": "Rescheduled",
+      "headerTitle": "Call from +91 97XXX XX882 · Kavya Reddy",
+      "headerMeta": "9:20 am · 1 min 32 s · English · matched existing patient",
+      "tags": [
+        "Intent: reschedule",
+        "Moved to 12:00 pm"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "Hi, can I move my aligner tray check today to 12 pm?"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "Done Kavya, your aligner tray 10 check with Dr. Karan is confirmed for 12:00 pm at Chair 3."
+        }
+      ]
+    },
+    {
+      "id": "vc-5",
+      "callerLabel": "Unknown · 88XXX",
+      "timeAndLang": "9:31 · Hindi",
+      "topic": "Is clinic open Sunday?",
+      "outcome": "Answered",
+      "headerTitle": "Call from +91 88XXX XX304 · Unknown caller",
+      "headerMeta": "9:31 am · 42 s · Hindi",
+      "tags": [
+        "Hours & directions shared"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "रविवार को क्लिनिक खुला रहता है?"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "जी, Station Road शाखा रविवार को सुबह 10 से दोपहर 2 बजे तक खुली रहती है।"
+        }
+      ]
+    },
+    {
+      "id": "vc-6",
+      "callerLabel": "Suresh Patil",
+      "timeAndLang": "9:48 · Hindi",
+      "topic": "Bill copy on WhatsApp",
+      "outcome": "Answered",
+      "headerTitle": "Call from +91 98XXX XX918 · Suresh Patil",
+      "headerMeta": "9:48 am · 1 min 05 s · Hindi",
+      "tags": [
+        "Invoice link sent"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "मेरा पिछला बिल WhatsApp पर भेज दीजिए।"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "जी सुरेश जी, आपकी रसीद लिंक WhatsApp पर भेज दी गई है।"
+        }
+      ]
+    },
+    {
+      "id": "vc-7",
+      "callerLabel": "Nitin Rao",
+      "timeAndLang": "10:02 · English",
+      "topic": "Insurance claim question",
+      "outcome": "Transferred",
+      "headerTitle": "Call from +91 98XXX XX602 · Nitin Rao",
+      "headerMeta": "10:02 am · 55 s · English · Transferred to Front desk",
+      "tags": [
+        "Low confidence / policy query",
+        "Transferred to Anita"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "Does my corporate cashless policy reimburse zirconia crowns?"
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "Let me transfer you to our front desk team so they can check your exact TPA policy details."
+        }
+      ]
+    },
+    {
+      "id": "vc-8",
+      "callerLabel": "Pallavi Joshi",
+      "timeAndLang": "10:10 · Marathi",
+      "topic": "Book scaling",
+      "outcome": "Booked",
+      "headerTitle": "Call from +91 98XXX XX221 · Pallavi Joshi",
+      "headerMeta": "10:10 am · 1 min 48 s · Marathi",
+      "tags": [
+        "Booked scaling",
+        "Self-check link sent"
+      ],
+      "messages": [
+        {
+          "sender": "Caller",
+          "text": "मला स्केलिंगसाठी उद्या सकाळची वेळ हवी आहे."
+        },
+        {
+          "sender": "AI receptionist",
+          "text": "उद्या सकाळी 10:00 वाजता स्लॉट बुक केला आहे. WhatsApp वर कन्फर्मेशन पाठवले आहे."
+        }
+      ]
+    }
+  ],
+  "voicePermissions": {
+    "bookAppointments": true,
+    "rescheduleCancel": true,
+    "quoteStandardFees": true,
+    "shareDirectionsHours": true,
+    "sendSelfCheckLink": true,
+    "discussMedicines": false
+  },
+  "rolePermissions": [
+    {
+      "key": "view_patient_records",
+      "label": "View patient records",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "V",
+        "Dentist": "F",
+        "Visiting": "O",
+        "Assistant": "V",
+        "Front desk": "V",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "edit_chart_plans",
+      "label": "Edit chart & treatment plans",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "-",
+        "Dentist": "F",
+        "Visiting": "O",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "write_prescriptions",
+      "label": "Write prescriptions",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "-",
+        "Dentist": "F",
+        "Visiting": "O",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "book_move_appointments",
+      "label": "Book / move appointments",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "F",
+        "Dentist": "F",
+        "Visiting": "O",
+        "Assistant": "V",
+        "Front desk": "F",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "collect_payments_refunds",
+      "label": "Collect payments & refunds",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "F",
+        "Dentist": "V",
+        "Visiting": "-",
+        "Assistant": "-",
+        "Front desk": "F",
+        "Accounts": "F"
+      }
+    },
+    {
+      "key": "give_discounts_over_10",
+      "label": "Give discounts > 10%",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "F",
+        "Dentist": "-",
+        "Visiting": "-",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "see_all_branch_revenue",
+      "label": "See all-branch revenue",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "-",
+        "Dentist": "-",
+        "Visiting": "-",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "V"
+      }
+    },
+    {
+      "key": "commission_payroll",
+      "label": "Commission & payroll",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "-",
+        "Dentist": "-",
+        "Visiting": "O",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "F"
+      }
+    },
+    {
+      "key": "send_campaigns",
+      "label": "Send campaigns",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "F",
+        "Dentist": "-",
+        "Visiting": "-",
+        "Assistant": "-",
+        "Front desk": "V",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "inventory_po",
+      "label": "Inventory & purchase orders",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "F",
+        "Dentist": "V",
+        "Visiting": "-",
+        "Assistant": "F",
+        "Front desk": "-",
+        "Accounts": "V"
+      }
+    },
+    {
+      "key": "sterilisation_log",
+      "label": "Sterilisation log",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "V",
+        "Dentist": "V",
+        "Visiting": "-",
+        "Assistant": "F",
+        "Front desk": "-",
+        "Accounts": "-"
+      }
+    },
+    {
+      "key": "export_patient_data",
+      "label": "Export patient data",
+      "levels": {
+        "Owner": "F",
+        "Branch mgr": "-",
+        "Dentist": "-",
+        "Visiting": "-",
+        "Assistant": "-",
+        "Front desk": "-",
+        "Accounts": "-"
+      }
+    }
+  ],
+  "specialistReferrals": [
+    {
+      "id": "ref-1",
+      "patientLabel": "Sunil Gawde, 52",
+      "summary": "Curved canals on 37 — can you take it?",
+      "fromInfo": "From Dr. Arjun (Civil Lines) · X-ray attached",
+      "status": "Pending"
+    },
+    {
+      "id": "ref-2",
+      "patientLabel": "Leena Fernandes, 29",
+      "summary": "Persistent pain after RCT 46",
+      "fromInfo": "From Dr. Sneha (Station Road) · X-ray attached",
+      "status": "Pending"
+    },
+    {
+      "id": "ref-3",
+      "patientLabel": "Manish Kapoor, 41",
+      "summary": "Open apex on 21 — apexification?",
+      "fromInfo": "From MG Road branch · X-ray attached",
+      "status": "Pending"
+    }
+  ],
+  "tenantAccounts": [
+    {
+      "id": "ten-1",
+      "clinicGroup": "Smile Studio Dental",
+      "branchesLabel": "3 branches",
+      "plan": "Growth",
+      "branchesCount": 3,
+      "mrrLabel": "₹14,999",
+      "whatsappCredits": 8400,
+      "lastActive": "Now",
+      "health": "Healthy"
+    },
+    {
+      "id": "ten-2",
+      "clinicGroup": "Apex Dental Care",
+      "branchesLabel": "Single clinic",
+      "plan": "Starter",
+      "branchesCount": 1,
+      "mrrLabel": "₹4,999",
+      "whatsappCredits": 1200,
+      "lastActive": "2 h ago",
+      "health": "Healthy"
+    },
+    {
+      "id": "ten-3",
+      "clinicGroup": "Pearl & Root Clinics",
+      "branchesLabel": "5 branches",
+      "plan": "Chain",
+      "branchesCount": 5,
+      "mrrLabel": "₹28,500",
+      "whatsappCredits": 310,
+      "lastActive": "1 d ago",
+      "health": "At risk"
+    },
+    {
+      "id": "ten-4",
+      "clinicGroup": "CareDent Baner",
+      "branchesLabel": "Single clinic",
+      "plan": "Trial",
+      "branchesCount": 1,
+      "mrrLabel": "—",
+      "whatsappCredits": 500,
+      "lastActive": "3 d ago",
+      "health": "Trial"
+    },
+    {
+      "id": "ten-5",
+      "clinicGroup": "BrightSmile Dental",
+      "branchesLabel": "2 branches",
+      "plan": "Growth",
+      "branchesCount": 2,
+      "mrrLabel": "₹14,999",
+      "whatsappCredits": 0,
+      "lastActive": "6 h ago",
+      "health": "Overdue"
+    },
+    {
+      "id": "ten-6",
+      "clinicGroup": "Kothrud Ortho Studio",
+      "branchesLabel": "Single clinic",
+      "plan": "Starter",
+      "branchesCount": 1,
+      "mrrLabel": "₹4,999",
+      "whatsappCredits": 2050,
+      "lastActive": "Now",
+      "health": "Healthy"
+    },
+    {
+      "id": "ten-7",
+      "clinicGroup": "Deccan Dental Chain",
+      "branchesLabel": "8 branches",
+      "plan": "Chain",
+      "branchesCount": 8,
+      "mrrLabel": "₹44,000",
+      "whatsappCredits": 14900,
+      "lastActive": "Now",
+      "health": "Healthy"
+    }
+  ],
+  "dpdpAccessLogs": [
+    {
+      "id": "dl-1",
+      "timestamp": "29 Sep, 10:02 am",
+      "actor": "Dr. Sneha Kulkarni",
+      "role": "Owner",
+      "patientName": "Priya Deshmukh",
+      "screenName": "Dental chart",
+      "action": "READ"
+    },
+    {
+      "id": "dl-2",
+      "timestamp": "29 Sep, 09:58 am",
+      "actor": "Anita Pawar",
+      "role": "Front desk",
+      "patientName": "Priya Deshmukh",
+      "screenName": "Patients",
+      "action": "READ"
+    },
+    {
+      "id": "dl-3",
+      "timestamp": "29 Sep, 09:14 am",
+      "actor": "Dr. Farhan Ali",
+      "role": "Visiting",
+      "patientName": "Rohan Mehta",
+      "screenName": "Post-op check-ins",
+      "action": "READ"
+    }
+  ],
+  "clinicSetup": {
+    "completed": true,
+    "clinicGroupName": "Smile Studio Dental",
+    "gstin": "27AABCS4821D1Z5",
+    "city": "Pune, Maharashtra",
+    "phone": "+91 20 2612 4400",
+    "branches": [
+      {
+        "id": "br-1",
+        "name": "Station Road branch",
+        "chairs": 4,
+        "address": "2nd Floor, Orchid Plaza, Station Road, Pune"
+      },
+      {
+        "id": "br-2",
+        "name": "Civil Lines branch",
+        "chairs": 3,
+        "address": "14 Residency Road, Civil Lines, Pune"
+      },
+      {
+        "id": "br-3",
+        "name": "MG Road branch",
+        "chairs": 2,
+        "address": "301 Aurora Towers, MG Road, Pune"
+      }
+    ],
+    "chairsAndRooms": [
+      "Chair 1 · General & Prophylaxis",
+      "Chair 2 · Endodontics & Microscope",
+      "Chair 3 · Orthodontics & Aligners",
+      "Chair 4 · Implant & Surgical Suite",
+      "Digital RVG & OPG X-ray Room",
+      "Central Sterilisation Bay (Autoclaves A & B)"
+    ],
+    "workingHours": "Mon – Sat: 09:30 am – 08:30 pm · Sun: 10:00 am – 02:00 pm (Emergency)",
+    "staffRoster": [
+      {
+        "id": "st-1",
+        "name": "Dr. Sneha Kulkarni",
+        "role": "Owner"
+      },
+      {
+        "id": "st-2",
+        "name": "Prakash Jha",
+        "role": "Branch mgr"
+      },
+      {
+        "id": "st-3",
+        "name": "Dr. Arjun Mehta",
+        "role": "Dentist"
+      },
+      {
+        "id": "st-4",
+        "name": "Dr. Farhan Ali",
+        "role": "Visiting"
+      },
+      {
+        "id": "st-5",
+        "name": "Ravi Gaikwad",
+        "role": "Assistant"
+      },
+      {
+        "id": "st-6",
+        "name": "Anita Pawar",
+        "role": "Front desk"
+      },
+      {
+        "id": "st-7",
+        "name": "Meenakshi Joshi",
+        "role": "Accounts"
+      }
+    ],
+    "procedureFees": [
+      {
+        "id": "pf-1",
+        "name": "Consultation & digital X-ray",
+        "fee": 500,
+        "gstPct": 0
+      },
+      {
+        "id": "pf-2",
+        "name": "Scaling & polishing",
+        "fee": 1500,
+        "gstPct": 0
+      },
+      {
+        "id": "pf-3",
+        "name": "Root canal treatment (molar)",
+        "fee": 8000,
+        "gstPct": 0
+      },
+      {
+        "id": "pf-4",
+        "name": "Zirconia crown (5-yr warranty)",
+        "fee": 14500,
+        "gstPct": 0
+      },
+      {
+        "id": "pf-5",
+        "name": "Dental implant + abutment",
+        "fee": 35000,
+        "gstPct": 0
+      },
+      {
+        "id": "pf-6",
+        "name": "In-clinic teeth whitening (cosmetic)",
+        "fee": 8500,
+        "gstPct": 18
+      }
+    ],
+    "whatsappConnected": true,
+    "whatsappNumber": "+91 98220 44100"
+  },
+  "patientApp": {
+    "selectedPatientId": "pat-priya",
+    "activeScreen": "home",
+    "alignerWornMinutesToday": 1240,
+    "alignerTimerRunning": false,
+    "alignerConsentPublic": false,
+    "selectedExplainerOption": "A",
+    "explainerLanguage": "हिन्दी"
+  }
+}

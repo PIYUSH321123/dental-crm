@@ -1,0 +1,2340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum PlanTier {
+  TRIAL
+  STARTER
+  GROWTH
+  CHAIN
+}
+
+enum TenantHealth {
+  HEALTHY
+  TRIAL
+  AT_RISK
+  OVERDUE
+}
+
+enum StaffRoleKey {
+  SUPER_ADMIN
+  OWNER
+  BRANCH_MGR
+  DENTIST
+  VISITING_SPECIALIST
+  ASSISTANT
+  FRONT_DESK
+  ACCOUNTS
+  CUSTOM
+}
+
+enum PermissionLevel {
+  FULL
+  VIEW
+  OWN_PATIENTS
+  NONE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  VISITING
+  OFF
+  LEAVE
+}
+
+enum IntegrationProvider {
+  WHATSAPP
+  ABDM_ABHA
+  UPI_GATEWAY
+  EMI_PARTNER
+  TALLY
+  GOOGLE_BUSINESS
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  SET_UP
+  DISCONNECTED
+}
+
+enum DpdpRequestType {
+  ACCESS
+  DELETION
+  BREACH_NOTICE
+  CORRECTION
+}
+
+enum DpdpRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum OutboxStatus {
+  PENDING
+  DISPATCHED
+  FAILED
+  DEAD_LETTER
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CONFIRMED
+  CHECKED_IN
+  IN_CHAIR
+  DONE
+  LATE
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  FRONT_DESK
+  PATIENT_WEB
+  WHATSAPP_BOT
+  AI_VOICE
+  GAP_FILLER
+  FAMILY_BUNDLE
+}
+
+enum DentitionMode {
+  ADULT
+  CHILD
+  MIXED
+}
+
+enum ToothCondition {
+  HEALTHY
+  CARIES
+  FILLED
+  CROWN
+  ROOT_CANAL
+  MISSING
+  PLANNED
+  IMPLANT
+}
+
+enum ImagingModality {
+  IOPA
+  OPG
+  BITEWING
+  CBCT
+  INTRAORAL_PHOTO
+}
+
+enum PlanStatus {
+  PROPOSED
+  EXPLAINED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  REVIEW
+  ABANDONED
+}
+
+enum StageStatus {
+  DONE
+  BOOKED
+  NOT_BOOKED
+  CANCELLED
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  SIGNED
+  SENT
+}
+
+enum PostOpProtocol {
+  D1_D3_D7
+  D1_ONLY
+  NONE
+}
+
+enum PostOpStatus {
+  ON_TRACK
+  ALERT
+  NO_REPLY
+  CLOSED
+}
+
+enum InvoiceType {
+  INVOICE
+  CREDIT_NOTE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  UNPAID
+  PART_PAID
+  PAID
+  REFUNDED
+  VOID
+}
+
+enum PaymentMethod {
+  UPI
+  UPI_AUTOPAY
+  CARD
+  CASH
+  SPLIT
+}
+
+enum PaymentStatus {
+  PENDING
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum RecoveryBucket {
+  PROPOSED_NOT_ACCEPTED
+  ACCEPTED_NOT_BOOKED
+  STARTED_NOT_COMPLETED
+}
+
+enum StallReason {
+  COST
+  FEAR
+  UNSURE
+  TIME
+  FAMILY
+  UNKNOWN
+}
+
+enum RecoveryStatus {
+  ACTIVE
+  RECOVERED
+  OPTED_OUT
+  MOVED_TO_RECALL
+  PAUSED
+}
+
+enum GapFillerOfferStatus {
+  PENDING_WAVE
+  SENT
+  VIEWED
+  ACCEPTED_HOLD
+  CONFIRMED
+  DECLINED
+  EXPIRED
+}
+
+enum CampaignType {
+  AUTOMATION
+  BROADCAST
+  SEQUENCE
+}
+
+enum CampaignStatus {
+  LIVE
+  SCHEDULED
+  DRAFT
+  DONE
+  PAUSED
+}
+
+enum LabCaseStatus {
+  IMPRESSION_SCAN
+  SENT_TO_LAB
+  IN_FABRICATION
+  QUERY_SENT
+  DISPATCHED
+  RECEIVED
+  FITTED_CLOSED
+}
+
+enum CycleResult {
+  RUNNING
+  PASS
+  FAIL
+  NOT_LOGGED
+}
+
+enum PayModelType {
+  OWNER_DRAW
+  PCT_NET_OF_LAB
+  PCT_COLLECTED_LESS_LAB
+  PER_PROCEDURE_FIXED
+  SALARY_PLUS_RECALL
+  SALARY_PLUS_BRANCH_PCT
+  FLAT_SALARY
+}
+
+enum PayoutStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+enum UrgencyBand {
+  ROUTINE
+  SOON
+  TODAY
+  EMERGENCY
+}
+
+enum AiSuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  AUTO_APPLIED
+}
+
+// ============================================================================
+// 1. MULTI-TENANCY, RBAC (O04), COMPLIANCE, OUTBOX, WEBHOOKS (A01)
+// ============================================================================
+
+model ClinicGroup {
+  id              String       @id @default(cuid())
+  name            String
+  slug            String       @unique
+  planTier        PlanTier     @default(GROWTH)
+  healthStatus    TenantHealth @default(HEALTHY)
+  mrrAmount       Decimal      @default(0) @db.Decimal(12, 2)
+  whatsappCredits Int          @default(5000)
+  aiMinutesUsed   Int          @default(0)
+  aiMinutesQuota  Int          @default(500)
+  featureFlags    Json         @default("{}")
+  dpdpSettings    Json         @default("{}")
+  lastActiveAt    DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  clinics               Clinic[]
+  branches              Branch[]
+  staffUsers            StaffUser[]
+  roles                 RoleDefinition[]
+  procedureCatalog      ProcedureCatalog[]
+  patients              Patient[]
+  familyGroups          FamilyGroup[]
+  appointments          Appointment[]
+  waitlistEntries       WaitlistEntry[]
+  gapFillerRuns         GapFillerRun[]
+  treatmentPlans        TreatmentPlan[]
+  explainers            TreatmentExplainer[]
+  prescriptions         Prescription[]
+  postOpCases           PostOpCase[]
+  invoices              Invoice[]
+  payments              Payment[]
+  recoveryCases         RecoveryCase[]
+  campaigns             Campaign[]
+  inventoryItems        InventoryItem[]
+  labCases              LabCase[]
+  sterilisationCycles   SterilisationCycle[]
+  payRules              StaffPayRule[]
+  payouts               PayrollPayout[]
+  accessLogs            AccessLog[]
+  auditLogs             AuditLog[]
+  dpdpRequests          DpdpRequest[]
+  outboxEvents          OutboxEvent[]
+  aiSuggestions         AiSuggestion[]
+  branchIntegrations    BranchIntegrationConfig[]
+  consentTemplates      ConsentTemplate[]
+  prescriptionTemplates PrescriptionTemplate[]
+  allergyRules          DrugAllergyRule[]
+  expenses              BranchExpense[]
+  ownerAlerts           OwnerAlert[]
+}
+
+model Clinic {
+  id             String    @id @default(cuid())
+  groupId        String
+  group          ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String    @unique
+  registrationNo String?
+  gstin          String?
+  logoUrl        String?
+  phone          String?
+  email          String?
+  website        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  branches           Branch[]
+  staffUsers         StaffUser[]
+  patients           Patient[]
+  labCases           LabCase[]
+  referredSpecialists SpecialistReferral[] @relation("FromClinic")
+
+  @@index([groupId])
+}
+
+model Branch {
+  id              String    @id @default(cuid())
+  groupId         String
+  group           ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  clinicId        String
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  name            String
+  code            String
+  address         String?
+  city            String?
+  pincode         String?
+  latitude        Float?
+  longitude       Float?
+  phone           String?
+  workingHours    Json      @default("{}")
+  holidays        Json      @default("[]")
+  depositEnabled  Boolean   @default(true)
+  depositAmount   Decimal   @default(500) @db.Decimal(10, 2)
+  quietHoursStart String    @default("21:00")
+  quietHoursEnd   String    @default("08:00")
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  chairs                 Chair[]
+  primaryStaff           StaffUser[]               @relation("PrimaryBranch")
+  staffAccess            StaffBranchAccess[]
+  attendances            StaffAttendance[]
+  homePatients           Patient[]                 @relation("HomeBranch")
+  appointments           Appointment[]
+  specialistBlocks       SpecialistScheduleBlock[]
+  waitlistEntries        WaitlistEntry[]
+  gapFillerRuns          GapFillerRun[]
+  imagingStudies         ImagingStudy[]
+  treatmentPlans         TreatmentPlan[]
+  explainers             TreatmentExplainer[]
+  prescriptions          Prescription[]
+  postOpCases            PostOpCase[]
+  invoices               Invoice[]
+  payments               Payment[]
+  recoveryCases          RecoveryCase[]
+  campaigns              Campaign[]
+  inventoryItems         InventoryItem[]
+  purchaseOrders         PurchaseOrder[]
+  transfersOut           StockTransfer[]           @relation("FromBranch")
+  transfersIn            StockTransfer[]           @relation("ToBranch")
+  labCases               LabCase[]
+  autoclaves             AutoclaveDevice[]
+  instrumentKits         InstrumentKit[]
+  sterilisationCycles    SterilisationCycle[]
+  expenses               BranchExpense[]
+  ownerAlerts            OwnerAlert[]
+  integrations           BranchIntegrationConfig[]
+  voiceConfig            VoiceReceptionistConfig?
+  voiceCallSessions      VoiceCallSession[]
+  whatsappConversations  WhatsAppConversation[]
+  selfAssessments        SelfAssessment[]
+  alignerCases           AlignerCase[]
+  specialistReferrals    SpecialistReferral[]
+
+  @@unique([clinicId, code])
+  @@index([groupId, clinicId])
+}
+
+model Chair {
+  id           String    @id @default(cuid())
+  groupId      String
+  clinicId     String
+  branchId     String
+  branch       Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name         String
+  code         String
+  specialtyTag String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  appointments  Appointment[]
+  gapFillerRuns GapFillerRun[]
+
+  @@unique([branchId, code])
+  @@index([groupId, branchId])
+}
+
+model ProcedureCatalog {
+  id                 String         @id @default(cuid())
+  groupId            String
+  group              ClinicGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  code               String
+  name               String
+  category           String
+  defaultDurationMin Int            @default(30)
+  defaultFee         Decimal        @db.Decimal(10, 2)
+  gstApplicable      Boolean        @default(false)
+  gstRate            Decimal        @default(0) @db.Decimal(5, 4)
+  defaultLabCost     Decimal        @default(0) @db.Decimal(10, 2)
+  chairCostPerMin    Decimal        @default(10) @db.Decimal(10, 2)
+  isCosmetic         Boolean        @default(false)
+  postOpProtocol     PostOpProtocol @default(NONE)
+  requiredSkill      String?
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+
+  appointments    Appointment[]
+  waitlistEntries WaitlistEntry[]
+  planStages      TreatmentPlanStage[]
+  invoiceItems    InvoiceItem[]
+  consumableBoms  ProcedureConsumableBom[]
+
+  @@unique([groupId, code])
+  @@index([groupId])
+}
+
+model StaffUser {
+  id              String       @id @default(cuid())
+  groupId         String
+  group           ClinicGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  clinicId        String?
+  clinic          Clinic?      @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  primaryBranchId String?
+  primaryBranch   Branch?      @relation("PrimaryBranch", fields: [primaryBranchId], references: [id], onDelete: SetNull)
+  name            String
+  email           String       @unique
+  phone           String?
+  passwordHash    String
+  roleKey         StaffRoleKey @default(FRONT_DESK)
+  customRoleId    String?
+  customRole      RoleDefinition? @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
+  specialty       String?
+  qualifications  String?
+  registrationNo  String?
+  isVisiting      Boolean      @default(false)
+  isActive        Boolean      @default(true)
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  branchAccesses         StaffBranchAccess[]
+  attendances            StaffAttendance[]
+  appointments           Appointment[]             @relation("DoctorAppointments")
+  specialistBlocks       SpecialistScheduleBlock[]
+  chartVersions          DentalChartVersion[]
+  treatmentPlans         TreatmentPlan[]
+  planStages             TreatmentPlanStage[]
+  explainersCreated      TreatmentExplainer[]      @relation("ExplainerCreator")
+  explainersApproved     TreatmentExplainer[]      @relation("ExplainerApprover")
+  prescriptions          Prescription[]
+  postOpCases            PostOpCase[]
+  reviewedPostOpCheckIns PostOpCheckIn[]
+  labCases               LabCase[]
+  sterilisationCycles    SterilisationCycle[]
+  payRules               StaffPayRule[]
+  commissionEntries      CommissionLedgerEntry[]
+  payouts                PayrollPayout[]
+  approvedPayouts        PayrollPayout[]           @relation("PayoutApprover")
+  referralsSent          SpecialistReferral[]      @relation("ReferringDoctor")
+  referralsReceived      SpecialistReferral[]      @relation("ReceivingSpecialist")
+  alignerCases           AlignerCase[]
+  aiSuggestionsReviewed  AiSuggestion[]
+
+  @@index([groupId, roleKey])
+}
+
+model StaffBranchAccess {
+  id           String    @id @default(cuid())
+  groupId      String
+  staffId      String
+  staff        StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  isDefault    Boolean   @default(false)
+  scheduleDays Json      @default("[]")
+  createdAt    DateTime  @default(now())
+
+  @@unique([staffId, branchId])
+  @@index([groupId, branchId])
+}
+
+model StaffAttendance {
+  id         String           @id @default(cuid())
+  groupId    String
+  branchId   String
+  branch     Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffId    String
+  staff      StaffUser        @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date       DateTime         @db.Date
+  status     AttendanceStatus @default(PRESENT)
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  notes      String?
+
+  @@unique([staffId, branchId, date])
+  @@index([groupId, date])
+}
+
+model RoleDefinition {
+  id          String                @id @default(cuid())
+  groupId     String
+  group       ClinicGroup           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  key         String
+  name        String
+  isCustom    Boolean               @default(false)
+  isSystem    Boolean               @default(false)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  deletedAt   DateTime?
+
+  permissions RolePermissionMatrix[]
+  staffUsers  StaffUser[]
+
+  @@unique([groupId, key])
+}
+
+model RolePermissionMatrix {
+  id            String          @id @default(cuid())
+  groupId       String
+  roleId        String
+  role          RoleDefinition  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionKey String
+  level         PermissionLevel @default(NONE)
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([roleId, permissionKey])
+  @@index([groupId])
+}
+
+model BranchIntegrationConfig {
+  id        String              @id @default(cuid())
+  groupId   String
+  group     ClinicGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId  String?
+  branch    Branch?             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  provider  IntegrationProvider
+  status    IntegrationStatus   @default(DISCONNECTED)
+  config    Json                @default("{}")
+  updatedAt DateTime            @updatedAt
+
+  @@unique([groupId, branchId, provider])
+}
+
+model RefreshSession {
+  id          String    @id @default(cuid())
+  subjectType String
+  subjectId   String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  userAgent   String?
+  ipAddress   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([subjectType, subjectId])
+}
+
+model PatientOtpSession {
+  id         String    @id @default(cuid())
+  groupId    String?
+  phone      String
+  otpHash    String
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, expiresAt])
+}
+
+model AccessLog {
+  id           String      @id @default(cuid())
+  groupId      String
+  group        ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId     String?
+  actorId      String
+  actorRole    String
+  patientId    String
+  patient      Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  resourceType String
+  resourceId   String?
+  action       String      @default("READ")
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime    @default(now())
+
+  @@index([groupId, patientId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  groupId    String
+  group      ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId   String?
+  actorType  String
+  actorId    String
+  entityType String
+  entityId   String
+  action     String
+  beforeData Json?
+  afterData  Json?
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([groupId, entityType, entityId])
+  @@index([createdAt])
+}
+
+model DpdpRequest {
+  id           String            @id @default(cuid())
+  groupId      String
+  group        ClinicGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  patientId    String?
+  patient      Patient?          @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  requestType  DpdpRequestType
+  status       DpdpRequestStatus @default(OPEN)
+  details      String?
+  requestedAt  DateTime          @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+
+  @@index([groupId, status])
+}
+
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  groupId       String
+  group         ClinicGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId      String?
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  nextRetryAt   DateTime?
+  dispatchedAt  DateTime?
+  lastError     String?
+  createdAt     DateTime     @default(now())
+
+  @@index([status, nextRetryAt, createdAt])
+  @@index([groupId, eventType])
+}
+
+model WebhookReceipt {
+  id              String   @id @default(cuid())
+  provider        String
+  externalEventId String
+  eventType       String
+  payload         Json
+  processedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@unique([provider, externalEventId])
+}
+
+model IdempotencyRecord {
+  id             String   @id @default(cuid())
+  groupId        String?
+  scope          String
+  idempotencyKey String
+  requestHash    String
+  responseStatus Int
+  responseBody   Json
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@unique([scope, idempotencyKey])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// 2. PATIENTS, COMFORT PROFILE, FAMILY, CONSENTS, ABHA (C03, P03-P04, P10-P11)
+// ============================================================================
+
+model FamilyGroup {
+  id        String      @id @default(cuid())
+  groupId   String
+  group     ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  members Patient[]
+
+  @@index([groupId])
+}
+
+model Patient {
+  id                      String       @id @default(cuid())
+  groupId                 String
+  group                   ClinicGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  clinicId                String
+  clinic                  Clinic       @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  homeBranchId            String
+  homeBranch              Branch       @relation("HomeBranch", fields: [homeBranchId], references: [id], onDelete: Restrict)
+  patientCode             String
+  name                    String
+  phone                   String
+  altPhone                String?
+  email                   String?
+  gender                  String       @default("Female")
+  dob                     DateTime?
+  age                     Int?
+  address                 String?
+  latitude                Float?
+  longitude               Float?
+  distanceFromHomeKm      Float?
+  familyGroupId           String?
+  familyGroup             FamilyGroup? @relation(fields: [familyGroupId], references: [id], onDelete: SetNull)
+  familyRelation          String?
+  preferredLanguage       String       @default("en")
+  whatsappConsent         Boolean      @default(true)
+  whatsappOptOutAt        DateTime?
+  beforeAfterPhotoConsent Boolean      @default(false)
+  abhaAddress             String?
+  abhaNumber              String?
+  abhaLinked              Boolean      @default(false)
+  abhaSharingEnabled      Boolean      @default(false)
+  allergies               String[]     @default([])
+  conditions              String[]     @default([])
+  medications             String[]     @default([])
+  bloodThinners           String?
+  pregnancy               Boolean      @default(false)
+  habits                  String?
+  lastHba1c               String?
+  medicalHistoryJson      Json         @default("{}")
+  medicalUpdatedAt        DateTime?
+  patientFlags            String[]     @default([])
+  lifetimeValue           Decimal      @default(0) @db.Decimal(12, 2)
+  visitsCount             Int          @default(0)
+  referredCount           Int          @default(0)
+  referredByPatientId     String?
+  referredByPatient       Patient?     @relation("PatientReferral", fields: [referredByPatientId], references: [id], onDelete: SetNull)
+  referredPatients        Patient[]    @relation("PatientReferral")
+  lastVisitAt             DateTime?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  deletedAt               DateTime?
+
+  comfortProfile        PatientComfortProfile?
+  consents              PatientConsent[]
+  abhaShareLogs         AbhaShareLog[]
+  milestones            DentalMilestone[]
+  appointments          Appointment[]
+  waitlistEntries       WaitlistEntry[]
+  gapFillerOffers       GapFillerOffer[]
+  chartVersions         DentalChartVersion[]
+  imagingStudies        ImagingStudy[]
+  treatmentPlans        TreatmentPlan[]
+  explainers            TreatmentExplainer[]
+  explainerEvents       ExplainerEvent[]
+  prescriptions         Prescription[]
+  postOpCases           PostOpCase[]
+  postOpCheckIns        PostOpCheckIn[]
+  invoices              Invoice[]
+  payments              Payment[]
+  advanceLedgers        PatientAdvanceLedger[]
+  autoPayMandates       UpiAutoPayMandate[]
+  recoveryCases         RecoveryCase[]
+  campaignLogs          CampaignMessageLog[]
+  referralsSent         Referral[]             @relation("Referrer")
+  referralsConverted    Referral[]             @relation("ReferredPatient")
+  reviews               PatientFeedbackReview[]
+  labCases              LabCase[]
+  kitUsages             KitCycleUsage[]
+  selfAssessments       SelfAssessment[]
+  alignerCases          AlignerCase[]
+  voiceCallSessions     VoiceCallSession[]
+  whatsappConversations WhatsAppConversation[]
+  specialistReferrals   SpecialistReferral[]
+  accessLogs            AccessLog[]
+  dpdpRequests          DpdpRequest[]
+  aiSuggestions         AiSuggestion[]
+
+  @@unique([groupId, phone])
+  @@unique([groupId, patientCode])
+  @@index([groupId, homeBranchId])
+}
+
+model PatientComfortProfile {
+  id                String   @id @default(cuid())
+  groupId           String
+  patientId         String   @unique
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  anxietyScore      Int      @default(0)
+  triggers          String[] @default([])
+  whatHelps         String[] @default([])
+  autoBufferMinutes Int      @default(15)
+  updatedAt         DateTime @updatedAt
+}
+
+model ConsentTemplate {
+  id            String           @id @default(cuid())
+  groupId       String
+  group         ClinicGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  code          String
+  title         String
+  bodyTemplate  String
+  requiresEsign Boolean          @default(true)
+  version       Int              @default(1)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+
+  consents PatientConsent[]
+
+  @@unique([groupId, code])
+}
+
+model PatientConsent {
+  id              String           @id @default(cuid())
+  groupId         String
+  branchId        String?
+  patientId       String
+  patient         Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  templateId      String?
+  template        ConsentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  treatmentPlanId String?
+  title           String
+  status          String           @default("PENDING")
+  dueBeforeStage  Int?
+  signedAt        DateTime?
+  signatureS3Key  String?
+  signatureHash   String?
+  signedIp        String?
+  signedByName    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([groupId, patientId])
+}
+
+model AbhaShareLog {
+  id                  String    @id @default(cuid())
+  groupId             String
+  patientId           String
+  patient             Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  recordType          String
+  recordId            String
+  sharedWithFacility  String
+  purpose             String
+  approvedByPatientAt DateTime?
+  status              String    @default("SHARED")
+  createdAt           DateTime  @default(now())
+
+  @@index([groupId, patientId])
+}
+
+model DentalMilestone {
+  id         String    @id @default(cuid())
+  groupId    String
+  patientId  String
+  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  ageLabel   String
+  title      String
+  status     String    @default("DUE")
+  dueDate    DateTime?
+  doctorName String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([groupId, patientId])
+}
+
+// ============================================================================
+// 3. SCHEDULING & GAP FILLER (C01, C02, C11, O02, P01, P02)
+// ============================================================================
+
+model Appointment {
+  id                   String            @id @default(cuid())
+  groupId              String
+  group                ClinicGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId             String
+  branch               Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId            String
+  patient              Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId             String
+  doctor               StaffUser         @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Restrict)
+  chairId              String?
+  chair                Chair?            @relation(fields: [chairId], references: [id], onDelete: SetNull)
+  procedureCatalogId   String?
+  procedureCatalog     ProcedureCatalog? @relation(fields: [procedureCatalogId], references: [id], onDelete: SetNull)
+  procedureName        String
+  startTime            DateTime
+  endTime              DateTime
+  baseDurationMin      Int               @default(30)
+  anxietyBufferMin     Int               @default(0)
+  totalDurationMin     Int               @default(30)
+  status               AppointmentStatus @default(BOOKED)
+  lateMinutes          Int?
+  cancellationReason   String?
+  cancelledAt          DateTime?
+  depositRequired      Boolean           @default(false)
+  depositAmount        Decimal           @default(0) @db.Decimal(10, 2)
+  depositPaid          Boolean           @default(false)
+  source               AppointmentSource @default(FRONT_DESK)
+  familyBundleId       String?
+  isWalkIn             Boolean           @default(false)
+  reminder24hSentAt    DateTime?
+  reminder2hSentAt     DateTime?
+  preVisitFormSentAt   DateTime?
+  comfortMessageSentAt DateTime?
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+
+  planStage         TreatmentPlanStage?
+  prescriptions     Prescription[]
+  postOpCases       PostOpCase[]
+  reviews           PatientFeedbackReview[]
+  kitUsages         KitCycleUsage[]
+  gapFillerFreed    GapFillerRun?        @relation("FreedAppointment")
+  gapFillerFilled   GapFillerRun?        @relation("FilledAppointment")
+
+  @@index([groupId, branchId, startTime])
+  @@index([doctorId, startTime])
+  @@index([patientId, startTime])
+}
+
+model SpecialistScheduleBlock {
+  id                  String    @id @default(cuid())
+  groupId             String
+  branchId            String?
+  branch              Branch?   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  specialistId        String
+  specialist        StaffUser @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  externalClinicName  String?
+  date                DateTime  @db.Date
+  startTime           DateTime
+  endTime             DateTime
+  slotCapacityMinutes Int       @default(300)
+  bookedMinutes       Int       @default(0)
+  isOpened            Boolean   @default(true)
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([groupId, specialistId, date])
+}
+
+model WaitlistEntry {
+  id                 String            @id @default(cuid())
+  groupId            String
+  group              ClinicGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId           String
+  branch             Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId          String
+  patient            Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  preferredDoctorId  String?
+  treatmentPlanId    String?
+  procedureCatalogId String?
+  procedureCatalog   ProcedureCatalog? @relation(fields: [procedureCatalogId], references: [id], onDelete: SetNull)
+  neededProcedure    String
+  neededDurationMin  Int               @default(30)
+  preferredWindow    String            @default("ANY")
+  flexibleAnyDay     Boolean           @default(false)
+  distanceKm         Float?
+  status             String            @default("ACTIVE")
+  lastMessagedAt     DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+
+  gapFillerOffers GapFillerOffer[]
+
+  @@index([groupId, branchId, status])
+}
+
+model GapFillerRun {
+  id                   String           @id @default(cuid())
+  groupId              String
+  group                ClinicGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId             String
+  branch               Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  freedAppointmentId   String           @unique
+  freedAppointment     Appointment      @relation("FreedAppointment", fields: [freedAppointmentId], references: [id], onDelete: Cascade)
+  chairId              String?
+  chair                Chair?           @relation(fields: [chairId], references: [id], onDelete: SetNull)
+  doctorId             String
+  slotStart            DateTime
+  slotEnd              DateTime
+  freedDurationMin     Int
+  revenueAtRisk        Decimal          @default(0) @db.Decimal(10, 2)
+  status               String           @default("ACTIVE")
+  currentWave          Int              @default(1)
+  filledByPatientId    String?
+  filledAppointmentId  String?          @unique
+  filledAppointment    Appointment?     @relation("FilledAppointment", fields: [filledAppointmentId], references: [id], onDelete: SetNull)
+  filledAt             DateTime?
+  medianFillSeconds    Int?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  offers GapFillerOffer[]
+
+  @@index([groupId, branchId, status])
+}
+
+model GapFillerOffer {
+  id              String               @id @default(cuid())
+  groupId         String
+  branchId        String
+  runId           String
+  run             GapFillerRun         @relation(fields: [runId], references: [id], onDelete: Cascade)
+  waitlistEntryId String
+  waitlistEntry   WaitlistEntry        @relation(fields: [waitlistEntryId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  waveNumber      Int
+  score           Int
+  matchReason     String
+  status          GapFillerOfferStatus @default(PENDING_WAVE)
+  sentAt          DateTime?
+  viewedAt        DateTime?
+  holdExpiresAt   DateTime?
+  respondedAt     DateTime?
+  responseText    String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([runId, waveNumber])
+  @@index([patientId, status])
+}
+
+// ============================================================================
+// 4. DENTAL CHART & IMAGING (C04)
+// ============================================================================
+
+model DentalChartVersion {
+  id                String        @id @default(cuid())
+  groupId           String
+  branchId          String
+  patientId         String
+  patient           Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  version           Int
+  numberingSystem   String        @default("FDI")
+  dentitionMode     DentitionMode @default(ADULT)
+  chartedByDoctorId String
+  chartedByDoctor   StaffUser     @relation(fields: [chartedByDoctorId], references: [id], onDelete: Restrict)
+  chartedAt         DateTime      @default(now())
+  notes             String?
+  isCurrent         Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+
+  teeth       ToothRecord[]
+  perioSites  PeriodontalRecord[]
+
+  @@unique([patientId, version])
+  @@index([groupId, patientId, isCurrent])
+}
+
+model ToothRecord {
+  id                String             @id @default(cuid())
+  groupId           String
+  patientId         String
+  chartVersionId    String
+  chartVersion      DentalChartVersion @relation(fields: [chartVersionId], references: [id], onDelete: Cascade)
+  toothNumber       Int
+  condition         ToothCondition     @default(HEALTHY)
+  surfaces          String[]           @default([])
+  finding           String?
+  plannedProcedures Json               @default("[]")
+  updatedAt         DateTime           @updatedAt
+
+  @@unique([chartVersionId, toothNumber])
+}
+
+model PeriodontalRecord {
+  id             String             @id @default(cuid())
+  groupId        String
+  patientId      String
+  chartVersionId String
+  chartVersion   DentalChartVersion @relation(fields: [chartVersionId], references: [id], onDelete: Cascade)
+  quadrant       String
+  toothNumber    Int
+  pocketDepthMm  Int?
+  bleeding       Boolean            @default(false)
+  mobility       Int                @default(0)
+  recordedAt     DateTime           @default(now())
+
+  @@unique([chartVersionId, toothNumber])
+}
+
+model ImagingStudy {
+  id              String          @id @default(cuid())
+  groupId         String
+  branchId        String
+  branch          Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  modality        ImagingModality
+  title           String
+  toothNumbers    String[]        @default([])
+  capturedAt      DateTime        @default(now())
+  s3Key           String
+  mimeType        String          @default("image/jpeg")
+  annotationsJson Json            @default("[]")
+  annotatedS3Key  String?
+  aiAnalyzed      Boolean         @default(false)
+  uploadedById    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+
+  explainers  TreatmentExplainer[]
+  labReferrals SpecialistReferral[]
+
+  @@index([groupId, patientId])
+}
+
+// ============================================================================
+// 5. TREATMENT PLANS & EXPLAINER (C05, C06, P08)
+// ============================================================================
+
+model TreatmentPlan {
+  id                    String      @id @default(cuid())
+  groupId               String
+  group                 ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId              String
+  branch                Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId             String
+  patient               Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  planCode              String
+  doctorId              String
+  doctor                StaffUser   @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  status                PlanStatus  @default(PROPOSED)
+  proposedAt            DateTime    @default(now())
+  explainedAt           DateTime?
+  acceptedAt            DateTime?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  reviewDueAt           DateTime?
+  chosenOptionId        String?
+  totalAmount           Decimal     @default(0) @db.Decimal(12, 2)
+  discountAmount        Decimal     @default(0) @db.Decimal(12, 2)
+  insuranceEstimate     Decimal?    @db.Decimal(12, 2)
+  paidAmount            Decimal     @default(0) @db.Decimal(12, 2)
+  balanceAmount         Decimal     @default(0) @db.Decimal(12, 2)
+  internalLabCost       Decimal     @default(0) @db.Decimal(12, 2)
+  emiPlanActive         Boolean     @default(false)
+  emiInstallmentsCount  Int?
+  emiInstallmentAmount  Decimal?    @db.Decimal(10, 2)
+  emiDebitDay           Int?
+  emiLendingPartner     String?
+  acceptedSignatureHash String?
+  acceptedEsignAt       DateTime?
+  recoveryTriggeredAt   DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  deletedAt             DateTime?
+
+  options       TreatmentPlanOption[]
+  stages        TreatmentPlanStage[]
+  explainers    TreatmentExplainer[]
+  invoices      Invoice[]
+  mandates      UpiAutoPayMandate[]
+  recoveryCases RecoveryCase[]
+
+  @@unique([groupId, planCode])
+  @@index([groupId, branchId, status])
+  @@index([patientId])
+}
+
+model TreatmentPlanOption {
+  id            String        @id @default(cuid())
+  groupId       String
+  planId        String
+  plan          TreatmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  optionCode    String
+  title         String
+  summary       String
+  totalPrice    Decimal       @db.Decimal(12, 2)
+  durationNote  String?
+  isRecommended Boolean       @default(false)
+  isChosen      Boolean       @default(false)
+  sortOrder     Int           @default(0)
+
+  stages TreatmentPlanStage[]
+
+  @@unique([planId, optionCode])
+}
+
+model TreatmentPlanStage {
+  id                 String               @id @default(cuid())
+  groupId            String
+  planId             String
+  plan               TreatmentPlan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  optionId           String?
+  option             TreatmentPlanOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  stageNumber        Int
+  procedureCatalogId String?
+  procedureCatalog   ProcedureCatalog?    @relation(fields: [procedureCatalogId], references: [id], onDelete: SetNull)
+  procedureName      String
+  toothNumber        String?
+  doctorId           String?
+  doctor             StaffUser?           @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  visitDate          DateTime?
+  fee                Decimal              @db.Decimal(10, 2)
+  feeIncludedInPrev  Boolean              @default(false)
+  status             StageStatus          @default(NOT_BOOKED)
+  appointmentId      String?              @unique
+  appointment        Appointment?         @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  completedAt        DateTime?
+  labRequired        Boolean              @default(false)
+  sortOrder          Int                  @default(0)
+
+  labCases LabCase[]
+
+  @@index([planId, stageNumber])
+}
+
+model TreatmentExplainer {
+  id                   String        @id @default(cuid())
+  groupId              String
+  group                ClinicGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId             String
+  branch               Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId            String
+  patient              Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlanId      String
+  treatmentPlan        TreatmentPlan @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+  imagingStudyId       String?
+  imagingStudy         ImagingStudy? @relation(fields: [imagingStudyId], references: [id], onDelete: SetNull)
+  toothNumber          String?
+  createdByDoctorId    String
+  createdByDoctor      StaffUser     @relation("ExplainerCreator", fields: [createdByDoctorId], references: [id], onDelete: Restrict)
+  activeLanguage       String        @default("en")
+  translations         Json          @default("{}")
+  includeNarratedAudio Boolean       @default(true)
+  audioS3Keys          Json          @default("{}")
+  allowAskQuestion     Boolean       @default(true)
+  showEmiOption        Boolean       @default(true)
+  doctorApproved       Boolean       @default(false)
+  approvedByDoctorId   String?
+  approvedByDoctor     StaffUser?    @relation("ExplainerApprover", fields: [approvedByDoctorId], references: [id], onDelete: SetNull)
+  approvedAt           DateTime?
+  contentVersion       Int           @default(1)
+  shareSlug            String        @unique
+  signedTokenHash      String
+  expiresAt            DateTime
+  sentAt               DateTime?
+  sentVia              String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  deletedAt            DateTime?
+
+  events ExplainerEvent[]
+
+  @@index([groupId, patientId])
+}
+
+model ExplainerEvent {
+  id                 String             @id @default(cuid())
+  groupId            String
+  explainerId        String
+  explainer          TreatmentExplainer @relation(fields: [explainerId], references: [id], onDelete: Cascade)
+  patientId          String
+  patient            Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  eventType          String
+  language           String?
+  watchSeconds       Int?
+  totalSeconds       Int?
+  selectedOptionCode String?
+  questionText       String?
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+
+  @@index([explainerId, createdAt])
+}
+
+// ============================================================================
+// 6. PRESCRIPTIONS & ALLERGY BLOCKING (C07)
+// ============================================================================
+
+model PrescriptionTemplate {
+  id               String      @id @default(cuid())
+  groupId          String
+  group            ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  code             String
+  name             String
+  defaultDiagnosis String
+  medicines        Json
+  defaultAdvice    String
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  prescriptions Prescription[]
+
+  @@unique([groupId, code])
+}
+
+model DrugAllergyRule {
+  id                       String      @id @default(cuid())
+  groupId                  String
+  group                    ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  drugName                 String
+  drugClass                String
+  contraindicatedAllergies String[]    @default([])
+  suggestedAlternative     String
+  interactionConditions    String[]    @default([])
+  interactionNote          String?
+  severity                 String      @default("BLOCK")
+
+  @@index([groupId, drugName])
+}
+
+model Prescription {
+  id                     String                @id @default(cuid())
+  groupId                String
+  group                  ClinicGroup           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId               String
+  branch                 Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId              String
+  patient                Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId               String
+  doctor                 StaffUser             @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  appointmentId          String?
+  appointment            Appointment?          @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  templateId             String?
+  template               PrescriptionTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  diagnosis              String
+  items                  Json
+  adviceEnglish          String
+  adviceTranslated       Json                  @default("{}")
+  allergyWarningsChecked Json                  @default("[]")
+  status                 PrescriptionStatus    @default(DRAFT)
+  signedAt               DateTime?
+  signatureHash          String?
+  pdfS3Key               String?
+  sentAt                 DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  deletedAt              DateTime?
+
+  @@index([groupId, patientId])
+}
+
+// ============================================================================
+// 7. POST-OP CHECK-INS (C08, P12)
+// ============================================================================
+
+model PostOpCase {
+  id            String         @id @default(cuid())
+  groupId       String
+  group         ClinicGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId     String
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId      String
+  doctor        StaffUser      @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  appointmentId String?
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  procedureName String
+  procedureDate DateTime
+  protocol      PostOpProtocol @default(D1_D3_D7)
+  currentDay    Int            @default(0)
+  status        PostOpStatus   @default(ON_TRACK)
+  lastCheckInAt DateTime?
+  nextCheckInAt DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  checkIns PostOpCheckIn[]
+
+  @@index([groupId, branchId, status])
+}
+
+model PostOpCheckIn {
+  id                    String     @id @default(cuid())
+  groupId               String
+  branchId              String
+  postOpCaseId          String
+  postOpCase            PostOpCase @relation(fields: [postOpCaseId], references: [id], onDelete: Cascade)
+  patientId             String
+  patient               Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  dayNumber             Int
+  scheduledAt           DateTime
+  sentAt                DateTime?
+  reminder6hSentAt      DateTime?
+  frontDeskTaskCreatedAt DateTime?
+  repliedAt             DateTime?
+  painScore             Int?
+  previousPainScore     Int?
+  swelling              Boolean    @default(false)
+  fever                 Boolean    @default(false)
+  bleedingWontStop      Boolean    @default(false)
+  badTasteOrSmell       Boolean    @default(false)
+  patientNotes          String?
+  photoS3Key            String?
+  ruleAlertTriggered    Boolean    @default(false)
+  ruleAlertReason       String?
+  aiTextFlagged         Boolean    @default(false)
+  aiFlagReason          String?
+  reviewedByDoctorId    String?
+  reviewedByDoctor      StaffUser? @relation(fields: [reviewedByDoctorId], references: [id], onDelete: SetNull)
+  reviewedAt            DateTime?
+  reviewNote            String?
+  reviewAction          String?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  @@unique([postOpCaseId, dayNumber])
+  @@index([groupId, branchId, ruleAlertTriggered])
+}
+
+// ============================================================================
+// 8. BILLING, GST, UPI AUTOPAY, ADVANCES (C09, P09)
+// ============================================================================
+
+model Invoice {
+  id              String        @id @default(cuid())
+  groupId         String
+  group           ClinicGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId        String
+  branch          Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlanId String?
+  treatmentPlan   TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id], onDelete: SetNull)
+  invoiceNumber   String
+  type            InvoiceType   @default(INVOICE)
+  parentInvoiceId String?
+  subtotal        Decimal       @db.Decimal(12, 2)
+  discountTotal   Decimal       @default(0) @db.Decimal(12, 2)
+  gstTotal        Decimal       @default(0) @db.Decimal(12, 2)
+  advanceAdjusted Decimal       @default(0) @db.Decimal(12, 2)
+  totalAmount     Decimal       @db.Decimal(12, 2)
+  paidAmount      Decimal       @default(0) @db.Decimal(12, 2)
+  dueAmount       Decimal       @db.Decimal(12, 2)
+  status          InvoiceStatus @default(UNPAID)
+  issuedAt        DateTime      @default(now())
+  tallyExportedAt DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  items             InvoiceItem[]
+  payments          Payment[]
+  commissionEntries CommissionLedgerEntry[]
+
+  @@unique([groupId, invoiceNumber])
+  @@index([groupId, branchId, issuedAt])
+}
+
+model InvoiceItem {
+  id                 String            @id @default(cuid())
+  invoiceId          String
+  invoice            Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  procedureCatalogId String?
+  procedureCatalog   ProcedureCatalog? @relation(fields: [procedureCatalogId], references: [id], onDelete: SetNull)
+  procedureName      String
+  toothNumber        String?
+  fee                Decimal           @db.Decimal(10, 2)
+  discount           Decimal           @default(0) @db.Decimal(10, 2)
+  gstExempt          Boolean           @default(true)
+  gstRate            Decimal           @default(0) @db.Decimal(5, 4)
+  gstAmount          Decimal           @default(0) @db.Decimal(10, 2)
+  netAmount          Decimal           @db.Decimal(10, 2)
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  groupId        String
+  group          ClinicGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId       String
+  branch         Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId      String
+  patient        Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  invoiceId      String
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  idempotencyKey String?       @unique
+  method         PaymentMethod
+  splitBreakdown Json?
+  amount         Decimal       @db.Decimal(12, 2)
+  status         PaymentStatus @default(PENDING)
+  gatewayRef     String?
+  upiQrPayload   String?
+  upiVpa         String?
+  paidAt         DateTime?
+  receiptS3Key   String?
+  recordedById   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  emiInstallment    EmiInstallment?
+  commissionEntries CommissionLedgerEntry[]
+
+  @@index([groupId, branchId, paidAt])
+}
+
+model PatientAdvanceLedger {
+  id                 String   @id @default(cuid())
+  groupId            String
+  branchId           String
+  patientId          String
+  patient            Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  entryType          String
+  amount             Decimal  @db.Decimal(12, 2)
+  balanceAfter       Decimal  @db.Decimal(12, 2)
+  referenceInvoiceId String?
+  paymentId          String?
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  @@index([groupId, patientId])
+}
+
+model UpiAutoPayMandate {
+  id                String         @id @default(cuid())
+  groupId           String
+  branchId          String
+  patientId         String
+  patient           Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlanId   String
+  treatmentPlan     TreatmentPlan  @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+  gatewayMandateId  String         @unique
+  upiVpa            String?
+  installmentAmount Decimal        @db.Decimal(10, 2)
+  totalInstallments Int
+  paidInstallments  Int            @default(0)
+  debitDayOfMonth   Int            @default(26)
+  status            String         @default("ACTIVE")
+  nextDebitDate     DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  installments EmiInstallment[]
+}
+
+model EmiInstallment {
+  id            String            @id @default(cuid())
+  mandateId     String
+  mandate       UpiAutoPayMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+  installmentNo Int
+  dueDate       DateTime
+  amount        Decimal           @db.Decimal(10, 2)
+  status        String            @default("LATER")
+  paymentId     String?           @unique
+  payment       Payment?          @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  paidAt        DateTime?
+
+  @@unique([mandateId, installmentNo])
+}
+
+// ============================================================================
+// 9. UNFINISHED TREATMENT RECOVERY & CAMPAIGNS (C10, C12)
+// ============================================================================
+
+model RecoveryCase {
+  id                String         @id @default(cuid())
+  groupId           String
+  group             ClinicGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId          String
+  branch            Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId         String
+  patient           Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlanId   String
+  treatmentPlan     TreatmentPlan  @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+  bucket            RecoveryBucket
+  pendingValue      Decimal        @db.Decimal(12, 2)
+  idleSince         DateTime
+  stallReason       StallReason    @default(UNKNOWN)
+  aiTaggedReason    String?
+  currentStepDay    Int            @default(3)
+  nextStepDate      DateTime
+  lastMessageSentAt DateTime?
+  status            RecoveryStatus @default(ACTIVE)
+  stoppedReason     String?
+  stoppedAt         DateTime?
+  recoveredAmount   Decimal        @default(0) @db.Decimal(12, 2)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  logs RecoveryLog[]
+
+  @@index([groupId, branchId, status, nextStepDate])
+}
+
+model RecoveryLog {
+  id               String       @id @default(cuid())
+  recoveryCaseId   String
+  recoveryCase     RecoveryCase @relation(fields: [recoveryCaseId], references: [id], onDelete: Cascade)
+  stepDay          Int
+  channel          String
+  messageSummary   String
+  taskAssignedToId String?
+  sentAt           DateTime     @default(now())
+  outcome          String?
+}
+
+model Campaign {
+  id                   String         @id @default(cuid())
+  groupId              String
+  group                ClinicGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId             String?
+  branch               Branch?        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name                 String
+  type                 CampaignType
+  audienceLabel        String
+  segmentRules         Json           @default("{}")
+  matchedCount         Int            @default(0)
+  consentEligibleCount Int            @default(0)
+  sentCount            Int            @default(0)
+  bookedCount          Int            @default(0)
+  status               CampaignStatus @default(DRAFT)
+  scheduledAt          DateTime?
+  templateKey          String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  deletedAt            DateTime?
+
+  logs CampaignMessageLog[]
+
+  @@index([groupId, status])
+}
+
+model CampaignMessageLog {
+  id                  String    @id @default(cuid())
+  campaignId          String
+  campaign            Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  patientId           String
+  patient             Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  status              String    @default("QUEUED")
+  sentAt              DateTime?
+  bookedAppointmentId String?
+  createdAt           DateTime  @default(now())
+
+  @@unique([campaignId, patientId])
+}
+
+model Referral {
+  id                String    @id @default(cuid())
+  groupId           String
+  branchId          String
+  referrerPatientId String
+  referrerPatient   Patient   @relation("Referrer", fields: [referrerPatientId], references: [id], onDelete: Cascade)
+  referredName      String
+  referredPhone     String
+  referredPatientId String?
+  referredPatient   Patient?  @relation("ReferredPatient", fields: [referredPatientId], references: [id], onDelete: SetNull)
+  status            String    @default("INVITED")
+  rewardLabel       String    @default("Free scaling")
+  rewardIssuedAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([groupId, referrerPatientId])
+}
+
+model PatientFeedbackReview {
+  id               String      @id @default(cuid())
+  groupId          String
+  branchId         String
+  patientId        String
+  patient          Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId    String?
+  appointment      Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  rating           Int
+  comment          String?
+  routedTo         String
+  googleLinkSentAt DateTime?
+  ownerNotifiedAt  DateTime?
+  ownerResolvedAt  DateTime?
+  createdAt        DateTime    @default(now())
+
+  @@index([groupId, branchId, rating])
+}
+
+// ============================================================================
+// 10. INVENTORY, LAB CASES (C14/L01), STERILISATION (C15), PAYROLL (C16/O02/S01)
+// ============================================================================
+
+model InventoryItem {
+  id           String      @id @default(cuid())
+  groupId      String
+  group        ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  sku          String
+  name         String
+  category     String
+  unit         String      @default("pcs")
+  inStockQty   Decimal     @default(0) @db.Decimal(10, 2)
+  reorderLevel Decimal     @default(0) @db.Decimal(10, 2)
+  unitCost     Decimal     @default(0) @db.Decimal(10, 2)
+  isSingleUse  Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  batches      InventoryBatch[]
+  boms         ProcedureConsumableBom[]
+  transactions InventoryTransaction[]
+  transfers    StockTransfer[]
+
+  @@unique([branchId, sku])
+  @@index([groupId, branchId])
+}
+
+model InventoryBatch {
+  id           String        @id @default(cuid())
+  groupId      String
+  branchId     String
+  itemId       String
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batchNumber  String
+  quantity     Decimal       @db.Decimal(10, 2)
+  remainingQty Decimal       @db.Decimal(10, 2)
+  expiryDate   DateTime?
+  unitCost     Decimal       @db.Decimal(10, 2)
+  receivedAt   DateTime      @default(now())
+
+  transactions InventoryTransaction[]
+
+  @@index([itemId, expiryDate])
+}
+
+model ProcedureConsumableBom {
+  id                   String           @id @default(cuid())
+  groupId              String
+  procedureCatalogId   String
+  procedureCatalog     ProcedureCatalog @relation(fields: [procedureCatalogId], references: [id], onDelete: Cascade)
+  inventoryItemId      String
+  inventoryItem        InventoryItem    @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  quantityPerProcedure Decimal          @db.Decimal(10, 3)
+
+  @@unique([procedureCatalogId, inventoryItemId])
+}
+
+model InventoryTransaction {
+  id            String          @id @default(cuid())
+  groupId       String
+  branchId      String
+  itemId        String
+  item          InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batchId       String?
+  batch         InventoryBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  type          String
+  quantity      Decimal         @db.Decimal(10, 2)
+  unitCost      Decimal         @db.Decimal(10, 2)
+  referenceType String?
+  referenceId   String?
+  createdById   String?
+  createdAt     DateTime        @default(now())
+
+  @@index([groupId, branchId, createdAt])
+}
+
+model PurchaseOrder {
+  id           String    @id @default(cuid())
+  groupId      String
+  branchId     String
+  branch       Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  poNumber     String
+  supplierName String
+  status       String    @default("DRAFT")
+  items        Json
+  totalCost    Decimal   @db.Decimal(12, 2)
+  orderedAt    DateTime?
+  receivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([groupId, poNumber])
+}
+
+model StockTransfer {
+  id           String        @id @default(cuid())
+  groupId      String
+  fromBranchId String
+  fromBranch   Branch        @relation("FromBranch", fields: [fromBranchId], references: [id], onDelete: Cascade)
+  toBranchId   String
+  toBranch     Branch        @relation("ToBranch", fields: [toBranchId], references: [id], onDelete: Cascade)
+  itemId       String
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity     Decimal       @db.Decimal(10, 2)
+  status       String        @default("REQUESTED")
+  requestedAt  DateTime      @default(now())
+  completedAt  DateTime?
+}
+
+model DentalLabPartner {
+  id           String    @id @default(cuid())
+  name         String
+  code         String    @unique
+  contactPhone String?
+  email        String?
+  apiKeyHash   String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  labCases LabCase[]
+}
+
+model LabCase {
+  id                   String              @id @default(cuid())
+  groupId              String
+  group                ClinicGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  clinicId             String
+  clinic               Clinic              @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  branchId             String
+  branch               Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  labPartnerId         String
+  labPartner           DentalLabPartner    @relation(fields: [labPartnerId], references: [id], onDelete: Restrict)
+  caseNumber           String
+  patientId            String
+  patient              Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId             String
+  doctor               StaffUser           @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  treatmentPlanStageId String?
+  treatmentPlanStage   TreatmentPlanStage? @relation(fields: [treatmentPlanStageId], references: [id], onDelete: SetNull)
+  workDescription      String
+  toothNumbers         String[]            @default([])
+  implantSystem        String?
+  abutment             String?
+  materialShade        String?
+  stlS3Key             String?
+  photoS3Keys          String[]            @default([])
+  status               LabCaseStatus       @default(IMPRESSION_SCAN)
+  dueDate              DateTime
+  dispatchedAt         DateTime?
+  receivedAt           DateTime?
+  fittedAt             DateTime?
+  labCost              Decimal             @default(0) @db.Decimal(10, 2)
+  labInvoiceS3Key      String?
+  labInvoiceNumber     String?
+  queryNotes           String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+
+  queries LabCaseQuery[]
+
+  @@unique([groupId, caseNumber])
+  @@index([labPartnerId, status, dueDate])
+  @@index([groupId, branchId, status])
+}
+
+model LabCaseQuery {
+  id              String    @id @default(cuid())
+  labCaseId       String
+  labCase         LabCase   @relation(fields: [labCaseId], references: [id], onDelete: Cascade)
+  senderType      String
+  senderId        String
+  message         String
+  proposedDueDate DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model AutoclaveDevice {
+  id                     String    @id @default(cuid())
+  groupId                String
+  branchId               String
+  branch                 Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name                   String
+  modelType              String    @default("Class B")
+  serialNo               String?
+  lastBiologicalTestAt   DateTime?
+  nextBiologicalTestDue  DateTime?
+  isActive               Boolean   @default(true)
+
+  cycles SterilisationCycle[]
+
+  @@unique([branchId, name])
+}
+
+model InstrumentKit {
+  id        String   @id @default(cuid())
+  groupId   String
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  kitCode   String
+  category  String
+  qrCode    String?
+  status    String   @default("STERILE")
+  createdAt DateTime @default(now())
+
+  usages KitCycleUsage[]
+
+  @@unique([branchId, kitCode])
+}
+
+model SterilisationCycle {
+  id                        String          @id @default(cuid())
+  groupId                   String
+  group                     ClinicGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId                  String
+  branch                    Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  cycleNumber               String
+  autoclaveId               String
+  autoclave                 AutoclaveDevice @relation(fields: [autoclaveId], references: [id], onDelete: Restrict)
+  startedAt                 DateTime        @default(now())
+  completedAt               DateTime?
+  tempC                     Float?
+  pressureBar               Float?
+  holdMinutes               Int?
+  chemicalIndicatorPassed   Boolean?
+  biologicalIndicatorPassed Boolean?
+  printoutS3Key             String?
+  result                    CycleResult     @default(NOT_LOGGED)
+  loggedById                String?
+  loggedBy                  StaffUser?      @relation(fields: [loggedById], references: [id], onDelete: SetNull)
+  notes                     String?
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  kitUsages KitCycleUsage[]
+
+  @@unique([branchId, cycleNumber])
+  @@index([groupId, branchId, result])
+}
+
+model KitCycleUsage {
+  id                    String             @id @default(cuid())
+  groupId               String
+  branchId              String
+  cycleId               String
+  cycle                 SterilisationCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  kitId                 String
+  kit                   InstrumentKit      @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  patientId             String?
+  patient               Patient?           @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  appointmentId         String?
+  appointment           Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  procedureName         String?
+  chairCode             String?
+  usedAt                DateTime?
+  isAffectedByFailure   Boolean            @default(false)
+  createdAt             DateTime           @default(now())
+
+  @@unique([cycleId, kitId])
+  @@index([kitId, usedAt])
+  @@index([patientId])
+}
+
+model StaffPayRule {
+  id                      String       @id @default(cuid())
+  groupId                 String
+  group                   ClinicGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  staffId                 String
+  staff                   StaffUser    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  modelType               PayModelType
+  sharePercent            Decimal?     @db.Decimal(5, 2)
+  fixedPerProcedure       Decimal?     @db.Decimal(10, 2)
+  baseSalary              Decimal?     @db.Decimal(12, 2)
+  minimumMonthlyGuarantee Decimal?     @db.Decimal(12, 2)
+  recallBonusPerBooking   Decimal?     @db.Decimal(10, 2)
+  branchRevenuePercent    Decimal?     @db.Decimal(5, 2)
+  tds194jApplicable       Boolean      @default(false)
+  tdsRate                 Decimal      @default(0.10) @db.Decimal(5, 4)
+  exceptionsJson          Json         @default("{}")
+  effectiveFrom           DateTime     @default(now())
+  isActive                Boolean      @default(true)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  @@index([groupId, staffId, isActive])
+}
+
+model CommissionLedgerEntry {
+  id                String    @id @default(cuid())
+  groupId           String
+  branchId          String
+  staffId           String
+  staff             StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  paymentId         String
+  payment           Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId         String
+  invoice           Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  procedureName     String
+  collectedAmount   Decimal   @db.Decimal(12, 2)
+  labCostDeducted   Decimal   @default(0) @db.Decimal(12, 2)
+  netAmount         Decimal   @db.Decimal(12, 2)
+  appliedRateOrRule String
+  grossCommission   Decimal   @db.Decimal(12, 2)
+  tdsAmount         Decimal   @default(0) @db.Decimal(12, 2)
+  netPayable        Decimal   @db.Decimal(12, 2)
+  payoutId          String?
+  payout            PayrollPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  periodMonth       String
+  createdAt         DateTime  @default(now())
+
+  @@index([groupId, staffId, periodMonth])
+}
+
+model PayrollPayout {
+  id               String       @id @default(cuid())
+  groupId          String
+  group            ClinicGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  staffId          String
+  staff            StaffUser    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  periodMonth      String
+  collectionsTotal Decimal      @default(0) @db.Decimal(12, 2)
+  labCostsTotal    Decimal      @default(0) @db.Decimal(12, 2)
+  netBase          Decimal      @default(0) @db.Decimal(12, 2)
+  baseSalary       Decimal      @default(0) @db.Decimal(12, 2)
+  grossCommission  Decimal      @default(0) @db.Decimal(12, 2)
+  minimumTopUp     Decimal      @default(0) @db.Decimal(12, 2)
+  tds194j          Decimal      @default(0) @db.Decimal(12, 2)
+  netPayable       Decimal      @default(0) @db.Decimal(12, 2)
+  status           PayoutStatus @default(DRAFT)
+  approvedById     String?
+  approvedBy       StaffUser?   @relation("PayoutApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt       DateTime?
+  settledUpiRef    String?
+  settledAt        DateTime?
+  slipS3Key        String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  entries CommissionLedgerEntry[]
+
+  @@unique([staffId, periodMonth])
+  @@index([groupId, periodMonth, status])
+}
+
+model SpecialistReferral {
+  id                String        @id @default(cuid())
+  groupId           String
+  fromClinicId      String
+  fromClinic        Clinic        @relation("FromClinic", fields: [fromClinicId], references: [id], onDelete: Cascade)
+  fromBranchId      String
+  fromBranch        Branch        @relation(fields: [fromBranchId], references: [id], onDelete: Cascade)
+  fromDoctorId      String
+  fromDoctor        StaffUser     @relation("ReferringDoctor", fields: [fromDoctorId], references: [id], onDelete: Restrict)
+  toSpecialistId    String
+  toSpecialist      StaffUser     @relation("ReceivingSpecialist", fields: [toSpecialistId], references: [id], onDelete: Restrict)
+  patientId         String
+  patient           Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  toothNumber       String?
+  caseSummary       String
+  xrayStudyId       String?
+  xrayStudy         ImagingStudy? @relation(fields: [xrayStudyId], references: [id], onDelete: SetNull)
+  status            String        @default("PENDING")
+  adviceText        String?
+  acceptedSlotStart DateTime?
+  appointmentId     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([toSpecialistId, status])
+}
+
+// ============================================================================
+// 11. OWNER P&L, SELF-CHECK, ALIGNERS, VOICE AI, WHATSAPP, AI SUGGESTIONS
+// ============================================================================
+
+model BranchExpense {
+  id          String      @id @default(cuid())
+  groupId     String
+  group       ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  month       String
+  category    String
+  amount      Decimal     @db.Decimal(12, 2)
+  notes       String?
+  createdById String?
+  createdAt   DateTime    @default(now())
+
+  @@index([groupId, branchId, month])
+}
+
+model OwnerAlert {
+  id          String      @id @default(cuid())
+  groupId     String
+  group       ClinicGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId    String?
+  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category    String
+  title       String
+  description String
+  severity    String      @default("WARNING")
+  isResolved  Boolean     @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([groupId, isResolved])
+}
+
+model SelfAssessment {
+  id                       String      @id @default(cuid())
+  groupId                  String
+  branchId                 String
+  branch                   Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId                String?
+  patient                  Patient?    @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  area                     String
+  painScore                Int
+  symptoms                 String[]    @default([])
+  duration                 String
+  redFlagSwellingOrFever   Boolean     @default(false)
+  redFlagBypassTriggered   Boolean     @default(false)
+  urgencyBand              UrgencyBand
+  summaryBullets           String[]    @default([])
+  recommendedConsultType   String
+  disclaimer               String      @default("This is not a diagnosis. It helps you choose how soon to come in.")
+  bookedAppointmentId      String?
+  createdAt                DateTime    @default(now())
+
+  photos SelfAssessmentPhoto[]
+
+  @@index([groupId, patientId])
+}
+
+model SelfAssessmentPhoto {
+  id               String         @id @default(cuid())
+  selfAssessmentId String
+  selfAssessment   SelfAssessment @relation(fields: [selfAssessmentId], references: [id], onDelete: Cascade)
+  angle            String
+  s3Key            String
+  qualityScore     Float?
+  qualityLabel     String?
+  aiObservations   String?
+  createdAt        DateTime       @default(now())
+}
+
+model AlignerCase {
+  id                       String    @id @default(cuid())
+  groupId                  String
+  branchId                 String
+  branch                   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId                String
+  patient                  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId                 String
+  doctor                   StaffUser @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  currentTray              Int       @default(1)
+  totalTrays               Int
+  dailyGoalMinutes         Int       @default(1320)
+  nextTrayDate             DateTime?
+  nextCheckAppointmentId   String?
+  beforeAfterPublicConsent Boolean   @default(false)
+  status                   String    @default("ACTIVE")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  wearLogs AlignerWearLog[]
+  photos   AlignerPhoto[]
+
+  @@index([groupId, patientId])
+}
+
+model AlignerWearLog {
+  id            String      @id @default(cuid())
+  alignerCaseId String
+  alignerCase   AlignerCase @relation(fields: [alignerCaseId], references: [id], onDelete: Cascade)
+  date          DateTime    @db.Date
+  traysOutAt    DateTime?
+  traysInAt     DateTime?
+  wornMinutes   Int         @default(0)
+
+  @@unique([alignerCaseId, date])
+}
+
+model AlignerPhoto {
+  id            String      @id @default(cuid())
+  alignerCaseId String
+  alignerCase   AlignerCase @relation(fields: [alignerCaseId], references: [id], onDelete: Cascade)
+  trayNumber    Int
+  monthLabel    String
+  s3Key         String
+  capturedAt    DateTime    @default(now())
+}
+
+model VoiceReceptionistConfig {
+  id                    String   @id @default(cuid())
+  groupId               String
+  branchId              String   @unique
+  branch                Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  allowBook             Boolean  @default(true)
+  allowRescheduleCancel Boolean  @default(true)
+  allowQuoteFees        Boolean  @default(true)
+  allowDirectionsHours  Boolean  @default(true)
+  allowSelfCheckLink    Boolean  @default(true)
+  allowDiscussMedicines Boolean  @default(false)
+  languages             String[] @default(["hi", "mr", "en"])
+  activeHoursSummary    String   @default("line busy > 3 rings, lunch 1-2 pm, after 8 pm, Sundays")
+  updatedAt             DateTime @updatedAt
+}
+
+model VoiceCallSession {
+  id                  String   @id @default(cuid())
+  groupId             String
+  branchId            String
+  branch              Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId           String?
+  patient             Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  callerPhone         String
+  language            String   @default("hi")
+  durationSeconds     Int      @default(0)
+  intent              String?
+  outcome             String
+  transcriptJson      Json     @default("[]")
+  recordingS3Key      String?
+  selfCheckLinkSent   Boolean  @default(false)
+  bookedAppointmentId String?
+  escalatedReason     String?
+  confidence          Float    @default(0.9)
+  createdAt           DateTime @default(now())
+
+  @@index([groupId, branchId, createdAt])
+}
+
+model WhatsAppConversation {
+  id            String   @id @default(cuid())
+  groupId       String
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  patientId     String?
+  patient       Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  phone         String
+  botState      String   @default("IDLE")
+  language      String   @default("hi")
+  contextJson   Json     @default("{}")
+  lastInboundAt DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  messages WhatsAppMessage[]
+
+  @@unique([branchId, phone])
+}
+
+model WhatsAppMessage {
+  id             String               @id @default(cuid())
+  conversationId String
+  conversation   WhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      String
+  messageType    String               @default("TEXT")
+  templateName   String?
+  bodyRedacted   String
+  waMessageId    String?              @unique
+  status         String               @default("SENT")
+  createdAt      DateTime             @default(now())
+}
+
+model AiSuggestion {
+  id           String             @id @default(cuid())
+  groupId      String
+  group        ClinicGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  branchId     String?
+  patientId    String?
+  patient      Patient?           @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  type         String
+  inputRef     String             @map("input_ref")
+  output       Json
+  confidence   Float
+  modelVersion String             @map("model_version")
+  status       AiSuggestionStatus @default(PENDING)
+  reviewedById String?            @map("reviewed_by")
+  reviewedBy   StaffUser?         @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@index([groupId, type, status])
+  @@index([inputRef])
+}

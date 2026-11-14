@@ -1,0 +1,10 @@
+[project]
+name = "dentflow-ai-service"
+version = "1.0.0"
+description = "DentFlow FastAPI AI service (pluggable providers + mock mode)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
