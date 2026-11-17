@@ -28,6 +28,10 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import {
+  ImagingGalleryAndViewer,
+  ToothImagingHoverStrip,
+} from "@/components/dental/imaging-viewer";
 import { PerioChart } from "@/components/dental/perio-chart";
 import { DetailedToothRootSvg, ToothSvg, ToothSvgDefs } from "@/components/dental/tooth-svg";
 import {
@@ -106,6 +110,7 @@ function DentalChartContent() {
   const [keyBuffer, setKeyBuffer] = useState<string>("");
   const [showShortcuts, setShowShortcuts] = useState<boolean>(false);
   const [hoveredToothFdi, setHoveredToothFdi] = useState<number | null>(null);
+  const [openImageId, setOpenImageId] = useState<string | null>(null);
   const [newProcName, setNewProcName] = useState<string>("");
   const [newProcFee, setNewProcFee] = useState<string>("2500");
 
@@ -744,6 +749,47 @@ function DentalChartContent() {
         />
       )}
 
+      {/* Imaging Gallery + Full-Screen Radiograph Viewer */}
+      {(activeChartTab === "imaging" || openImageId) && (
+        <ImagingGalleryAndViewer
+          imaging={activeChart.imaging}
+          numberingSystem={numberingSystem}
+          actorName={actorName}
+          selectedToothFdi={selectedToothNum}
+          openImageId={openImageId}
+          galleryHidden={activeChartTab !== "imaging"}
+          onSelectOpenImageId={setOpenImageId}
+          onUpdateImage={(updated, detail) => {
+            mutateActiveChart((chart) => ({
+              ...chart,
+              imaging: chart.imaging.map((img) => (img.id === updated.id ? updated : img)),
+            }));
+            logAuditEvent({
+              patientName: activePatient?.name || "Patient",
+              screenName: "Dental chart",
+              action: "IMAGING_UPDATED",
+              entityType: "dental_chart",
+              entityId: updated.id,
+              details: detail,
+            });
+          }}
+          onAddImage={(item) => {
+            mutateActiveChart((chart) => ({
+              ...chart,
+              imaging: [item, ...chart.imaging],
+            }));
+            logAuditEvent({
+              patientName: activePatient?.name || "Patient",
+              screenName: "Dental chart",
+              action: "IMAGING_IMPORTED",
+              entityType: "dental_chart",
+              entityId: item.id,
+              details: `Imported ${item.title} linked to teeth ${item.linkedTeeth.join(", ")}`,
+            });
+          }}
+        />
+      )}
+
       {/* Main Layout: Left 8-col Odontogram + Right 4-col Selected Tooth Panel */}
       {activeChartTab === "odontogram" && (
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
@@ -926,6 +972,14 @@ function DentalChartContent() {
                 )}
               </div>
             )}
+
+            {/* Linked Radiograph Thumbnails on Tooth Hover */}
+            <ToothImagingHoverStrip
+              hoveredFdi={hoveredToothFdi || selectedToothNum}
+              imaging={activeChart.imaging}
+              numberingSystem={numberingSystem}
+              onOpenImage={(img) => setOpenImageId(img.id)}
+            />
 
             {/* Arch Canvas (No horizontal scrollbars; tablet pinch-zoom enabled) */}
             <div
