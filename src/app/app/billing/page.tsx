@@ -271,29 +271,52 @@ export default function BillingPage() {
               Collect ₹{dueNow.toLocaleString("en-IN")}
             </h2>
 
-            {/* Payment tabs */}
-            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[var(--df-canvas-subtle)] border border-[var(--df-border)]">
-              {(["UPI", "Card", "Cash", "EMI"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setPayTab(tab)}
-                  className={`py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    payTab === tab
-                      ? "bg-[var(--df-sidebar-bg)] text-white"
-                      : "text-[var(--df-text-secondary)] hover:text-[var(--df-text)]"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+            {/* Payment method tabs (single active highlight; clears split mode when a single tab is picked) */}
+            <div
+              role="tablist"
+              aria-label="Payment method"
+              className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[var(--df-canvas-subtle)] border border-[var(--df-border)]"
+            >
+              {(["UPI", "Card", "Cash", "EMI"] as const).map((tab) => {
+                const isSelected = !splitPayment && payTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      setSplitPayment(false);
+                      setPayTab(tab);
+                    }}
+                    className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      isSelected
+                        ? "bg-[var(--df-teal)] text-white font-bold shadow-xs ring-1 ring-[var(--df-teal)]"
+                        : "bg-transparent text-[var(--df-text-secondary)] font-semibold hover:bg-[var(--df-surface)] hover:text-[var(--df-text)] hover:shadow-xs"
+                    }`}
+                  >
+                    {isSelected && (
+                      <span
+                        aria-hidden="true"
+                        className="h-1.5 w-1.5 rounded-full bg-white shrink-0"
+                      />
+                    )}
+                    <span>{tab}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {payTab === "UPI" && (
-              <div className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] flex items-center gap-3.5">
+            {!splitPayment && payTab === "UPI" && (
+              <div
+                role="tabpanel"
+                aria-label="UPI payment details"
+                className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] flex items-center gap-3.5"
+              >
                 {/* Deterministic Dynamic UPI QR Matrix */}
                 <svg
                   viewBox="0 0 84 84"
+                  aria-label="Dynamic UPI QR code"
                   className="h-20 w-20 shrink-0 rounded-lg bg-white p-1.5 border border-[var(--df-border)]"
                 >
                   <rect x="4" y="4" width="22" height="22" fill="none" stroke="#18221E" strokeWidth="4" />
@@ -313,28 +336,43 @@ export default function BillingPage() {
                   <rect x="64" y="62" width="12" height="12" fill="#18221E" />
                   <rect x="36" y="70" width="14" height="6" fill="#18221E" />
                 </svg>
-                <p className="text-[11px] text-[var(--df-text-secondary)] leading-relaxed">
+                <p className="text-xs text-[var(--df-text-secondary)] leading-relaxed">
                   Dynamic UPI QR for exact amount. Auto-marks paid on bank confirmation. Or send
                   payment link on WhatsApp.
                 </p>
               </div>
             )}
 
-            {payTab === "Card" && (
-              <div className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs text-[var(--df-text-secondary)]">
+            {!splitPayment && payTab === "Card" && (
+              <div
+                role="tabpanel"
+                aria-label="Card payment details"
+                className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs text-[var(--df-text-secondary)]"
+              >
+                <p className="font-semibold text-[var(--df-text)] mb-0.5">Card POS Terminal</p>
                 Pine Labs POS terminal ready · Tap/insert card for ₹{dueNow.toLocaleString("en-IN")}.
               </div>
             )}
 
-            {payTab === "Cash" && (
-              <div className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs text-[var(--df-text-secondary)]">
+            {!splitPayment && payTab === "Cash" && (
+              <div
+                role="tabpanel"
+                aria-label="Cash payment details"
+                className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs text-[var(--df-text-secondary)]"
+              >
+                <p className="font-semibold text-[var(--df-text)] mb-0.5">Cash Counter</p>
                 Cash drawer #1 active · Exact receipt generated upon confirmation.
               </div>
             )}
 
-            {payTab === "EMI" && (
-              <div className="p-3.5 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] text-xs text-[var(--df-text-secondary)]">
-                0% EMI via Bajaj Finserv Health / UPI AutoPay: 3 × ₹
+            {!splitPayment && payTab === "EMI" && (
+              <div
+                role="tabpanel"
+                aria-label="EMI payment details"
+                className="p-3.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs text-[var(--df-text-secondary)]"
+              >
+                <p className="font-semibold text-[var(--df-text)] mb-0.5">0% Health EMI Plan</p>
+                Bajaj Finserv Health / UPI AutoPay: 3 × ₹
                 {Math.round(dueNow / 3).toLocaleString("en-IN")}/mo.
               </div>
             )}
@@ -350,28 +388,36 @@ export default function BillingPage() {
             </label>
 
             {splitPayment && (
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <label className="block text-[10.5px] text-[var(--df-text-muted)] mb-1">
-                    Cash (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={cashSplit}
-                    onChange={(e) => setCashSplit(e.target.value)}
-                    className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10.5px] text-[var(--df-text-muted)] mb-1">
-                    UPI balance (₹)
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={Math.max(0, dueNow - (Number(cashSplit) || 0)).toLocaleString("en-IN")}
-                    className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface-muted)] px-2.5 py-1.5 font-semibold"
-                  />
+              <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-teal-border)] space-y-2.5 text-xs">
+                <p className="font-semibold text-[var(--df-teal)]">
+                  Split collection active · Cash + UPI
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">
+                      Cash (₹)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      aria-label="Cash split amount in rupees"
+                      value={cashSplit}
+                      onChange={(e) => setCashSplit(e.target.value.replace(/[^\d]/g, ""))}
+                      className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">
+                      UPI balance (₹)
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      aria-label="UPI balance amount in rupees"
+                      value={Math.max(0, dueNow - (Number(cashSplit) || 0)).toLocaleString("en-IN")}
+                      className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 font-semibold"
+                    />
+                  </div>
                 </div>
               </div>
             )}
