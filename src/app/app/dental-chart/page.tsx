@@ -28,6 +28,7 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { PerioChart } from "@/components/dental/perio-chart";
 import { DetailedToothRootSvg, ToothSvg, ToothSvgDefs } from "@/components/dental/tooth-svg";
 import {
   ALL_PERMANENT_FDI,
@@ -94,6 +95,7 @@ function DentalChartContent() {
     state.clinicSetup.numberingSystem || "FDI";
   const actorName = ROLE_USER_PROFILES[state.activeRole]?.name || "Clinic Dentist";
 
+  const [activeChartTab, setActiveChartTab] = useState<"odontogram" | "perio" | "imaging">("odontogram");
   const [selectedToothNum, setSelectedToothNum] = useState<number>(36);
   const [activeCondition, setActiveCondition] = useState<ToothConditionCode>("caries");
   const [multiSelectedFdis, setMultiSelectedFdis] = useState<number[]>([]);
@@ -692,7 +694,58 @@ function DentalChartContent() {
         </div>
       </div>
 
+      {/* Chart Workspace Tabs: Odontogram | Periodontal (6-site) | Imaging */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--df-border)] pb-2 print:hidden">
+        {(
+          [
+            { id: "odontogram", label: "Odontogram" },
+            { id: "perio", label: "Periodontal (6-site)" },
+            { id: "imaging", label: `Imaging (${activeChart.imaging.length})` },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveChartTab(tab.id)}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+              activeChartTab === tab.id
+                ? "bg-[var(--df-sidebar-bg)] text-white shadow-xs"
+                : "bg-[var(--df-surface)] border border-[var(--df-border)] text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Periodontal 6-site Tab */}
+      {activeChartTab === "perio" && (
+        <PerioChart
+          perioCurrent={activeChart.perioCurrent}
+          perioHistory={activeChart.perioHistory}
+          numberingSystem={numberingSystem}
+          missingFdis={Object.values(activeChart.teeth)
+            .filter((t) => t.conditions.includes("missing"))
+            .map((t) => t.fdi)}
+          onUpdatePerioTooth={(fdi, updated, detail) => {
+            mutateActiveChart((chart) => ({
+              ...chart,
+              perioCurrent: { ...chart.perioCurrent, [fdi]: updated },
+            }));
+            logAuditEvent({
+              patientName: activePatient?.name || "Patient",
+              screenName: "Dental chart",
+              action: "PERIO_UPDATE",
+              entityType: "dental_chart",
+              entityId: `perio-${fdi}`,
+              details: detail,
+            });
+          }}
+        />
+      )}
+
       {/* Main Layout: Left 8-col Odontogram + Right 4-col Selected Tooth Panel */}
+      {activeChartTab === "odontogram" && (
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
         <div className="xl:col-span-8 space-y-4">
           {/* Odontogram Card */}
@@ -1333,6 +1386,7 @@ function DentalChartContent() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
