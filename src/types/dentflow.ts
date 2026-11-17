@@ -220,6 +220,49 @@ export interface TreatmentPlanRecord {
   };
 }
 
+export interface AllergyConflictRule {
+  id: string;
+  allergyKeyword: string; // e.g., "penicillin"
+  conflictingDrugs: string[]; // e.g., ["amoxicillin", "augmentin", "penicillin"]
+  severity: "block" | "warn";
+  suggestedAlternativeNote: string; // guidance only — no hardcoded clinical doses
+  clinicianApproved: boolean;
+}
+
+export interface RxTemplateMedicineDraft {
+  id: string;
+  medicine: string;
+  dose: string; // clinician-entered/configured; never hardcoded by system
+  frequency: string;
+  days: string;
+  instructions: string;
+}
+
+export interface RxTemplateDefinition {
+  id: string;
+  name: string;
+  ageBand: "adult" | "paediatric" | "all";
+  minAge?: number;
+  maxAge?: number;
+  requiresWeight: boolean;
+  diagnosis: string;
+  medicines: RxTemplateMedicineDraft[];
+  advice: string;
+  clinicianApproved: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface ClinicPrescriptionConfig {
+  paediatricMaxAgeYears: number;
+  adultMinAgeYears: number;
+  strictAgeBandBlocking: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+  allergyRules: AllergyConflictRule[];
+  templates: RxTemplateDefinition[];
+}
+
 export interface PrescriptionRecord {
   id: string;
   patientId: string;
@@ -469,6 +512,7 @@ export interface DentflowAppState {
   specialistReferrals: SpecialistReferralItem[];
   tenantAccounts: TenantAccountRecord[];
   dpdpAccessLogs: DentflowAuditLogEntry[];
+  prescriptionConfig?: ClinicPrescriptionConfig;
   clinicSetup: ClinicSetupConfig;
   patientApp: {
     selectedPatientId: string;

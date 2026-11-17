@@ -1,4 +1,5 @@
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
+import { DEFAULT_CLINIC_PRESCRIPTION_CONFIG } from "@/lib/prescription-validation";
 import { INITIAL_ROLE_PERMISSIONS } from "@/lib/dentflow-theme";
 import {
   DentflowAppState,
@@ -7,7 +8,7 @@ import {
   PatientConsentRecord,
 } from "@/types/dentflow";
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export const CONSENT_TEXT_VERSIONS = {
   dpdp: {
@@ -80,6 +81,18 @@ export function migrateDentflowState(raw: unknown): DentflowAppState {
     dpdpAccessLogs: Array.isArray(parsed.dpdpAccessLogs)
       ? parsed.dpdpAccessLogs.map(migrateAuditEntry)
       : INITIAL_DENTFLOW_STATE.dpdpAccessLogs.map(migrateAuditEntry),
+    prescriptionConfig: parsed.prescriptionConfig
+      ? {
+          ...DEFAULT_CLINIC_PRESCRIPTION_CONFIG,
+          ...parsed.prescriptionConfig,
+          allergyRules: Array.isArray(parsed.prescriptionConfig.allergyRules)
+            ? parsed.prescriptionConfig.allergyRules
+            : DEFAULT_CLINIC_PRESCRIPTION_CONFIG.allergyRules,
+          templates: Array.isArray(parsed.prescriptionConfig.templates)
+            ? parsed.prescriptionConfig.templates
+            : DEFAULT_CLINIC_PRESCRIPTION_CONFIG.templates,
+        }
+      : DEFAULT_CLINIC_PRESCRIPTION_CONFIG,
     schemaVersion: CURRENT_SCHEMA_VERSION,
   };
 
