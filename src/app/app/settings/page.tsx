@@ -220,6 +220,7 @@ function ClinicProfileSection({
     timezone: "Asia/Kolkata (IST, UTC+05:30)",
     currency: "INR (₹)",
     nabhStatus: "NABH Pre-Accredited Dental Healthcare Facility",
+    numberingSystem: (clinicSetup.numberingSystem || "FDI") as "FDI" | "Universal" | "Palmer",
   });
 
   const handleSave = (e: React.FormEvent) => {
@@ -233,9 +234,10 @@ function ClinicProfileSection({
         city: formData.city,
         phone: formData.phone,
         whatsappNumber: formData.whatsappNumber,
+        numberingSystem: formData.numberingSystem,
       },
     }));
-    toast.success("Clinic profile and regulatory details updated successfully");
+    toast.success(`Clinic profile saved (Dental numbering: ${formData.numberingSystem})`);
   };
 
   return (
@@ -361,6 +363,47 @@ function ClinicProfileSection({
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] text-[var(--df-text)] focus:border-[var(--df-teal)] outline-none"
             />
+          </div>
+
+          <div className="md:col-span-2 pt-2 border-t border-[var(--df-border)]">
+            <label className="block font-semibold text-[var(--df-text)] mb-1.5">
+              Dental Chart Numbering System (Clinic-Wide Default)
+            </label>
+            <p className="text-[11px] text-[var(--df-text-muted)] mb-2">
+              Applies across Odontogram, Periodontal chart, Treatment Plans, and Imaging tooth links.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {(
+                [
+                  { id: "FDI", label: "FDI (ISO 3950)", sample: "18–11 | 21–28 · Primary 55–85" },
+                  { id: "Universal", label: "Universal (ADA)", sample: "1–32 · Primary A–T" },
+                  { id: "Palmer", label: "Palmer Notation", sample: "8┘..1┘ | └1..└8 · Primary E┘..└E" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, numberingSystem: opt.id });
+                    updateState((prev) => ({
+                      ...prev,
+                      clinicSetup: { ...prev.clinicSetup, numberingSystem: opt.id },
+                    }));
+                    toast.success(`Clinic tooth numbering switched to ${opt.label}`);
+                  }}
+                  className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                    formData.numberingSystem === opt.id
+                      ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                      : "bg-[var(--df-surface-muted)] border-[var(--df-border)] hover:border-[var(--df-teal)]"
+                  }`}
+                >
+                  <p className="font-bold text-xs text-[var(--df-text)]">{opt.label}</p>
+                  <p className="text-[11px] font-mono text-[var(--df-text-muted)] mt-0.5">
+                    {opt.sample}
+                  </p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

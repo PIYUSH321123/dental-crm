@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ClipboardList, FilePlay, Play, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { DentflowChromeTabs, DentflowPageHeader } from "@/components/dental/dentflow-primitives";
+import { formatToothNumber, getToothDisplayName } from "@/lib/dental-chart-logic";
 import { useDentflow } from "@/lib/dentflow-store";
 import { EXPLAINER_LANGUAGES } from "@/lib/mock/dentflow";
 
@@ -19,9 +20,20 @@ const XRAY_ANNOTATION_LABEL: Record<string, string> = {
   bn: "ক্ষয়",
 };
 
-export default function ExplainersPage() {
+function ExplainersPageInner() {
   const router = useRouter();
-  const { updateState } = useDentflow();
+  const searchParams = useSearchParams();
+  const { state, updateState } = useDentflow();
+
+  const paramPatientId = searchParams.get("patientId") || "pat-priya";
+  const paramTooth = Number(searchParams.get("tooth") || "36");
+  const activePatient = useMemo(
+    () => state.patients.find((p) => p.id === paramPatientId) || state.patients[0],
+    [state.patients, paramPatientId],
+  );
+  const numberingSystem = state.clinicSetup.numberingSystem || "FDI";
+  const chartedTooth = activePatient ? state.dentalCharts?.[activePatient.id]?.teeth?.[paramTooth] : undefined;
+  const toothDisplay = formatToothNumber(paramTooth, numberingSystem);
 
   // Default to Hindi ("hi") to match treatment explainer screen
   const [selectedLangCode, setSelectedLangCode] = useState<string>("hi");
@@ -41,7 +53,10 @@ export default function ExplainersPage() {
   const baseLang =
     EXPLAINER_LANGUAGES.find((l) => l.code === selectedLangCode) || EXPLAINER_LANGUAGES[1];
   const currentText = editsByLang[selectedLangCode] || {
-    what: baseLang.what,
+    what:
+      selectedLangCode === "en" && chartedTooth?.finding
+        ? `Tooth ${toothDisplay} (${getToothDisplayName(paramTooth)}): ${chartedTooth.finding}`
+        : baseLang.what,
     wait: baseLang.wait,
     recovery: baseLang.recovery,
   };
@@ -65,16 +80,17 @@ export default function ExplainersPage() {
       toast.error("Doctor approval required before sending explainer to patient.");
       return;
     }
+    const targetPid = activePatient?.id || "pat-priya";
     updateState((prev) => ({
       ...prev,
       patients: prev.patients.map((p) =>
-        p.id === "pat-priya"
+        p.id === targetPid
           ? {
               ...p,
               recentActivity: [
                 {
                   date: "Today",
-                  text: `Sent doctor-approved explainer in ${baseLang.label} (30-day signed link)`,
+                  text: `Sent doctor-approved explainer for tooth ${toothDisplay} in ${baseLang.label} (30-day signed link)`,
                 },
                 ...p.recentActivity,
               ],
@@ -83,15 +99,15 @@ export default function ExplainersPage() {
       ),
     }));
     toast.success(
-      `WhatsApp explainer sent to Priya Deshmukh (+91 98XXX XX210) in ${baseLang.label}. Link valid for 30 days.`,
+      `WhatsApp explainer sent to ${activePatient?.name || "Patient"} (${activePatient?.phone || ""}) in ${baseLang.label}. Link valid for 30 days.`,
     );
   };
 
   return (
     <div>
       <DentflowPageHeader
-        title="Treatment explainer · Priya Deshmukh"
-        subtitle="Built from IOPA 36 and plan TP-2231 · doctor approval required before patient send"
+        title={`Treatment explainer · ${activePatient?.name || "Priya Deshmukh"}`}
+        subtitle={`Built from tooth ${toothDisplay} charted findings (${getToothDisplayName(paramTooth)}) · doctor approval required before patient send`}
       />
 
       {/* Chrome-style Tab Bar for Clinical Treatment Plans Section */}
@@ -456,6 +472,20 @@ export default function ExplainersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ExplainersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-[var(--df-text-muted)]">
+          Loading patient explainer...
+        </div>
+      }
+    >
+      <ExplainersPageInner />
+    </Suspense>
   );
 }
 
