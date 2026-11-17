@@ -94,7 +94,21 @@ function PatientsPageInner() {
 
   // New Patient Form State — all consents start unticked by default
   const [form, setForm] = useState(INITIAL_REGISTRATION_FORM);
+  const [regStep, setRegStep] = useState<1 | 2 | 3 | 4>(1);
   const [consentError, setConsentError] = useState<string | null>(null);
+
+  // Live duplicate check on phone number
+  const duplicatePhonePatient = useMemo(() => {
+    const digits = form.phone.replace(/\D/g, "");
+    if (digits.length < 7) return null;
+    const tail = digits.slice(-10);
+    return (
+      state.patients.find((p) => {
+        const pDigits = p.phone.replace(/\D/g, "");
+        return pDigits.length >= 7 && (pDigits.endsWith(tail) || tail.endsWith(pDigits.slice(-7)));
+      }) || null
+    );
+  }, [form.phone, state.patients]);
 
   // URL sync for profile drawer
   useEffect(() => {
@@ -227,20 +241,13 @@ function PatientsPageInner() {
     }
 
     // Explicit consent enforcement (DPDP Act 2023 + Clinical Exam + explicit WhatsApp choice)
-    if (!form.dpdpConsent) {
-      const msg = "Explicit DPDP data privacy consent must be ticked before registering a patient.";
-      setConsentError(msg);
-      toast.error(msg);
-      return;
-    }
-    if (!form.treatmentConsent) {
-      const msg = "Explicit general examination & diagnosis consent must be ticked before registering.";
-      setConsentError(msg);
-      toast.error(msg);
-      return;
-    }
-    if (!form.whatsappConsent && !form.whatsappDeclined) {
-      const msg = "Please explicitly tick WhatsApp consent (opt-in) or mark WhatsApp updates as declined.";
+    if (!form.dpdpConsent || !form.treatmentConsent || (!form.whatsappConsent && !form.whatsappDeclined)) {
+      const msg = !form.dpdpConsent
+        ? "Explicit DPDP data privacy consent must be ticked before registering a patient."
+        : !form.treatmentConsent
+        ? "Explicit general examination & diagnosis consent must be ticked before registering."
+        : "Please explicitly tick WhatsApp consent (opt-in) or mark WhatsApp updates as declined.";
+      setRegStep(4);
       setConsentError(msg);
       toast.error(msg);
       return;
@@ -365,6 +372,7 @@ function PatientsPageInner() {
 
     toast.success(`Patient ${fullName} (${newCode}) registered with audited consent!`);
     setForm(INITIAL_REGISTRATION_FORM);
+    setRegStep(1);
     setConsentError(null);
     setNewPatientOpen(false);
 
@@ -677,417 +685,493 @@ function PatientsPageInner() {
         )}
       </div>
 
-      {/* "+ New Patient" Right-Side Drawer */}
+      {/* "+ New Patient" Right-Side Progressive Registration Drawer */}
       <DentflowDrawer
         open={newPatientOpen}
-        onClose={() => setNewPatientOpen(false)}
-        title="+ New Patient Registration"
-        subtitle="Complete intake profile across personal, medical, comfort & consent"
+        onClose={() => {
+          setNewPatientOpen(false);
+          setRegStep(1);
+        }}
+        title="New Patient Registration"
+        subtitle="Quick 1-step intake with optional medical, comfort & audited consent steps"
       >
-        <div className="space-y-6 text-xs pb-10">
-          {/* Section 1: Personal Details */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--df-teal)] border-b border-[var(--df-border)] pb-1">
-              1. Personal Details
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">First name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ramesh"
-                  value={form.firstName}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                  className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">Last name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Patel"
-                  value={form.lastName}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                  className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">Date of birth</label>
-                <input
-                  type="date"
-                  value={form.dob}
-                  onChange={(e) => {
-                    const dobYear = new Date(e.target.value).getFullYear();
-                    const ageNow = new Date().getFullYear() - dobYear;
-                    setForm({ ...form, dob: e.target.value, age: String(ageNow > 0 ? ageNow : 30) });
-                  }}
-                  className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">Age</label>
-                <input
-                  type="number"
-                  value={form.age}
-                  onChange={(e) => setForm({ ...form, age: e.target.value })}
-                  className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Gender</label>
-              <div className="flex gap-2">
-                {(["Female", "Male", "Other"] as const).map((g) => (
+        <div className="space-y-5 text-[13px] pb-10">
+          {/* Progress Indicator */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-4 gap-1.5">
+              {(
+                [
+                  { step: 1, label: "1. Basics", req: true },
+                  { step: 2, label: "2. Medical", req: false },
+                  { step: 3, label: "3. Comfort", req: false },
+                  { step: 4, label: "4. Consent", req: true },
+                ] as const
+              ).map((s) => {
+                const isActive = regStep === s.step;
+                const isPast = regStep > s.step;
+                return (
                   <button
-                    key={g}
+                    key={s.step}
                     type="button"
-                    onClick={() => setForm({ ...form, gender: g })}
-                    className={`flex-1 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer ${
-                      form.gender === g
+                    onClick={() => setRegStep(s.step)}
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold border text-center cursor-pointer transition-colors ${
+                      isActive
                         ? "bg-[var(--df-teal)] text-white border-[var(--df-teal)]"
-                        : "bg-[var(--df-surface)] text-[var(--df-text-secondary)] border-[var(--df-border)]"
+                        : isPast
+                        ? "bg-[var(--df-teal-soft)] text-[var(--df-teal)] border-[var(--df-teal-border)]"
+                        : "bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] border-[var(--df-border)] hover:border-[var(--df-teal)]"
                     }`}
                   >
-                    {g}
+                    {s.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-[var(--df-surface-muted)] overflow-hidden">
+              <div
+                className="h-full bg-[var(--df-teal)] transition-all duration-200"
+                style={{ width: `${(regStep / 4) * 100}%` }}
+              />
             </div>
           </div>
 
-          {/* Section 2: Contact Information */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--df-teal)] border-b border-[var(--df-border)] pb-1">
-              2. Contact Information
-            </h3>
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Phone (+91) *</label>
-              <input
-                type="tel"
-                required
-                placeholder="98220 12345"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-              />
-              <div className="mt-2 p-2.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-1.5">
-                <p className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
-                  WhatsApp Communication Consent * ({CONSENT_TEXT_VERSIONS.whatsapp.version})
-                </p>
-                <label className="flex items-start gap-2 text-[11px] text-[var(--df-text-secondary)] cursor-pointer">
+          {/* Step 1: Short Basics (Name, Phone + Duplicate Check, Age/DOB) */}
+          {regStep === 1 && (
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">First name *</label>
                   <input
-                    type="checkbox"
-                    checked={form.whatsappConsent}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setForm({
-                        ...form,
-                        whatsappConsent: checked,
-                        whatsappDeclined: checked ? false : form.whatsappDeclined,
-                      });
-                      setConsentError(null);
-                    }}
-                    className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh"
+                    value={form.firstName}
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
                   />
-                  <span>{CONSENT_TEXT_VERSIONS.whatsapp.text}</span>
-                </label>
-                <label className="flex items-start gap-2 text-[11px] text-[var(--df-text-muted)] cursor-pointer">
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Last name *</label>
                   <input
-                    type="checkbox"
-                    checked={form.whatsappDeclined}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setForm({
-                        ...form,
-                        whatsappDeclined: checked,
-                        whatsappConsent: checked ? false : form.whatsappConsent,
-                      });
-                      setConsentError(null);
-                    }}
-                    className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
+                    type="text"
+                    required
+                    placeholder="e.g. Patel"
+                    value={form.lastName}
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
                   />
-                  <span>Patient declined WhatsApp updates (record opt-out)</span>
-                </label>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Email address</label>
-              <input
-                type="email"
-                placeholder="ramesh.patel@example.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">City</label>
+                <label className="block font-semibold mb-1 text-[var(--df-text)]">Phone (+91) *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="98220 12345"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className={`w-full bg-[var(--df-surface)] border rounded-xl px-3 py-2 ${
+                    duplicatePhonePatient ? "border-red-500 ring-1 ring-red-400" : "border-[var(--df-border)]"
+                  }`}
+                />
+                {duplicatePhonePatient && (
+                  <div
+                    role="alert"
+                    className="mt-2 p-2.5 rounded-xl bg-red-50 border border-red-200 flex items-center justify-between gap-2 text-xs text-red-900"
+                  >
+                    <div>
+                      <p className="font-bold">Duplicate phone detected</p>
+                      <p className="text-[11px]">
+                        Matches <strong>{duplicatePhonePatient.name}</strong> ({duplicatePhonePatient.code})
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewPatientOpen(false);
+                        handleOpenProfile(duplicatePhonePatient);
+                      }}
+                      className="df-btn-secondary px-2.5 py-1 text-[11px] shrink-0 cursor-pointer"
+                    >
+                      Open record
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Date of birth</label>
+                  <input
+                    type="date"
+                    value={form.dob}
+                    onChange={(e) => {
+                      const dobYear = new Date(e.target.value).getFullYear();
+                      const ageNow = new Date().getFullYear() - dobYear;
+                      setForm({ ...form, dob: e.target.value, age: String(ageNow > 0 ? ageNow : 30) });
+                    }}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Age</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={form.age}
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-[var(--df-text)]">Gender</label>
+                <div className="flex gap-2">
+                  {(["Female", "Male", "Other"] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setForm({ ...form, gender: g })}
+                      className={`flex-1 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer ${
+                        form.gender === g
+                          ? "bg-[var(--df-teal)] text-white border-[var(--df-teal)]"
+                          : "bg-[var(--df-surface)] text-[var(--df-text-secondary)] border-[var(--df-border)]"
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-[11.5px] text-[var(--df-text-muted)] pt-1">
+                Optional steps (Medical history &amp; Comfort profile) can be filled now or updated later from the patient profile.
+              </p>
+            </div>
+          )}
+
+          {/* Step 2: Optional Medical History & Allergies */}
+          {regStep === 2 && (
+            <div className="space-y-3.5">
+              <p className="text-xs text-[var(--df-text-muted)]">
+                Optional step — helps flag drug allergies and clinical alerts automatically.
+              </p>
+              <div>
+                <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Known allergies</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALLERGY_OPTIONS.map((a) => {
+                    const active = form.allergies.includes(a);
+                    return (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => toggleAllergy(a)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
+                          active
+                            ? "bg-red-100 border-red-300 text-red-800"
+                            : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
+                        }`}
+                      >
+                        {active ? `✓ ${a}` : `+ ${a}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Systemic conditions</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {CONDITION_OPTIONS.map((c) => {
+                    const active = form.conditions.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => toggleCondition(c)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
+                          active
+                            ? "bg-amber-100 border-amber-300 text-amber-800"
+                            : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
+                        }`}
+                      >
+                        {active ? `✓ ${c}` : `+ ${c}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-[var(--df-text)]">Current medicines</label>
                 <input
                   type="text"
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  placeholder="e.g. Metformin 500mg, Telmisartan 40mg"
+                  value={form.medications}
+                  onChange={(e) => setForm({ ...form, medications: e.target.value })}
                   className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Email address</label>
+                  <input
+                    type="email"
+                    placeholder="ramesh@example.com"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Preferred language</label>
+                  <select
+                    aria-label="Preferred language"
+                    value={form.preferredLanguage}
+                    onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value as any })}
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
+                  >
+                    <option value="English">English</option>
+                    <option value="हिन्दी">हिन्दी</option>
+                    <option value="मराठी">मराठी</option>
+                    <option value="ગુજરાતી">ગુજરાતી</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Optional Comfort Profile */}
+          {regStep === 3 && (
+            <div className="space-y-3.5">
+              <p className="text-xs text-[var(--df-text-muted)]">
+                Optional step — automatically schedules anxiety buffer slots and alerts the clinician.
+              </p>
               <div>
-                <label className="block font-semibold mb-1 text-[var(--df-text)]">Pincode</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-[var(--df-text)]">Dental anxiety score: {form.anxietyScore}/10</label>
+                  <span className={`text-xs font-bold ${form.anxietyScore >= 7 ? "text-red-700" : form.anxietyScore >= 5 ? "text-amber-700" : "text-green-700"}`}>
+                    {form.anxietyScore >= 7 ? "Severe (+15m buffer)" : form.anxietyScore >= 5 ? "Moderate (+15m buffer)" : "Calm"}
+                  </span>
+                </div>
                 <input
-                  type="text"
-                  value={form.pincode}
-                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={form.anxietyScore}
+                  onChange={(e) => setForm({ ...form, anxietyScore: parseInt(e.target.value, 10) })}
+                  className="w-full accent-[var(--df-teal)] cursor-pointer"
+                />
+                <div className="flex justify-between text-[11px] text-[var(--df-text-muted)]">
+                  <span>0 · Relaxed</span>
+                  <span>5 · Moderate</span>
+                  <span>10 · Phobia</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Known triggers</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRIGGER_OPTIONS.map((t) => {
+                    const active = form.triggers.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => toggleTrigger(t)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
+                          active
+                            ? "bg-[var(--df-teal-soft)] border-[var(--df-teal-border)] text-[var(--df-teal)]"
+                            : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
+                        }`}
+                      >
+                        {active ? `✓ ${t}` : `+ ${t}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-[var(--df-text)]">Acquisition source</label>
+                <select
+                  aria-label="Acquisition source"
+                  value={form.source}
+                  onChange={(e) => setForm({ ...form, source: e.target.value })}
                   className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-                />
+                >
+                  <option value="Google search">Google search / Maps</option>
+                  <option value="Referral">Patient / Family referral</option>
+                  <option value="Walk-in">Walk-in</option>
+                  <option value="Social media">Instagram / Facebook</option>
+                </select>
               </div>
             </div>
+          )}
 
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Preferred language</label>
-              <select
-                aria-label="Preferred language"
-                value={form.preferredLanguage}
-                onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value as any })}
-                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
+          {/* Step 4: Audited Explicit Consents (Always unticked by default) */}
+          {regStep === 4 && (
+            <div className="space-y-3.5">
+              <div
+                className={`p-3 rounded-xl border space-y-2.5 ${
+                  consentError
+                    ? "bg-red-50/70 border-red-300"
+                    : "bg-[var(--df-surface-muted)] border-[var(--df-border)]"
+                }`}
               >
-                <option value="English">English</option>
-                <option value="हिन्दी">हिन्दी</option>
-                <option value="मराठी">मराठी</option>
-                <option value="ગુજરાતી">ગુજરાતી</option>
-              </select>
-            </div>
-          </div>
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                  <span>Mandatory Explicit Consents *</span>
+                  <span>By: {ROLE_USER_PROFILES[state.activeRole]?.name}</span>
+                </div>
 
-          {/* Section 3: Medical History & Allergies */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--df-teal)] border-b border-[var(--df-border)] pb-1">
-              3. Medical History & Allergies
-            </h3>
-            <div>
-              <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Known allergies (chips)</label>
-              <div className="flex flex-wrap gap-1.5">
-                {ALLERGY_OPTIONS.map((a) => {
-                  const active = form.allergies.includes(a);
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => toggleAllergy(a)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
-                        active
-                          ? "bg-red-100 border-red-300 text-red-800"
-                          : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                      }`}
-                    >
-                      {active ? `✓ ${a}` : `+ ${a}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Systemic conditions</label>
-              <div className="flex flex-wrap gap-1.5">
-                {CONDITION_OPTIONS.map((c) => {
-                  const active = form.conditions.includes(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => toggleCondition(c)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
-                        active
-                          ? "bg-amber-100 border-amber-300 text-amber-800"
-                          : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                      }`}
-                    >
-                      {active ? `✓ ${c}` : `+ ${c}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Current medicines</label>
-              <input
-                type="text"
-                placeholder="e.g. Metformin 500mg, Telmisartan 40mg"
-                value={form.medications}
-                onChange={(e) => setForm({ ...form, medications: e.target.value })}
-                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-              />
-            </div>
-          </div>
-
-          {/* Section 4: Comfort Profile */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--df-teal)] border-b border-[var(--df-border)] pb-1">
-              4. Comfort Profile & Anxiety
-            </h3>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="font-semibold text-[var(--df-text)]">Dental anxiety score: {form.anxietyScore}/10</label>
-                <span className={`text-[11px] font-bold ${form.anxietyScore >= 7 ? "text-red-600" : form.anxietyScore >= 5 ? "text-amber-600" : "text-green-600"}`}>
-                  {form.anxietyScore >= 7 ? "Severe (+15m buffer)" : form.anxietyScore >= 5 ? "Moderate (+15m buffer)" : "Calm"}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={form.anxietyScore}
-                onChange={(e) => setForm({ ...form, anxietyScore: parseInt(e.target.value, 10) })}
-                className="w-full accent-[var(--df-teal)] cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-[var(--df-text-muted)]">
-                <span>0 · Relaxed</span>
-                <span>5 · Moderate</span>
-                <span>10 · Phobia</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1.5 text-[var(--df-text)]">Known triggers</label>
-              <div className="flex flex-wrap gap-1.5">
-                {TRIGGER_OPTIONS.map((t) => {
-                  const active = form.triggers.includes(t);
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => toggleTrigger(t)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-colors ${
-                        active
-                          ? "bg-[var(--df-teal-soft)] border-[var(--df-teal-border)] text-[var(--df-teal)]"
-                          : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                      }`}
-                    >
-                      {active ? `✓ ${t}` : `+ ${t}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Source & Consent */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--df-teal)] border-b border-[var(--df-border)] pb-1">
-              5. Source & Consent
-            </h3>
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Acquisition source</label>
-              <select
-                aria-label="Acquisition source"
-                value={form.source}
-                onChange={(e) => setForm({ ...form, source: e.target.value })}
-                className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
-              >
-                <option value="Google search">Google search / Maps</option>
-                <option value="Referral">Patient / Family referral</option>
-                <option value="Walk-in">Walk-in</option>
-                <option value="Social media">Instagram / Facebook</option>
-              </select>
-            </div>
-
-            <div
-              className={`p-3 rounded-xl border space-y-2.5 ${
-                consentError
-                  ? "bg-red-50/70 border-red-300"
-                  : "bg-[var(--df-surface-muted)] border-[var(--df-border)]"
-              }`}
-            >
-              <div className="flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
-                <span>Mandatory Explicit Consents *</span>
-                <span>Recorded by: {ROLE_USER_PROFILES[state.activeRole]?.name}</span>
-              </div>
-
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={form.treatmentConsent}
-                  onChange={(e) => {
-                    setForm({ ...form, treatmentConsent: e.target.checked });
-                    setConsentError(null);
-                  }}
-                  className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
-                />
-                <span className="text-[11px] text-[var(--df-text-secondary)] leading-snug">
-                  <strong className="text-[var(--df-text)]">
-                    {CONSENT_TEXT_VERSIONS.clinicalExam.title} *
-                  </strong>{" "}
-                  <span className="font-mono text-[10px] text-[var(--df-text-muted)]">
-                    ({CONSENT_TEXT_VERSIONS.clinicalExam.version})
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={form.treatmentConsent}
+                    onChange={(e) => {
+                      setForm({ ...form, treatmentConsent: e.target.checked });
+                      setConsentError(null);
+                    }}
+                    className="h-4 w-4 mt-0.5 rounded text-[var(--df-teal)]"
+                  />
+                  <span className="text-xs text-[var(--df-text-secondary)] leading-snug">
+                    <strong className="text-[var(--df-text)]">
+                      {CONSENT_TEXT_VERSIONS.clinicalExam.title} *
+                    </strong>{" "}
+                    <span className="font-mono text-[10.5px] text-[var(--df-text-muted)]">
+                      ({CONSENT_TEXT_VERSIONS.clinicalExam.version})
+                    </span>
+                    <br />
+                    {CONSENT_TEXT_VERSIONS.clinicalExam.text}
                   </span>
-                  <br />
-                  {CONSENT_TEXT_VERSIONS.clinicalExam.text}
-                </span>
-              </label>
+                </label>
 
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={form.dpdpConsent}
-                  onChange={(e) => {
-                    setForm({ ...form, dpdpConsent: e.target.checked });
-                    setConsentError(null);
-                  }}
-                  className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
-                />
-                <span className="text-[11px] text-[var(--df-text-secondary)] leading-snug">
-                  <strong className="text-[var(--df-text)]">
-                    {CONSENT_TEXT_VERSIONS.dpdp.title} *
-                  </strong>{" "}
-                  <span className="font-mono text-[10px] text-[var(--df-text-muted)]">
-                    ({CONSENT_TEXT_VERSIONS.dpdp.version})
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={form.dpdpConsent}
+                    onChange={(e) => {
+                      setForm({ ...form, dpdpConsent: e.target.checked });
+                      setConsentError(null);
+                    }}
+                    className="h-4 w-4 mt-0.5 rounded text-[var(--df-teal)]"
+                  />
+                  <span className="text-xs text-[var(--df-text-secondary)] leading-snug">
+                    <strong className="text-[var(--df-text)]">
+                      {CONSENT_TEXT_VERSIONS.dpdp.title} *
+                    </strong>{" "}
+                    <span className="font-mono text-[10.5px] text-[var(--df-text-muted)]">
+                      ({CONSENT_TEXT_VERSIONS.dpdp.version})
+                    </span>
+                    <br />
+                    {CONSENT_TEXT_VERSIONS.dpdp.text}
                   </span>
-                  <br />
-                  {CONSENT_TEXT_VERSIONS.dpdp.text}
-                </span>
-              </label>
+                </label>
 
-              {consentError && (
-                <p role="alert" className="text-[11px] font-semibold text-red-700 pt-1">
-                  {consentError}
-                </p>
+                <div className="pt-2 border-t border-[var(--df-border)] space-y-1.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    WhatsApp Updates * ({CONSENT_TEXT_VERSIONS.whatsapp.version})
+                  </p>
+                  <label className="flex items-start gap-2 text-xs text-[var(--df-text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.whatsappConsent}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setForm({
+                          ...form,
+                          whatsappConsent: checked,
+                          whatsappDeclined: checked ? false : form.whatsappDeclined,
+                        });
+                        setConsentError(null);
+                      }}
+                      className="h-4 w-4 mt-0.5 rounded text-[var(--df-teal)]"
+                    />
+                    <span>{CONSENT_TEXT_VERSIONS.whatsapp.text}</span>
+                  </label>
+                  <label className="flex items-start gap-2 text-xs text-[var(--df-text-muted)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.whatsappDeclined}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setForm({
+                          ...form,
+                          whatsappDeclined: checked,
+                          whatsappConsent: checked ? false : form.whatsappConsent,
+                        });
+                        setConsentError(null);
+                      }}
+                      className="h-4 w-4 mt-0.5 rounded text-[var(--df-teal)]"
+                    />
+                    <span>Patient declined WhatsApp updates (record opt-out)</span>
+                  </label>
+                </div>
+
+                {consentError && (
+                  <p role="alert" className="text-xs font-semibold text-red-700 pt-1">
+                    {consentError}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Progressive Footer Actions: Save & Save+Book available from Step 1 */}
+          <div className="pt-4 border-t border-[var(--df-border)] flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {regStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setRegStep((s) => Math.max(1, s - 1) as 1 | 2 | 3 | 4)}
+                  className="df-btn-secondary px-3 py-2 text-xs font-semibold cursor-pointer"
+                >
+                  ← Back
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setNewPatientOpen(false)}
+                  className="df-btn-secondary px-3 py-2 text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+              )}
+              {regStep < 4 && (
+                <button
+                  type="button"
+                  onClick={() => setRegStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4)}
+                  className="df-btn-secondary px-3 py-2 text-xs font-semibold cursor-pointer"
+                >
+                  Next step →
+                </button>
               )}
             </div>
-          </div>
 
-          {/* Footer Actions */}
-          <div className="pt-4 border-t border-[var(--df-border)] flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={() => setNewPatientOpen(false)}
-              className="df-btn-secondary px-4 py-2 text-xs font-semibold cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSavePatient(false)}
-              className="df-btn-secondary px-4 py-2 text-xs font-semibold text-[var(--df-teal)] border-[var(--df-teal-border)] bg-[var(--df-teal-soft)] cursor-pointer"
-            >
-              Save patient
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSavePatient(true)}
-              className="df-btn-primary px-4 py-2 text-xs font-semibold cursor-pointer"
-            >
-              Save & book appointment →
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={Boolean(duplicatePhonePatient)}
+                onClick={() => handleSavePatient(false)}
+                className="df-btn-secondary px-3.5 py-2 text-xs font-semibold text-[var(--df-teal)] border-[var(--df-teal-border)] bg-[var(--df-teal-soft)] cursor-pointer disabled:opacity-50"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(duplicatePhonePatient)}
+                onClick={() => handleSavePatient(true)}
+                className="df-btn-primary px-3.5 py-2 text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Save &amp; book
+              </button>
+            </div>
           </div>
         </div>
       </DentflowDrawer>
