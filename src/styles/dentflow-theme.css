@@ -12,19 +12,19 @@
   --df-border: #E5E2D9;
   --df-border-strong: #D3CFC3;
 
-  /* Typography Colors */
+  /* Typography Colors (WCAG AA >= 4.5:1 against surface & canvas) */
   --df-text: #18221E;
-  --df-text-secondary: #4C5752;
-  --df-text-muted: #76807B;
+  --df-text-secondary: #3A4440;
+  --df-text-muted: #525D58;
 
-  /* Dark Forest Green Sidebar */
+  /* Dark Forest Green Sidebar (WCAG AA >= 4.5:1 against #12352C) */
   --df-sidebar-bg: #12352C;
   --df-sidebar-hover: #1A463B;
   --df-sidebar-active: #1F5648;
   --df-sidebar-border: #1E493E;
   --df-sidebar-text: #E9F1EE;
-  --df-sidebar-muted: #86A89D;
-  --df-sidebar-section: #6F9488;
+  --df-sidebar-muted: #B2D0C6;
+  --df-sidebar-section: #A2C5B9;
 
   /* Partner Portal Headers */
   --df-specialist-header: #232738;
@@ -69,7 +69,7 @@
   --df-status-blue-border: #BFDBFE;
 
   --df-status-grey-bg: #EFECE6;
-  --df-status-grey-text: #5C5B55;
+  --df-status-grey-text: #474640;
   --df-status-grey-border: #DDD9CE;
 
   --df-status-purple-bg: #F1E8FD;
@@ -96,6 +96,30 @@
   background-color: var(--df-canvas);
   color: var(--df-text);
   font-family: var(--df-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Minimum readable table typography (13.5px body cells, 12px headers) */
+.df-canvas table tbody td {
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.df-canvas table thead th {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Visible keyboard focus indicators across interactive elements */
+.df-canvas :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--df-teal);
+  outline-offset: 2px;
+}
+
+.df-canvas aside :is(a, button):focus-visible {
+  outline: 2px solid #9be7cf;
+  outline-offset: 2px;
 }
 
 .df-serif {

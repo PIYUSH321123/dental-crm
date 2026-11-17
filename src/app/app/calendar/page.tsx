@@ -1530,6 +1530,8 @@ function CalendarPageInner() {
               <button
                 type="button"
                 onClick={() => setVideoModalOpen(false)}
+                aria-label="Close video consultation modal"
+                title="Close"
                 className="p-1 rounded-lg text-[var(--df-text-muted)] hover:bg-[var(--df-surface-muted)] cursor-pointer"
               >
                 <X className="h-4 w-4" />
@@ -1754,6 +1756,8 @@ function CalendarPageInner() {
                 <button
                   type="button"
                   onClick={() => setCallMuted((v) => !v)}
+                  aria-label={callMuted ? "Unmute microphone" : "Mute microphone"}
+                  title={callMuted ? "Unmute microphone" : "Mute microphone"}
                   className={`p-3 rounded-xl cursor-pointer ${callMuted ? "bg-red-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-white"}`}
                 >
                   {callMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -1762,6 +1766,8 @@ function CalendarPageInner() {
                 <button
                   type="button"
                   onClick={() => setCallVideoOff((v) => !v)}
+                  aria-label={callVideoOff ? "Turn camera on" : "Turn camera off"}
+                  title={callVideoOff ? "Turn camera on" : "Turn camera off"}
                   className={`p-3 rounded-xl cursor-pointer ${callVideoOff ? "bg-red-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-white"}`}
                 >
                   {callVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
@@ -1770,6 +1776,7 @@ function CalendarPageInner() {
                 <button
                   type="button"
                   onClick={() => toast.info("Screen sharing initiated")}
+                  aria-label="Share screen"
                   className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white cursor-pointer"
                   title="Share Screen"
                 >

@@ -159,11 +159,11 @@ export function DentflowKpiCard({
           : "bg-[var(--df-surface)]"
       }`}
     >
-      <p className="text-[11px] font-medium text-[var(--df-text-muted)]">{label}</p>
+      <p className="text-xs font-medium text-[var(--df-text-muted)]">{label}</p>
       <p className="df-serif text-2xl sm:text-[26px] font-semibold text-[var(--df-text)] mt-1 leading-tight tracking-tight">
         {value}
       </p>
-      <p className={`text-[11px] mt-1 font-medium ${subColor}`}>{subtext}</p>
+      <p className={`text-xs mt-1 font-medium ${subColor}`}>{subtext}</p>
     </div>
   );
 }
@@ -277,6 +277,7 @@ export function DentflowPageHeader({
           <Search className="h-3.5 w-3.5 text-[var(--df-text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
+            aria-label="Search patients, appointments, or invoices"
             value={searchQuery}
             onFocus={() => setSearchOpen(true)}
             onBlur={() => setTimeout(() => setSearchOpen(false), 180)}
@@ -784,6 +785,7 @@ export function DentflowDashboardShell({ children }: { children: React.ReactNode
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
             className="flex items-center gap-2 text-xs font-semibold"
           >
             <Menu className="h-4 w-4" />
@@ -827,6 +829,8 @@ export function DentflowDrawer({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close panel"
+            title="Close panel"
             className="p-1.5 rounded-lg hover:bg-[var(--df-surface-hover)] text-[var(--df-text-muted)] cursor-pointer"
           >
             <X className="h-4 w-4" />

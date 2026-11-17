@@ -419,6 +419,7 @@ export default function VideoConsultPage() {
                   toast.success("Instant room link copied to clipboard");
                 }}
                 className="p-1.5 rounded-lg border border-[var(--df-border)] hover:bg-[var(--df-surface)] text-[var(--df-text)] cursor-pointer"
+                aria-label="Copy video consultation link"
                 title="Copy link"
               >
                 <Copy className="h-3.5 w-3.5" />
@@ -541,6 +542,8 @@ export default function VideoConsultPage() {
                 />
                 <button
                   type="submit"
+                  aria-label="Send chat message"
+                  title="Send chat message"
                   className="p-2 bg-[var(--df-teal)] rounded-lg text-white hover:bg-[var(--df-teal-hover)] cursor-pointer"
                 >
                   <Send className="h-3 w-3" />
@@ -554,6 +557,7 @@ export default function VideoConsultPage() {
             <button
               type="button"
               onClick={() => setIsMicMuted(!isMicMuted)}
+              aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
               className={`p-3 rounded-xl cursor-pointer transition-colors ${
                 isMicMuted ? "bg-red-500/20 text-red-400 border border-red-500/40" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
               }`}
@@ -565,6 +569,7 @@ export default function VideoConsultPage() {
             <button
               type="button"
               onClick={() => setIsVideoOff(!isVideoOff)}
+              aria-label={isVideoOff ? "Turn video on" : "Turn video off"}
               className={`p-3 rounded-xl cursor-pointer transition-colors ${
                 isVideoOff ? "bg-red-500/20 text-red-400 border border-red-500/40" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
               }`}
@@ -579,6 +584,7 @@ export default function VideoConsultPage() {
                 setIsScreenSharing(!isScreenSharing);
                 toast.info(isScreenSharing ? "Stopped screen sharing" : "Sharing clinical screen with patient");
               }}
+              aria-label={isScreenSharing ? "Stop sharing screen" : "Share clinical screen"}
               className={`p-3 rounded-xl cursor-pointer transition-colors ${
                 isScreenSharing ? "bg-[var(--df-teal)] text-white" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
               }`}
