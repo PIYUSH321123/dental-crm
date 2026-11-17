@@ -28,7 +28,7 @@ import { ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
 import { AllergyConflictRule, ClinicPrescriptionConfig } from "@/types/dentflow";
 
 export default function PrescriptionsPage() {
-  const { state, updateState } = useDentflow();
+  const { state, updateState, logAuditEvent } = useDentflow();
   const baseRx = state.prescriptions[0];
   const rxConfig: ClinicPrescriptionConfig =
     state.prescriptionConfig || DEFAULT_CLINIC_PRESCRIPTION_CONFIG;
@@ -133,6 +133,14 @@ export default function PrescriptionsPage() {
         .map((i) => i.message)
         .join(" ");
       setTemplateBlockMessage(reasons);
+      logAuditEvent({
+        patientName: activePatient.name,
+        screenName: "Prescriptions",
+        action: "RX_TEMPLATE_BLOCKED",
+        entityType: "prescription",
+        entityId: tpl.id,
+        details: `Blocked template "${tpl.name}": ${reasons}`,
+      });
       toast.error(reasons);
       return;
     }
@@ -143,6 +151,15 @@ export default function PrescriptionsPage() {
     setMedicines(tpl.medicines.map((m) => ({ ...m, id: `${m.id}-${Date.now()}` })));
     setAdvice(tpl.advice);
     setSigned(false);
+
+    logAuditEvent({
+      patientName: activePatient.name,
+      screenName: "Prescriptions",
+      action: "RX_TEMPLATE_APPLIED",
+      entityType: "prescription",
+      entityId: tpl.id,
+      details: `Applied template "${tpl.name}" (${tpl.ageBand})`,
+    });
 
     if (check.hasWarnings) {
       toast.warning(check.issues.map((i) => i.message).join(" "));
@@ -238,6 +255,14 @@ export default function PrescriptionsPage() {
       ...cfg,
       allergyRules: [...cfg.allergyRules, newRule],
     }));
+    logAuditEvent({
+      patientName: "Clinic Formulary",
+      screenName: "Prescriptions",
+      action: "RX_RULE_ADDED",
+      entityType: "prescription",
+      entityId: newRule.id,
+      details: `Added ${newRule.severity.toUpperCase()} allergy rule for "${newRule.allergyKeyword}" (${newRule.conflictingDrugs.join(", ")})`,
+    });
     setNewRuleKeyword("");
     setNewRuleDrugs("");
     setNewRuleNote("");
@@ -259,6 +284,13 @@ export default function PrescriptionsPage() {
         approvedAt: nowIso,
       })),
     }));
+    logAuditEvent({
+      patientName: "Clinic Formulary",
+      screenName: "Prescriptions",
+      action: "RX_RULES_APPROVED",
+      entityType: "prescription",
+      details: `All clinic prescription rules & templates clinician-approved by ${actor}`,
+    });
     toast.success(`Prescription rules & templates marked clinician-approved by ${actor}`);
   };
 
@@ -434,6 +466,17 @@ export default function PrescriptionsPage() {
                 setDiagnosis(e.target.value);
                 setSigned(false);
               }}
+              onBlur={() => {
+                if (activePatient) {
+                  logAuditEvent({
+                    patientName: activePatient.name,
+                    screenName: "Prescriptions",
+                    action: "RX_DIAGNOSIS_UPDATED",
+                    entityType: "prescription",
+                    details: `Diagnosis updated: ${diagnosis}`,
+                  });
+                }
+              }}
               className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs font-medium text-[var(--df-text)]"
             />
           </div>
@@ -513,6 +556,18 @@ export default function PrescriptionsPage() {
                             );
                             setSigned(false);
                           }}
+                          onBlur={() => {
+                            if (activePatient && m.medicine.trim()) {
+                              logAuditEvent({
+                                patientName: activePatient.name,
+                                screenName: "Prescriptions",
+                                action: "RX_MEDICINE_UPDATED",
+                                entityType: "prescription",
+                                entityId: m.id,
+                                details: `Medicine set to "${m.medicine}" (dose: ${m.dose || "unset"})`,
+                              });
+                            }
+                          }}
                           className={`w-full rounded-lg border px-2.5 py-1.5 text-xs font-medium bg-[var(--df-surface)] ${
                             rowConflict
                               ? "border-red-500 text-red-900"
@@ -538,6 +593,18 @@ export default function PrescriptionsPage() {
                               ),
                             );
                             setSigned(false);
+                          }}
+                          onBlur={() => {
+                            if (activePatient && m.dose.trim()) {
+                              logAuditEvent({
+                                patientName: activePatient.name,
+                                screenName: "Prescriptions",
+                                action: "RX_DOSE_UPDATED",
+                                entityType: "prescription",
+                                entityId: m.id,
+                                details: `Clinician dose set for "${m.medicine || "medicine"}": ${m.dose}`,
+                              });
+                            }
                           }}
                           className={`w-28 rounded-lg border px-2 py-1.5 text-xs bg-[var(--df-surface)] ${
                             rowDoseMissing
@@ -600,6 +667,16 @@ export default function PrescriptionsPage() {
                           onClick={() => {
                             setMedicines((prev) => prev.filter((x) => x.id !== m.id));
                             setSigned(false);
+                            if (activePatient) {
+                              logAuditEvent({
+                                patientName: activePatient.name,
+                                screenName: "Prescriptions",
+                                action: "RX_MEDICINE_REMOVED",
+                                entityType: "prescription",
+                                entityId: m.id,
+                                details: `Removed medicine: ${m.medicine || "(blank row)"}`,
+                              });
+                            }
                           }}
                           aria-label="Remove medicine"
                           className="p-1 text-[var(--df-text-muted)] hover:text-[var(--df-status-red-text)] cursor-pointer"
@@ -617,10 +694,11 @@ export default function PrescriptionsPage() {
           <button
             type="button"
             onClick={() => {
+              const newId = `m-${Date.now()}`;
               setMedicines((prev) => [
                 ...prev,
                 {
-                  id: `m-${Date.now()}`,
+                  id: newId,
                   medicine: "",
                   dose: "",
                   frequency: "1-0-0",
@@ -629,6 +707,16 @@ export default function PrescriptionsPage() {
                 },
               ]);
               setSigned(false);
+              if (activePatient) {
+                logAuditEvent({
+                  patientName: activePatient.name,
+                  screenName: "Prescriptions",
+                  action: "RX_MEDICINE_ADDED",
+                  entityType: "prescription",
+                  entityId: newId,
+                  details: "Added blank medicine row to draft prescription",
+                });
+              }
             }}
             className="df-btn-secondary inline-flex items-center gap-1 px-3 py-1.5 text-xs cursor-pointer"
           >
@@ -674,6 +762,14 @@ export default function PrescriptionsPage() {
                       : t,
                   ),
                 }));
+                logAuditEvent({
+                  patientName: "Clinic Formulary",
+                  screenName: "Prescriptions",
+                  action: "RX_TEMPLATE_APPROVED",
+                  entityType: "prescription",
+                  entityId: activeTemplate.id,
+                  details: `Saved and clinician-approved template "${activeTemplate.name}" (${medicines.length} medicines)`,
+                });
                 toast.success(`Saved & clinician-approved "${activeTemplate.name}" template`);
               }}
               className="df-btn-secondary px-3.5 py-2 text-xs cursor-pointer"

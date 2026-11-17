@@ -66,7 +66,7 @@ function DentalChartContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") === "imaging" ? "imaging" : "chart";
-  const { logPatientRead } = useDentflow();
+  const { logPatientRead, logAuditEvent } = useDentflow();
 
   const [dentitionType, setDentitionType] = useState<"adult" | "child" | "mixed">("adult");
   const [selectedToothNum, setSelectedToothNum] = useState<number>(36);
@@ -101,6 +101,8 @@ function DentalChartContent() {
   };
 
   const toggleSurface = (surf: "B" | "M" | "O" | "D" | "L") => {
+    const prevTooth = teethState[selectedToothNum];
+    const prevVal = Boolean(prevTooth?.surfaces?.[surf]);
     setTeethState((prev) => {
       const current = prev[selectedToothNum] || {
         number: selectedToothNum,
@@ -122,9 +124,18 @@ function DentalChartContent() {
         },
       };
     });
+    logAuditEvent({
+      patientName: "Priya Deshmukh",
+      screenName: "Dental chart",
+      action: "CHART_SURFACE_UPDATE",
+      entityType: "dental_chart",
+      entityId: `tooth-${selectedToothNum}`,
+      details: `Tooth ${selectedToothNum} surface ${surf} ${prevVal ? "cleared" : "marked"}`,
+    });
   };
 
   const handleStatusChange = (status: OdontogramTooth["status"]) => {
+    const prevStatus = teethState[selectedToothNum]?.status || "healthy";
     const badgeMap: Partial<Record<OdontogramTooth["status"], string>> = {
       caries: "C",
       filled: "F",
@@ -146,6 +157,14 @@ function DentalChartContent() {
           badge: badgeMap[status],
         },
       };
+    });
+    logAuditEvent({
+      patientName: "Priya Deshmukh",
+      screenName: "Dental chart",
+      action: "CHART_STATUS_UPDATE",
+      entityType: "dental_chart",
+      entityId: `tooth-${selectedToothNum}`,
+      details: `Tooth ${selectedToothNum} status changed: ${prevStatus} → ${status}`,
     });
     toast.success(`Tooth ${selectedToothNum} updated to ${status.replace("_", " ")}`);
   };
@@ -350,13 +369,25 @@ function DentalChartContent() {
                             <button
                               type="button"
                               onClick={() => {
+                                const prevP = r.pocket;
+                                const nextP = prevP !== null ? (prevP >= 6 ? 2 : prevP + 1) : null;
                                 setPerioRows((prev) =>
                                   prev.map((item, i) => {
                                     if (i !== idx || item.pocket === null) return item;
-                                    const nextP = item.pocket >= 6 ? 2 : item.pocket + 1;
-                                    return { ...item, pocket: nextP, alert: nextP >= 5 };
+                                    const updatedP = item.pocket >= 6 ? 2 : item.pocket + 1;
+                                    return { ...item, pocket: updatedP, alert: updatedP >= 5 };
                                   }),
                                 );
+                                if (prevP !== null && nextP !== null) {
+                                  logAuditEvent({
+                                    patientName: "Priya Deshmukh",
+                                    screenName: "Dental chart",
+                                    action: "PERIO_UPDATE",
+                                    entityType: "dental_chart",
+                                    entityId: `perio-${r.tooth}`,
+                                    details: `Tooth ${r.tooth} pocket depth updated: ${prevP}mm → ${nextP}mm`,
+                                  });
+                                }
                               }}
                               title="Click to adjust pocket depth"
                               className={`inline-block px-1.5 py-0.5 rounded font-semibold cursor-pointer ${
@@ -606,6 +637,14 @@ function DentalChartContent() {
             <button
               type="button"
               onClick={() => {
+                logAuditEvent({
+                  patientName: "Priya Deshmukh",
+                  screenName: "Dental chart",
+                  action: "CHART_TO_PLAN",
+                  entityType: "dental_chart",
+                  entityId: `tooth-${selectedTooth.number}`,
+                  details: `Tooth ${selectedTooth.number} (${selectedTooth.status}) added to treatment plan TP-2231`,
+                });
                 toast.success(
                   `Tooth ${selectedTooth.number} added to treatment plan TP-2231`,
                 );
@@ -697,6 +736,14 @@ function DentalChartContent() {
                           prev.map((x) => (x.id === s.id ? { ...x, status: "Accepted" } : x)),
                         );
                         setSelectedToothNum(s.tooth);
+                        logAuditEvent({
+                          patientName: "Priya Deshmukh",
+                          screenName: "Dental chart",
+                          action: "AI_FINDING_ACCEPTED",
+                          entityType: "dental_chart",
+                          entityId: s.id,
+                          details: `Accepted AI radiograph finding on tooth ${s.tooth}: ${s.finding}`,
+                        });
                         toast.success(`Accepted AI finding for tooth ${s.tooth}`);
                       }}
                       className="inline-flex items-center gap-1 df-btn-primary px-2.5 py-1 text-[11px] cursor-pointer"
@@ -709,6 +756,14 @@ function DentalChartContent() {
                         setAiSuggestions((prev) =>
                           prev.map((x) => (x.id === s.id ? { ...x, status: "Rejected" } : x)),
                         );
+                        logAuditEvent({
+                          patientName: "Priya Deshmukh",
+                          screenName: "Dental chart",
+                          action: "AI_FINDING_REJECTED",
+                          entityType: "dental_chart",
+                          entityId: s.id,
+                          details: `Rejected AI radiograph finding on tooth ${s.tooth}`,
+                        });
                         toast.info(`Dismissed suggestion for tooth ${s.tooth}`);
                       }}
                       className="inline-flex items-center gap-1 df-btn-secondary px-2.5 py-1 text-[11px] cursor-pointer"

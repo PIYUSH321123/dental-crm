@@ -1824,7 +1824,9 @@ function DataPrivacySection({
       log.actor.toLowerCase().includes(filter.toLowerCase()) ||
       log.patientName.toLowerCase().includes(filter.toLowerCase()) ||
       log.screenName.toLowerCase().includes(filter.toLowerCase()) ||
-      log.role.toLowerCase().includes(filter.toLowerCase()),
+      log.role.toLowerCase().includes(filter.toLowerCase()) ||
+      log.action.toLowerCase().includes(filter.toLowerCase()) ||
+      (log.details || "").toLowerCase().includes(filter.toLowerCase()),
   );
 
   const handleExportCSV = () => {
@@ -1910,19 +1912,39 @@ function DataPrivacySection({
                 <th className="py-2 text-left">Role</th>
                 <th className="py-2 text-left">Patient Record</th>
                 <th className="py-2 text-left">Module / Screen</th>
+                <th className="py-2 text-left">Details</th>
                 <th className="py-2 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--df-border)]">
               {filteredLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-[var(--df-surface-hover)]/40">
-                  <td className="py-2 text-[var(--df-text-muted)] font-mono">{log.timestamp}</td>
-                  <td className="py-2 font-bold text-[var(--df-text)]">{log.actor}</td>
-                  <td className="py-2 text-[var(--df-text-secondary)]">{log.role}</td>
-                  <td className="py-2 font-semibold text-[var(--df-text)]">{log.patientName}</td>
-                  <td className="py-2 text-[var(--df-text-secondary)]">{log.screenName}</td>
-                  <td className="py-2 text-right">
-                    <DentflowStatusPill label={log.action} tone="blue" />
+                  <td
+                    className="py-2 pr-2 text-[var(--df-text-muted)] font-mono whitespace-nowrap"
+                    title={log.isoTimestamp || log.timestamp}
+                  >
+                    {log.timestamp}
+                  </td>
+                  <td className="py-2 pr-2 font-bold text-[var(--df-text)] whitespace-nowrap">{log.actor}</td>
+                  <td className="py-2 pr-2 text-[var(--df-text-secondary)] whitespace-nowrap">{log.role}</td>
+                  <td className="py-2 pr-2 font-semibold text-[var(--df-text)] whitespace-nowrap">{log.patientName}</td>
+                  <td className="py-2 pr-2 text-[var(--df-text-secondary)] whitespace-nowrap">{log.screenName}</td>
+                  <td className="py-2 pr-2 text-[11px] text-[var(--df-text-secondary)] max-w-xs">
+                    {log.details || "—"}
+                  </td>
+                  <td className="py-2 text-right whitespace-nowrap">
+                    <DentflowStatusPill
+                      label={log.action}
+                      tone={
+                        log.action.includes("BLOCKED") || log.action.includes("REJECTED")
+                          ? "red"
+                          : log.action.includes("CONSENT") || log.action.includes("APPROVED") || log.action.includes("SIGNED")
+                          ? "green"
+                          : log.action === "READ"
+                          ? "blue"
+                          : "amber"
+                      }
+                    />
                   </td>
                 </tr>
               ))}

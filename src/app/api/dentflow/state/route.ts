@@ -84,22 +84,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, state });
   }
 
-  if (action === "LOG_DPDP_READ") {
+  if (action === "LOG_DPDP_READ" || action === "LOG_AUDIT_EVENT") {
+    const now = new Date();
     const entry = {
-      id: `dl-${Date.now()}`,
-      timestamp: new Date().toLocaleTimeString("en-IN", {
+      id: `dl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: now.toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
         hour: "2-digit",
         minute: "2-digit",
       }),
+      isoTimestamp: now.toISOString(),
       actor: payload.actor || "Staff",
       role: payload.role || state.activeRole,
       patientName: payload.patientName || "Priya Deshmukh",
       screenName: payload.screenName || "Patients",
-      action: payload.readAction || "READ",
+      action: payload.action || payload.readAction || "READ",
+      entityType: payload.entityType || "patient",
+      entityId: payload.entityId,
+      details: payload.details,
     };
     state = {
       ...state,
-      dpdpAccessLogs: [entry, ...state.dpdpAccessLogs].slice(0, 50),
+      dpdpAccessLogs: [entry, ...state.dpdpAccessLogs].slice(0, 500),
     };
     saveState(state);
     return NextResponse.json({ ok: true, state });

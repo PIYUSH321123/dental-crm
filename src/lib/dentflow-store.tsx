@@ -6,6 +6,15 @@ import { migrateDentflowState } from "@/lib/dentflow-migrations";
 import { DentflowRoleKey, ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
 import { BranchName, DentflowAppState } from "@/types/dentflow";
 
+export interface AuditEventInput {
+  patientName: string;
+  screenName: string;
+  action: string;
+  entityType: "patient" | "dental_chart" | "prescription" | "consent" | "system";
+  entityId?: string;
+  details?: string;
+}
+
 interface DentflowContextValue {
   state: DentflowAppState;
   backendConnected: boolean;
@@ -16,6 +25,7 @@ interface DentflowContextValue {
   setActiveBranch: (branch: BranchName) => void;
   updateState: (updater: (prev: DentflowAppState) => DentflowAppState) => void;
   logPatientRead: (patientName: string, screenName: string, readAction?: string) => void;
+  logAuditEvent: (event: AuditEventInput) => void;
   resetDemoState: () => Promise<void>;
 }
 
@@ -93,21 +103,60 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
         ) {
           return prev;
         }
+        const now = new Date();
         const entry = {
-          id: `dl-${Date.now()}`,
-          timestamp: new Date().toLocaleTimeString("en-IN", {
+          id: `dl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: now.toLocaleString("en-IN", {
+            day: "numeric",
+            month: "short",
             hour: "2-digit",
             minute: "2-digit",
           }),
+          isoTimestamp: now.toISOString(),
           actor: profile.name,
           role: prev.activeRole,
           patientName,
           screenName,
           action: readAction,
+          entityType: "patient" as const,
         };
         const next = {
           ...prev,
-          dpdpAccessLogs: [entry, ...prev.dpdpAccessLogs].slice(0, 50),
+          dpdpAccessLogs: [entry, ...prev.dpdpAccessLogs].slice(0, 500),
+        };
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  const logAuditEvent = useCallback(
+    (event: AuditEventInput) => {
+      setState((prev) => {
+        const profile = ROLE_USER_PROFILES[prev.activeRole];
+        const now = new Date();
+        const entry = {
+          id: `dl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: now.toLocaleString("en-IN", {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isoTimestamp: now.toISOString(),
+          actor: profile?.name || "Clinic Staff",
+          role: prev.activeRole,
+          patientName: event.patientName,
+          screenName: event.screenName,
+          action: event.action,
+          entityType: event.entityType,
+          entityId: event.entityId,
+          details: event.details,
+        };
+        const next = {
+          ...prev,
+          dpdpAccessLogs: [entry, ...prev.dpdpAccessLogs].slice(0, 500),
         };
         persist(next);
         return next;
@@ -138,6 +187,7 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
         setActiveBranch,
         updateState,
         logPatientRead,
+        logAuditEvent,
         resetDemoState,
       }}
     >
