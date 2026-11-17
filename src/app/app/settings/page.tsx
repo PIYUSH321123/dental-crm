@@ -221,6 +221,7 @@ function ClinicProfileSection({
     currency: "INR (₹)",
     nabhStatus: "NABH Pre-Accredited Dental Healthcare Facility",
     numberingSystem: (clinicSetup.numberingSystem || "FDI") as "FDI" | "Universal" | "Palmer",
+    timeFormat: (clinicSetup.timeFormat || "12h") as "12h" | "24h",
   });
 
   const handleSave = (e: React.FormEvent) => {
@@ -235,9 +236,14 @@ function ClinicProfileSection({
         phone: formData.phone,
         whatsappNumber: formData.whatsappNumber,
         numberingSystem: formData.numberingSystem,
+        timeFormat: formData.timeFormat,
       },
     }));
-    toast.success(`Clinic profile saved (Dental numbering: ${formData.numberingSystem})`);
+    toast.success(
+      `Clinic profile saved (Numbering: ${formData.numberingSystem} · Time: ${
+        formData.timeFormat === "12h" ? "12-hour AM/PM" : "24-hour"
+      })`,
+    );
   };
 
   return (
@@ -393,6 +399,46 @@ function ClinicProfileSection({
                   }}
                   className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                     formData.numberingSystem === opt.id
+                      ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+                      : "bg-[var(--df-surface-muted)] border-[var(--df-border)] hover:border-[var(--df-teal)]"
+                  }`}
+                >
+                  <p className="font-bold text-xs text-[var(--df-text)]">{opt.label}</p>
+                  <p className="text-[11px] font-mono text-[var(--df-text-muted)] mt-0.5">
+                    {opt.sample}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 pt-2 border-t border-[var(--df-border)]">
+            <label className="block font-semibold text-[var(--df-text)] mb-1.5">
+              Appointment Time Format (Clinic-Wide)
+            </label>
+            <p className="text-[11px] text-[var(--df-text-muted)] mb-2">
+              Applies consistently across Today&apos;s Queue, Day Calendar, Appointment Lists, and Booking Drawers.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(
+                [
+                  { id: "12h", label: "12-hour (AM / PM) — Default", sample: "9:30 AM · 12:30 PM · 2:30 PM" },
+                  { id: "24h", label: "24-hour (ISO)", sample: "09:30 · 12:30 · 14:30" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, timeFormat: opt.id });
+                    updateState((prev) => ({
+                      ...prev,
+                      clinicSetup: { ...prev.clinicSetup, timeFormat: opt.id },
+                    }));
+                    toast.success(`Clinic time format switched to ${opt.label}`);
+                  }}
+                  className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                    formData.timeFormat === opt.id
                       ? "bg-[var(--df-teal-soft)] border-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
                       : "bg-[var(--df-surface-muted)] border-[var(--df-border)] hover:border-[var(--df-teal)]"
                   }`}

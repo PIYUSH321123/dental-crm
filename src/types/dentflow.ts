@@ -138,6 +138,7 @@ export interface ClinicSetupConfig {
   city: string;
   phone: string;
   numberingSystem?: DentalNumberingSystem;
+  timeFormat?: "12h" | "24h";
   branches: { id: string; name: string; chairs: number; address: string }[];
   chairsAndRooms: string[];
   workingHours: string;

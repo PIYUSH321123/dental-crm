@@ -91,6 +91,7 @@ export function migrateDentflowState(raw: unknown): DentflowAppState {
       ...INITIAL_DENTFLOW_STATE.clinicSetup,
       ...(parsed.clinicSetup || {}),
       numberingSystem: parsed.clinicSetup?.numberingSystem || "FDI",
+      timeFormat: parsed.clinicSetup?.timeFormat || "12h",
     },
     rolePermissions: parsed.rolePermissions?.length
       ? parsed.rolePermissions

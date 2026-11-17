@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Clock,
   FileText,
+  GripVertical,
   MessageSquare,
   Mic,
   MicOff,
@@ -28,6 +29,17 @@ import {
   VideoOff,
   X,
 } from "lucide-react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { toast } from "sonner";
 import {
   DentflowDrawer,
@@ -37,6 +49,13 @@ import {
 } from "@/components/dental/dentflow-primitives";
 import { useDentflow } from "@/lib/dentflow-store";
 import { StatusTone } from "@/lib/dentflow-theme";
+import {
+  ClinicTimeFormat,
+  formatClinicTime,
+  minutesToDecimalHour,
+  parseTimeToMinutes,
+  sortByTime,
+} from "@/lib/time-utils";
 import { ClinicAppointment } from "@/types/dentflow";
 
 interface AppointmentBlock {
@@ -246,16 +265,135 @@ const WAITLIST_QUEUE: WaitlistItem[] = [
   },
 ];
 
+function ChairHourDropSlot({
+  chairId,
+  hour,
+  timeFormat,
+}: {
+  chairId: "C1" | "C2" | "C3" | "C4";
+  hour: number;
+  timeFormat: ClinicTimeFormat;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `${chairId}::${hour}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ height: "80px" }}
+      className={`border-b border-[var(--df-border)]/50 transition-colors relative ${
+        isOver
+          ? "bg-[var(--df-teal-soft)] ring-2 ring-inset ring-[var(--df-teal)] z-10"
+          : "hover:bg-[var(--df-surface-muted)]/30"
+      }`}
+    >
+      {isOver && (
+        <span className="absolute top-1 right-1.5 text-[10px] font-bold text-[var(--df-teal)] bg-white/95 px-1.5 py-0.5 rounded border border-[var(--df-teal-border)] shadow-xs">
+          Drop · {chairId} {formatClinicTime(hour, timeFormat)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function DraggableAppointmentBlock({
+  block,
+  topOffset,
+  height,
+  timeFormat,
+  onOpen,
+}: {
+  block: AppointmentBlock;
+  topOffset: number;
+  height: number;
+  timeFormat: ClinicTimeFormat;
+  onOpen: (b: AppointmentBlock) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: block.id,
+  });
+
+  const style: React.CSSProperties = {
+    top: `${topOffset}px`,
+    height: `${height}px`,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    opacity: isDragging ? 0.35 : 1,
+    zIndex: isDragging ? 40 : 20,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      onClick={() => onOpen(block)}
+      title="Click for details or drag to reschedule chair/time"
+      className="absolute left-1.5 right-1.5 p-0.5 touch-none"
+    >
+      <div
+        className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+          block.status === "Done"
+            ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
+            : block.status === "In chair"
+            ? "bg-[#E3F3EE] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
+            : block.status === "Late 10 min"
+            ? "bg-[#FEF3DC] border-[#F8DFAA] text-[#9A5B00]"
+            : "bg-white border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-1 leading-none">
+          <span className="inline-flex items-center gap-1 min-w-0 font-bold text-xs text-[var(--df-text)]">
+            <GripVertical className="h-3 w-3 shrink-0 text-[var(--df-text-muted)]" />
+            <span className="truncate">{block.patientName}</span>
+          </span>
+          <span className="text-[10px] font-mono font-semibold text-[var(--df-text-secondary)] bg-[var(--df-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--df-border)]/80 shrink-0">
+            {formatClinicTime(block.startHour, timeFormat)}
+          </span>
+        </div>
+
+        <p className="text-[11px] font-medium text-[var(--df-text-secondary)] truncate my-0.5 leading-snug">
+          {block.procedure}
+        </p>
+
+        <div className="flex items-center justify-between gap-1 text-[10px] text-[var(--df-text-muted)] leading-none pt-0.5 border-t border-[var(--df-border)]/40">
+          <span className="truncate font-medium">{block.doctor}</span>
+          {block.anxietyBufferMin > 0 ? (
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA] shrink-0">
+              +{block.anxietyBufferMin}m
+            </span>
+          ) : (
+            <span className="text-[9px] font-semibold text-[var(--df-text-secondary)] uppercase tracking-wider shrink-0">
+              {block.status}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CalendarPageInner() {
   const searchParams = useSearchParams();
   const { state, updateState } = useDentflow();
+  const timeFormat: ClinicTimeFormat = state.clinicSetup.timeFormat || "12h";
 
-  // Calendar View Controls - defaults to "List" so booked appointment list is shown first
-  const [viewMode, setViewMode] = useState<"List" | "Day" | "Week">("List");
+  // Calendar View Controls - defaults to chair-wise "Day" calendar with drag-and-drop rescheduling
+  const [viewMode, setViewMode] = useState<"Day" | "List" | "Week">("Day");
   const [currentDate, setCurrentDate] = useState(() => new Date(2026, 9, 1)); // 1 Oct 2026
   const [doctorFilter, setDoctorFilter] = useState("All Doctors");
   const [chairFilter, setChairFilter] = useState("All Chairs");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
 
   // Date shifting handlers
   const handlePrevDate = () => {
@@ -366,15 +504,21 @@ function CalendarPageInner() {
 
   const anxietyBuffer = selectedPatient?.comfortProfile?.autoBufferMin || 0;
 
-  // Filtered blocks for Day Calendar & List View
+  // Filtered & chronologically sorted blocks for Day Calendar & List View
   const filteredBlocks = useMemo(() => {
-    return activeDayBlocks.filter((b) => {
+    const filtered = activeDayBlocks.filter((b) => {
       if (doctorFilter !== "All Doctors" && !b.doctor.includes(doctorFilter.split(" ")[1] || "")) return false;
       if (chairFilter !== "All Chairs" && b.chair !== chairFilter) return false;
       if (statusFilter !== "All Status" && b.status !== statusFilter) return false;
       return true;
     });
+    return sortByTime(filtered, (b) => b.startHour);
   }, [activeDayBlocks, doctorFilter, chairFilter, statusFilter]);
+
+  const activeDragBlock = useMemo(
+    () => (activeDragId ? activeDayBlocks.find((b) => b.id === activeDragId) || null : null),
+    [activeDragId, activeDayBlocks],
+  );
 
   // Dynamic KPI counts for active date
   const totalDayAppointments = activeDayBlocks.length;
@@ -415,25 +559,97 @@ function CalendarPageInner() {
     toast.success(`Appointment updated: ${newStatus}`);
   };
 
+  // Reschedule block to a new chair and/or start hour (used by drag-and-drop & drawer controls)
+  const handleRescheduleBlock = (
+    blockId: string,
+    newChair: "C1" | "C2" | "C3" | "C4",
+    newStartHour: number,
+  ) => {
+    const clampedStart = Math.max(9, Math.min(17.5, newStartHour));
+    let movedBlock: AppointmentBlock | null = null;
+
+    setCustomAppointments((prev) => {
+      const currentList = prev[activeDateKey] || getBaseScheduleForDate(currentDate);
+      const updated = currentList.map((b) => {
+        if (b.id !== blockId) return b;
+        const nextBlock: AppointmentBlock = {
+          ...b,
+          chair: newChair,
+          startHour: clampedStart,
+          timeLabel: formatClinicTime(clampedStart, timeFormat),
+          endTimeLabel: formatClinicTime(clampedStart + b.durationHours, timeFormat),
+        };
+        movedBlock = nextBlock;
+        return nextBlock;
+      });
+      return { ...prev, [activeDateKey]: updated };
+    });
+
+    if (selectedBlock?.id === blockId) {
+      setSelectedBlock((prev) =>
+        prev
+          ? {
+              ...prev,
+              chair: newChair,
+              startHour: clampedStart,
+              timeLabel: formatClinicTime(clampedStart, timeFormat),
+              endTimeLabel: formatClinicTime(clampedStart + prev.durationHours, timeFormat),
+            }
+          : null,
+      );
+    }
+
+    const blockRef = movedBlock || activeDayBlocks.find((b) => b.id === blockId);
+    if (blockRef) {
+      toast.success(
+        `Rescheduled ${blockRef.patientName} to ${newChair} · ${formatClinicTime(clampedStart, timeFormat)}`,
+      );
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragId(null);
+    const { active, over } = event;
+    if (!over) return;
+    const overId = String(over.id);
+    const [targetChair, targetHourStr] = overId.split("::");
+    const targetHour = Number(targetHourStr);
+    if (
+      !targetChair ||
+      !["C1", "C2", "C3", "C4"].includes(targetChair) ||
+      !Number.isFinite(targetHour)
+    ) {
+      return;
+    }
+    const dragged = activeDayBlocks.find((b) => b.id === String(active.id));
+    if (!dragged) return;
+    if (dragged.chair === targetChair && Math.floor(dragged.startHour) === targetHour) {
+      return;
+    }
+    handleRescheduleBlock(
+      dragged.id,
+      targetChair as "C1" | "C2" | "C3" | "C4",
+      targetHour,
+    );
+  };
+
   // Book appointment handler
   const handleBookAppointment = () => {
-    const startH = selectedSlot.includes("9:30")
-      ? 9.5
-      : selectedSlot.includes("11:00")
-      ? 11.0
-      : selectedSlot.includes("12:30")
-      ? 12.5
-      : selectedSlot.includes("2:30")
-      ? 14.5
-      : 16.0;
+    const startMinutes = parseTimeToMinutes(selectedSlot);
+    const startH = minutesToDecimalHour(startMinutes);
+    const durationHours = 0.75;
 
     const newBlock: AppointmentBlock = {
       id: `cb-${Date.now()}`,
       chair: selectedChair,
       startHour: startH,
-      durationHours: 0.85,
-      timeLabel: selectedSlot,
-      endTimeLabel: "—",
+      durationHours,
+      timeLabel: formatClinicTime(startH, timeFormat),
+      endTimeLabel: formatClinicTime(startH + durationHours, timeFormat),
       patientId: selectedPatient.id,
       patientName: selectedPatient.name,
       procedure: selectedProcedure.split("—")[0].trim(),
@@ -451,7 +667,9 @@ function CalendarPageInner() {
       };
     });
     setNewApptOpen(false);
-    toast.success(`Appointment booked for ${selectedPatient.name} on ${formattedSelectedDate} at ${selectedSlot}!`);
+    toast.success(
+      `Appointment booked for ${selectedPatient.name} on ${formattedSelectedDate} at ${formatClinicTime(startH, timeFormat)}!`,
+    );
   };
 
   // Schedule Video Consultation handler
@@ -564,17 +782,6 @@ function CalendarPageInner() {
         <div className="flex items-center gap-1 bg-[var(--df-surface-muted)] p-1 rounded-xl border border-[var(--df-border)]">
           <button
             type="button"
-            onClick={() => setViewMode("List")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-              viewMode === "List"
-                ? "bg-[var(--df-surface)] text-[var(--df-teal)] font-bold shadow-xs border border-[var(--df-border)]"
-                : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
-            }`}
-          >
-            Booked appointments list
-          </button>
-          <button
-            type="button"
             onClick={() => setViewMode("Day")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
               viewMode === "Day"
@@ -583,6 +790,17 @@ function CalendarPageInner() {
             }`}
           >
             Day calendar
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("List")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+              viewMode === "List"
+                ? "bg-[var(--df-surface)] text-[var(--df-teal)] font-bold shadow-xs border border-[var(--df-border)]"
+                : "text-[var(--df-text-muted)] hover:text-[var(--df-text)]"
+            }`}
+          >
+            Booked list
           </button>
           <button
             type="button"
@@ -660,207 +878,219 @@ function CalendarPageInner() {
             <option value="Checked in">Checked in</option>
             <option value="Done">Done</option>
           </select>
+
+          <button
+            type="button"
+            onClick={() => {
+              const next: ClinicTimeFormat = timeFormat === "12h" ? "24h" : "12h";
+              updateState((prev) => ({
+                ...prev,
+                clinicSetup: { ...prev.clinicSetup, timeFormat: next },
+              }));
+              toast.success(
+                `Time display set to ${next === "12h" ? "12-hour (AM/PM)" : "24-hour"}`,
+              );
+            }}
+            aria-label="Toggle 12-hour or 24-hour time format"
+            title="Switch between 12-hour AM/PM and 24-hour clock"
+            className="inline-flex items-center gap-1 bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[var(--df-text-secondary)] hover:border-[var(--df-teal)] hover:text-[var(--df-teal)] cursor-pointer transition-colors"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            <span>{timeFormat === "12h" ? "12h AM/PM" : "24h"}</span>
+          </button>
         </div>
       </div>
 
-      {/* Main View Area: Day Calendar OR List View */}
+      {/* Main View Area: Day Calendar (Default) OR List View OR Week View */}
       {viewMode === "Day" && (
-        <div className="df-card overflow-hidden">
-          {/* Chair Headers */}
-          <div className="grid grid-cols-12 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-xs font-bold divide-x divide-[var(--df-border)]">
-            <div className="col-span-1 p-3 text-center text-[11px] text-[var(--df-text-muted)] font-semibold flex items-center justify-center">
-              Time
-            </div>
-            {chairs.map((c) => (
-              <div key={c.id} className="col-span-2 p-3">
-                <p className="text-[var(--df-text)] font-semibold text-xs">{c.label}</p>
-                <p className="text-[11px] text-[var(--df-text-muted)] font-normal mt-0.5">{c.doc}</p>
-              </div>
-            ))}
-            <div className="col-span-3 p-3 text-[11px] text-[var(--df-text-muted)] flex items-center justify-between">
-              <span className="font-bold text-[var(--df-text)] text-xs">Waitlist & Walk-in queue</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]">
-                {WAITLIST_QUEUE.length} active
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="df-card overflow-hidden">
+            {/* Drag hint strip */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-[var(--df-surface-muted)]/70 border-b border-[var(--df-border)] text-[11px] text-[var(--df-text-secondary)]">
+              <span className="inline-flex items-center gap-1.5">
+                <GripVertical className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+                <span>
+                  Drag any appointment card to another chair or time slot to reschedule · Click a card to open details
+                </span>
+              </span>
+              <span className="font-mono text-[11px] text-[var(--df-text-muted)]">
+                Sorted chronologically · {timeFormat === "12h" ? "12-hour AM/PM" : "24-hour"}
               </span>
             </div>
-          </div>
 
-          {/* Time Rows Grid: 12-Column Matching Layout */}
-          <div className="grid grid-cols-12 divide-x divide-[var(--df-border)] bg-[var(--df-surface)] relative min-h-[720px]">
-            {/* 1. Time Column (col-span-1) */}
-            <div className="col-span-1 select-none">
-              {hours.map((h) => (
-                <div
-                  key={h}
-                  style={{ height: "80px" }}
-                  className="border-b border-[var(--df-border)]/50 p-2 text-center flex flex-col items-center justify-start pt-2"
-                >
-                  <span className="font-mono text-xs font-semibold text-[var(--df-text)]">
-                    {h > 12 ? `${h - 12}:00` : `${h}:00`}
-                  </span>
-                  <span className="text-[10px] font-sans font-medium text-[var(--df-text-muted)] uppercase">
-                    {h >= 12 ? "PM" : "AM"}
-                  </span>
+            {/* Chair Headers */}
+            <div className="grid grid-cols-12 border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-xs font-bold divide-x divide-[var(--df-border)]">
+              <div className="col-span-1 p-3 text-center text-[11px] text-[var(--df-text-muted)] font-semibold flex items-center justify-center">
+                Time
+              </div>
+              {chairs.map((c) => (
+                <div key={c.id} className="col-span-2 p-3">
+                  <p className="text-[var(--df-text)] font-semibold text-xs">{c.label}</p>
+                  <p className="text-[11px] text-[var(--df-text-muted)] font-normal mt-0.5">{c.doc}</p>
                 </div>
               ))}
+              <div className="col-span-3 p-3 text-[11px] text-[var(--df-text-muted)] flex items-center justify-between">
+                <span className="font-bold text-[var(--df-text)] text-xs">Waitlist & Walk-in queue</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]">
+                  {WAITLIST_QUEUE.length} active
+                </span>
+              </div>
             </div>
 
-            {/* 2. Chair Columns (col-span-2 each for C1, C2, C3, C4) */}
-            {chairs.map((c) => {
-              const chairBlocks = filteredBlocks.filter((b) => b.chair === c.id);
-              const HOUR_HEIGHT = 80;
-
-              return (
-                <div key={c.id} className="col-span-2 relative">
-                  {/* Hour background guide lines */}
-                  {hours.map((h) => (
-                    <div
-                      key={h}
-                      style={{ height: "80px" }}
-                      className="border-b border-[var(--df-border)]/50 hover:bg-[var(--df-surface-muted)]/30 transition-colors"
-                    />
-                  ))}
-
-                  {/* Appointment cards for this chair */}
-                  {chairBlocks.map((b) => {
-                    const topOffset = (b.startHour - 9.0) * HOUR_HEIGHT;
-                    const height = Math.max(b.durationHours * HOUR_HEIGHT, 48);
-
-                    return (
-                      <div
-                        key={b.id}
-                        onClick={() => handleOpenBlock(b)}
-                        style={{
-                          top: `${topOffset}px`,
-                          height: `${height}px`,
-                        }}
-                        className="absolute left-1.5 right-1.5 p-0.5 z-20"
-                      >
-                        <div
-                          className={`h-full w-full rounded-xl border p-2 text-xs flex flex-col justify-between shadow-xs hover:shadow-md transition-all cursor-pointer ${
-                            b.status === "Done"
-                              ? "bg-[#E6F4EA] border-[#B7E1CD] text-[#137333]"
-                              : b.status === "In chair"
-                              ? "bg-[#E3F3EE] border-[var(--df-teal-border)] text-[var(--df-teal)] ring-1 ring-[var(--df-teal)]"
-                              : b.status === "Late 10 min"
-                              ? "bg-[#FEF3DC] border-[#F8DFAA] text-[#9A5B00]"
-                              : "bg-white border-[var(--df-border)] text-[var(--df-text)] hover:border-[var(--df-teal)]"
-                          }`}
-                        >
-                          {/* Top Row: Patient Name & Time Badge */}
-                          <div className="flex items-center justify-between gap-1 leading-none">
-                            <span className="font-bold text-xs truncate text-[var(--df-text)]">
-                              {b.patientName}
-                            </span>
-                            <span className="text-[10px] font-mono font-semibold text-[var(--df-text-muted)] bg-[var(--df-surface-muted)] px-1.5 py-0.5 rounded border border-[var(--df-border)]/80 shrink-0">
-                              {b.timeLabel}
-                            </span>
-                          </div>
-
-                          {/* Middle Row: Procedure Description */}
-                          <p className="text-[11px] font-medium text-[var(--df-text-secondary)] truncate my-0.5 leading-snug">
-                            {b.procedure}
-                          </p>
-
-                          {/* Bottom Row: Doctor & Status / Buffer */}
-                          <div className="flex items-center justify-between gap-1 text-[10px] text-[var(--df-text-muted)] leading-none pt-0.5 border-t border-[var(--df-border)]/40">
-                            <span className="truncate font-medium">{b.doctor}</span>
-                            {b.anxietyBufferMin > 0 ? (
-                              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA] shrink-0">
-                                +{b.anxietyBufferMin}m
-                              </span>
-                            ) : (
-                              <span className="text-[9px] font-semibold text-[var(--df-text-muted)]/70 uppercase tracking-wider shrink-0">
-                                {b.status}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-
-            {/* 3. Waitlist & Walk-in Queue Column (col-span-3) */}
-            <div className="col-span-3 bg-[var(--df-surface-muted)]/30 p-3 space-y-3">
-              <div className="flex items-center justify-between text-[11px] text-[var(--df-text-muted)] px-0.5">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Queue · Priority</span>
-                <span className="text-[10px] text-[var(--df-teal)] font-medium">Auto-match on</span>
-              </div>
-
-              {WAITLIST_QUEUE.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] shadow-xs hover:border-[var(--df-teal-border)] transition-all space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-1">
-                    <div>
-                      <p className="font-bold text-xs text-[var(--df-text)]">{item.name}</p>
-                      <p className="text-[10px] text-[var(--df-text-muted)]">{item.phone}</p>
-                    </div>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
-                        item.type === "Walk-in"
-                          ? "bg-amber-100 text-amber-800 border border-amber-200"
-                          : "bg-blue-50 text-blue-700 border border-blue-200"
-                      }`}
-                    >
-                      {item.type}
+            {/* Time Rows Grid: 12-Column Matching Layout */}
+            <div className="grid grid-cols-12 divide-x divide-[var(--df-border)] bg-[var(--df-surface)] relative min-h-[720px]">
+              {/* 1. Time Column (col-span-1) */}
+              <div className="col-span-1 select-none">
+                {hours.map((h) => (
+                  <div
+                    key={h}
+                    style={{ height: "80px" }}
+                    className="border-b border-[var(--df-border)]/50 p-2 text-center flex flex-col items-center justify-start pt-2"
+                  >
+                    <span className="font-mono text-[11px] font-semibold text-[var(--df-text)] whitespace-nowrap">
+                      {formatClinicTime(h, timeFormat)}
                     </span>
                   </div>
+                ))}
+              </div>
 
-                  <p className="text-[11px] font-medium text-[var(--df-text-secondary)]">
-                    {item.procedure}
-                  </p>
+              {/* 2. Chair Columns (col-span-2 each for C1, C2, C3, C4) */}
+              {chairs.map((c) => {
+                const chairBlocks = filteredBlocks.filter((b) => b.chair === c.id);
+                const HOUR_HEIGHT = 80;
 
-                  <div className="flex items-center justify-between text-[10px] text-[var(--df-text-muted)] pt-1 border-t border-[var(--df-border)]/60">
-                    <span>{item.waitingInfo}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedPatientId(item.patientId);
-                        setSelectedProcedure(item.procedure);
-                        setSelectedDoctor(item.preferredDoctor);
-                        setNewApptOpen(true);
-                      }}
-                      className="df-btn-primary px-2.5 py-1 text-[10px] font-semibold cursor-pointer rounded-lg inline-flex items-center gap-1 shadow-xs"
-                    >
-                      Seat in Chair
-                    </button>
+                return (
+                  <div key={c.id} className="col-span-2 relative">
+                    {/* Droppable hour cells */}
+                    {hours.map((h) => (
+                      <ChairHourDropSlot
+                        key={h}
+                        chairId={c.id as "C1" | "C2" | "C3" | "C4"}
+                        hour={h}
+                        timeFormat={timeFormat}
+                      />
+                    ))}
+
+                    {/* Draggable appointment cards for this chair */}
+                    {chairBlocks.map((b) => {
+                      const topOffset = (b.startHour - 9.0) * HOUR_HEIGHT;
+                      const height = Math.max(b.durationHours * HOUR_HEIGHT, 52);
+
+                      return (
+                        <DraggableAppointmentBlock
+                          key={b.id}
+                          block={b}
+                          topOffset={topOffset}
+                          height={height}
+                          timeFormat={timeFormat}
+                          onOpen={handleOpenBlock}
+                        />
+                      );
+                    })}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
-              <button
-                type="button"
-                onClick={() => setNewApptOpen(true)}
-                className="w-full py-2.5 border border-dashed border-[var(--df-border-strong)] rounded-xl text-[11px] font-semibold text-[var(--df-text-muted)] hover:text-[var(--df-teal)] hover:border-[var(--df-teal)] bg-[var(--df-surface)]/60 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>+ Add Walk-in / Waitlist</span>
-              </button>
+              {/* 3. Waitlist & Walk-in Queue Column (col-span-3) */}
+              <div className="col-span-3 bg-[var(--df-surface-muted)]/30 p-3 space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-[var(--df-text-muted)] px-0.5">
+                  <span className="font-semibold uppercase tracking-wider text-[10px]">Queue · Priority</span>
+                  <span className="text-[10px] text-[var(--df-teal)] font-medium">Auto-match on</span>
+                </div>
+
+                {WAITLIST_QUEUE.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] shadow-xs hover:border-[var(--df-teal-border)] transition-all space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <div>
+                        <p className="font-bold text-xs text-[var(--df-text)]">{item.name}</p>
+                        <p className="text-[10px] text-[var(--df-text-muted)]">
+                          {item.phone} · Arrived {formatClinicTime(item.arrivedTime, timeFormat)}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
+                          item.type === "Walk-in"
+                            ? "bg-amber-100 text-amber-800 border border-amber-200"
+                            : "bg-blue-50 text-blue-700 border border-blue-200"
+                        }`}
+                      >
+                        {item.type}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] font-medium text-[var(--df-text-secondary)]">
+                      {item.procedure}
+                    </p>
+
+                    <div className="flex items-center justify-between text-[10px] text-[var(--df-text-muted)] pt-1 border-t border-[var(--df-border)]/60">
+                      <span>{item.waitingInfo}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPatientId(item.patientId);
+                          setSelectedProcedure(item.procedure);
+                          setSelectedDoctor(item.preferredDoctor);
+                          setNewApptOpen(true);
+                        }}
+                        className="df-btn-primary px-2.5 py-1 text-[10px] font-semibold cursor-pointer rounded-lg inline-flex items-center gap-1 shadow-xs"
+                      >
+                        Seat in Chair
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setNewApptOpen(true)}
+                  className="w-full py-2.5 border border-dashed border-[var(--df-border-strong)] rounded-xl text-[11px] font-semibold text-[var(--df-text-muted)] hover:text-[var(--df-teal)] hover:border-[var(--df-teal)] bg-[var(--df-surface)]/60 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>+ Add Walk-in / Waitlist</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          <DragOverlay>
+            {activeDragBlock ? (
+              <div className="rounded-xl border-2 border-[var(--df-teal)] bg-white p-2.5 shadow-xl text-xs w-48 opacity-95">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-bold text-[var(--df-text)] truncate">
+                    {activeDragBlock.patientName}
+                  </span>
+                  <span className="font-mono text-[10px] text-[var(--df-teal)] font-bold shrink-0">
+                    {formatClinicTime(activeDragBlock.startHour, timeFormat)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--df-text-secondary)] truncate mt-0.5">
+                  {activeDragBlock.procedure}
+                </p>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
-      {/* List View Table */}
+      {/* List View Table (5 columns; click any row for full detail side panel) */}
       {viewMode === "List" && (
         <div className="df-card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="border-b border-[var(--df-border)] bg-[var(--df-surface-muted)] text-[11px] font-bold text-[var(--df-text-muted)] uppercase tracking-wider">
                   <th className="py-3 px-4">Time</th>
                   <th className="py-3 px-4">Patient</th>
-                  <th className="py-3 px-4">Procedure</th>
-                  <th className="py-3 px-4">Doctor</th>
+                  <th className="py-3 px-4">Procedure &amp; Doctor</th>
                   <th className="py-3 px-4">Chair</th>
-                  <th className="py-3 px-4">Buffer</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--df-border)]">
@@ -870,41 +1100,30 @@ function CalendarPageInner() {
                     onClick={() => handleOpenBlock(b)}
                     className="hover:bg-[var(--df-surface-hover)] transition-colors cursor-pointer"
                   >
-                    <td className="py-3 px-4 font-mono font-bold text-[var(--df-text)]">
-                      {b.timeLabel}
-                    </td>
-                    <td className="py-3 px-4 font-bold text-[var(--df-text)]">
-                      {b.patientName}
-                    </td>
-                    <td className="py-3 px-4 text-[var(--df-text-secondary)]">
-                      {b.procedure}
-                    </td>
-                    <td className="py-3 px-4 text-[var(--df-text)]">
-                      {b.doctor}
+                    <td className="py-3 px-4 font-mono font-bold text-[var(--df-text)] whitespace-nowrap">
+                      {formatClinicTime(b.startHour, timeFormat)}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-md bg-[var(--df-surface-muted)] border text-[11px] font-semibold">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-bold text-[var(--df-text)]">{b.patientName}</span>
+                        {b.anxietyBufferMin > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF3DC] text-[#9A5B00] border border-[#F8DFAA]">
+                            +{b.anxietyBufferMin}m buffer
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-[var(--df-text)] font-medium">{b.procedure}</p>
+                      <p className="text-xs text-[var(--df-text-muted)] mt-0.5">{b.doctor}</p>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs font-semibold">
                         {b.chair}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      {b.anxietyBufferMin > 0 ? (
-                        <span className="text-amber-700 font-bold">+{b.anxietyBufferMin} min</span>
-                      ) : (
-                        <span className="text-[var(--df-text-muted)]">—</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 text-right">
                       <DentflowStatusPill label={b.status} tone={STATUS_TONES[b.status] || "grey"} />
-                    </td>
-                    <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenBlock(b)}
-                        className="df-btn-secondary px-2.5 py-1 text-xs cursor-pointer"
-                      >
-                        Manage
-                      </button>
                     </td>
                   </tr>
                 ))}
@@ -988,7 +1207,10 @@ function CalendarPageInner() {
           open={detailDrawerOpen}
           onClose={() => setDetailDrawerOpen(false)}
           title={`Appointment · ${selectedBlock.patientName}`}
-          subtitle={`${selectedBlock.timeLabel} · ${selectedBlock.chair} · ${selectedBlock.procedure}`}
+          subtitle={`${formatClinicTime(selectedBlock.startHour, timeFormat)} – ${formatClinicTime(
+            selectedBlock.startHour + selectedBlock.durationHours,
+            timeFormat,
+          )} · ${selectedBlock.chair} · ${selectedBlock.procedure}`}
         >
           <div className="space-y-5 text-xs pb-10">
             {/* Status Card */}
@@ -998,6 +1220,54 @@ function CalendarPageInner() {
                 <p className="font-bold text-sm text-[var(--df-text)] mt-0.5">{selectedBlock.status}</p>
               </div>
               <DentflowStatusPill label={selectedBlock.status} tone={STATUS_TONES[selectedBlock.status] || "grey"} />
+            </div>
+
+            {/* Reschedule Chair / Time (mirrors drag-and-drop for keyboard & touch users) */}
+            <div className="df-card p-3.5 space-y-2.5">
+              <p className="font-bold text-xs text-[var(--df-text)]">Reschedule Chair / Time</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">Chair</label>
+                  <select
+                    aria-label="Reschedule chair"
+                    value={selectedBlock.chair}
+                    onChange={(e) =>
+                      handleRescheduleBlock(
+                        selectedBlock.id,
+                        e.target.value as "C1" | "C2" | "C3" | "C4",
+                        selectedBlock.startHour,
+                      )
+                    }
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+                  >
+                    <option value="C1">Chair 1 · General</option>
+                    <option value="C2">Chair 2 · Surgery/Endo</option>
+                    <option value="C3">Chair 3 · Ortho</option>
+                    <option value="C4">Chair 4 · Implant</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">Start time</label>
+                  <select
+                    aria-label="Reschedule start time"
+                    value={Math.floor(selectedBlock.startHour)}
+                    onChange={(e) =>
+                      handleRescheduleBlock(
+                        selectedBlock.id,
+                        selectedBlock.chair,
+                        Number(e.target.value),
+                      )
+                    }
+                    className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+                  >
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {formatClinicTime(h, timeFormat)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Quick Actions */}
@@ -1052,7 +1322,7 @@ function CalendarPageInner() {
             <div className="df-card p-3.5 space-y-2">
               <p className="font-bold text-xs text-[var(--df-text)]">WhatsApp Notifications</p>
               <p className="text-[11px] text-[var(--df-text-secondary)]">
-                Automated reminder sent at 8:00 am today. Patient confirmed via WhatsApp interactive reply.
+                Automated reminder sent at {formatClinicTime("08:00", timeFormat)} today. Patient confirmed via WhatsApp interactive reply.
               </p>
               <button
                 type="button"
@@ -1181,7 +1451,7 @@ function CalendarPageInner() {
                       : "bg-[var(--df-surface)] border-[var(--df-border)] text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)]"
                   }`}
                 >
-                  {slot}
+                  {formatClinicTime(slot, timeFormat)}
                 </button>
               ))}
             </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/dental/dentflow-primitives";
 import { StatusTone } from "@/lib/dentflow-theme";
 import { useDentflow } from "@/lib/dentflow-store";
+import { formatClinicTime, sortByTime } from "@/lib/time-utils";
 import { ClinicAppointment } from "@/types/dentflow";
 
 const APT_STATUS_TONE: Record<ClinicAppointment["status"], StatusTone> = {
@@ -46,8 +47,10 @@ export default function TodayFrontDeskPage() {
     time: "11:15",
   });
 
+  const timeFormat = state.clinicSetup.timeFormat || "12h";
+
   const filteredAppointments = useMemo(() => {
-    return state.appointments.filter((apt) => {
+    const filtered = state.appointments.filter((apt) => {
       if (chairFilter !== "All chairs" && apt.chair !== chairFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -59,6 +62,7 @@ export default function TodayFrontDeskPage() {
       }
       return true;
     });
+    return sortByTime(filtered, (apt) => apt.time);
   }, [state.appointments, chairFilter, searchQuery]);
 
   const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
@@ -134,7 +138,7 @@ export default function TodayFrontDeskPage() {
         <DentflowKpiCard
           label="Chairs in use"
           value="3 / 4"
-          subtext="Chair 4 free till 11:00"
+          subtext={`Chair 4 free till ${formatClinicTime("11:00", timeFormat)}`}
         />
         <DentflowKpiCard
           label="Collected today"
@@ -217,7 +221,7 @@ export default function TodayFrontDeskPage() {
                     className="hover:bg-[var(--df-surface-hover)]/60 transition-colors"
                   >
                     <td className="py-2.5 pl-5 pr-3 text-xs df-mono text-[var(--df-text-secondary)] whitespace-nowrap">
-                      {apt.time}
+                      {formatClinicTime(apt.time, timeFormat)}
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -308,7 +312,9 @@ export default function TodayFrontDeskPage() {
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-unique-dark-bg)] text-[var(--df-unique-dark-text)]">
                 AI receptionist
               </span>
-              <span className="text-[11px] text-[var(--df-sidebar-muted)]">since 8:00 am</span>
+              <span className="text-[11px] text-[var(--df-sidebar-muted)]">
+                since {formatClinicTime("08:00", timeFormat)}
+              </span>
             </div>
             <p className="df-serif text-lg font-semibold leading-snug">
               23 calls handled · 6 booked
