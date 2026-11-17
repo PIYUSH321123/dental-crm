@@ -235,6 +235,7 @@ export interface SidebarNavItem {
   badgeType?: "unique" | "new" | "count";
   badgeText?: string;
   requiredPermission?: PermissionRowKey;
+  allowedRoles?: DentflowRoleKey[];
   ownerGroupOnly?: boolean;
   subTabs?: SidebarSubTab[];
 }
@@ -246,55 +247,55 @@ export interface SidebarNavSection {
 
 export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
   {
-    title: "",
+    title: "TODAY",
     items: [
       { id: "dashboard", label: "Dashboard", slug: "today" },
-      {
-        id: "patients",
-        label: "Patients",
-        slug: "patients",
-        requiredPermission: "view_patient_records",
-      },
       {
         id: "calendar",
         label: "Appointments",
         slug: "calendar",
         requiredPermission: "book_move_appointments",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant", "Front desk"],
       },
       {
         id: "video-consult",
         label: "Video consultation",
         slug: "video-consult",
-        badgeType: "unique",
-        badgeText: "Live",
         requiredPermission: "book_move_appointments",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Front desk"],
       },
       {
         id: "gap-filler",
         label: "Gap filler",
         slug: "gap-filler",
-        badgeType: "unique",
-        badgeText: "Unique",
         requiredPermission: "book_move_appointments",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk"],
       },
       {
         id: "ai-receptionist",
         label: "AI assistant",
         slug: "ai-receptionist",
-        badgeType: "unique",
-        badgeText: "Unique",
         requiredPermission: "book_move_appointments",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk"],
       },
     ],
   },
   {
-    title: "CLINICAL",
+    title: "PATIENTS & CLINICAL",
     items: [
+      {
+        id: "patients",
+        label: "Patients",
+        slug: "patients",
+        requiredPermission: "view_patient_records",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant", "Front desk"],
+      },
       {
         id: "treatment-plans",
         label: "Treatment plans",
         slug: "treatment-plans",
         requiredPermission: "view_patient_records",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Front desk"],
       },
       {
         id: "post-op",
@@ -303,12 +304,14 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         badgeType: "count",
         badgeText: "2",
         requiredPermission: "view_patient_records",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant", "Front desk"],
       },
       {
         id: "prescriptions",
         label: "Prescriptions",
         slug: "prescriptions",
         requiredPermission: "write_prescriptions",
+        allowedRoles: ["Owner", "Dentist", "Visiting"],
       },
     ],
   },
@@ -320,26 +323,28 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         label: "Billing",
         slug: "billing",
         requiredPermission: "collect_payments_refunds",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk", "Accounts"],
       },
       {
         id: "insurance",
         label: "Insurance & TPA",
         slug: "insurance",
         requiredPermission: "collect_payments_refunds",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk", "Accounts"],
       },
       {
         id: "treatment-recovery",
         label: "Treatment recovery",
         slug: "treatment-recovery",
-        badgeType: "unique",
-        badgeText: "Unique",
         requiredPermission: "send_campaigns",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk"],
       },
       {
         id: "recall-campaigns",
         label: "Recall & campaigns",
         slug: "recall-campaigns",
         requiredPermission: "send_campaigns",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk"],
       },
     ],
   },
@@ -350,15 +355,15 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         id: "patient-insights",
         label: "Patient insights",
         slug: "patient-insights",
-        badgeType: "new",
-        badgeText: "New",
         requiredPermission: "see_all_branch_revenue",
+        allowedRoles: ["Owner", "Branch mgr"],
       },
       {
         id: "group-dashboard",
         label: "All branches",
         slug: "group-dashboard",
         requiredPermission: "see_all_branch_revenue",
+        allowedRoles: ["Owner", "Branch mgr", "Accounts"],
       },
     ],
   },
@@ -370,58 +375,71 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         label: "Inventory & costing",
         slug: "inventory",
         requiredPermission: "inventory_po",
+        allowedRoles: ["Owner", "Branch mgr", "Assistant", "Accounts"],
       },
       {
         id: "lab-cases",
         label: "Lab cases",
         slug: "lab-cases",
         requiredPermission: "view_patient_records",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant"],
       },
       {
         id: "sterilisation",
         label: "Sterilisation",
         slug: "sterilisation",
         requiredPermission: "sterilisation_log",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Assistant"],
       },
       {
         id: "staff-commission",
         label: "Staff & commission",
         slug: "staff-commission",
         requiredPermission: "commission_payroll",
+        allowedRoles: ["Owner", "Branch mgr", "Accounts"],
       },
     ],
   },
   {
-    title: "SETTINGS & REPORTS",
+    title: "SETTINGS",
     items: [
       {
         id: "visiting-specialists",
         label: "Visiting specialists",
         slug: "visiting-specialists",
         requiredPermission: "see_all_branch_revenue",
+        allowedRoles: ["Owner", "Branch mgr"],
       },
       {
         id: "reports",
         label: "Reports & P&L",
         slug: "reports",
         requiredPermission: "see_all_branch_revenue",
+        allowedRoles: ["Owner", "Branch mgr", "Accounts"],
       },
       {
         id: "settings",
         label: "Settings",
         slug: "settings",
+        allowedRoles: ["Owner", "Branch mgr"],
       },
     ],
   },
 ];
 
 export function canRoleAccessNavItem(
-  _role: DentflowRoleKey,
-  _item: SidebarNavItem,
-  _matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
+  role: DentflowRoleKey,
+  item: SidebarNavItem,
+  matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
 ): boolean {
-  // All clinic sections are accessible across all user roles
-  return true;
+  if (role === "Owner") return true;
+  if (item.allowedRoles && !item.allowedRoles.includes(role)) {
+    return false;
+  }
+  if (!item.requiredPermission) return true;
+  const row = matrix.find((r) => r.key === item.requiredPermission);
+  if (!row) return true;
+  return row.levels[role] !== "-";
 }
 
 export function canRoleAccessAppSlug(

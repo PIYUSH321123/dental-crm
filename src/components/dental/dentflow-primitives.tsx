@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ import {
   Menu,
   Moon,
   Package,
+  PanelLeftClose,
+  PanelLeftOpen,
   PhoneCall,
   Receipt,
   RefreshCw,
@@ -548,6 +550,9 @@ export function DentflowChromeTabs({
   );
 }
 
+const SIDEBAR_GROUPS_STORAGE_KEY = "dentflow_sidebar_collapsed_groups";
+const SIDEBAR_RAIL_STORAGE_KEY = "dentflow_sidebar_rail_collapsed";
+
 export function DentflowSidebar({
   mobileOpen,
   onCloseMobile,
@@ -556,36 +561,81 @@ export function DentflowSidebar({
   onCloseMobile: () => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { state } = useDentflow();
 
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [railCollapsed, setRailCollapsed] = useState<boolean>(false);
+
+  // Restore saved collapsed groups & rail preference from localStorage
+  useEffect(() => {
+    try {
+      const savedGroups = window.localStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY);
+      if (savedGroups) setCollapsedGroups(JSON.parse(savedGroups));
+      const savedRail = window.localStorage.getItem(SIDEBAR_RAIL_STORAGE_KEY);
+      if (savedRail === "true") setRailCollapsed(true);
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   const toggleGroup = (title: string) => {
-    setCollapsedGroups((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }));
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [title]: !prev[title] };
+      try {
+        window.localStorage.setItem(SIDEBAR_GROUPS_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const toggleRail = () => {
+    setRailCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SIDEBAR_RAIL_STORAGE_KEY, String(next));
+      } catch {}
+      return next;
+    });
   };
 
   const postOpAlertCount = state.postOpCases.filter((p) => p.status === "Alert").length;
 
   const sidebarContent = (
-    <aside className="w-[236px] shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none">
+    <aside
+      className={`${
+        railCollapsed ? "w-[68px]" : "w-[236px]"
+      } shrink-0 bg-[var(--df-sidebar-bg)] text-[var(--df-sidebar-text)] flex flex-col h-full select-none transition-all duration-200`}
+    >
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 border-b border-[var(--df-sidebar-border)]">
+      <div className="flex items-center justify-between px-3 pt-3.5 pb-2.5 border-b border-[var(--df-sidebar-border)]">
         <Link
           href={state.activeRole === "Owner" ? "/app/group-dashboard" : "/app/today"}
           onClick={onCloseMobile}
-          className="flex items-center gap-2.5"
+          title="DentFlow Home"
+          className="flex items-center gap-2.5 min-w-0"
         >
-          <div className="h-7 w-7 rounded-lg bg-[var(--df-teal)] flex items-center justify-center text-white font-bold text-sm shadow-xs">
+          <div className="h-7 w-7 rounded-lg bg-[var(--df-teal)] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
             W
           </div>
-          <span className="df-serif text-lg font-semibold tracking-tight text-white">
-            DentFlow
-          </span>
+          {!railCollapsed && (
+            <span className="df-serif text-lg font-semibold tracking-tight text-white truncate">
+              DentFlow
+            </span>
+          )}
         </Link>
+        <button
+          type="button"
+          onClick={toggleRail}
+          className="hidden lg:inline-flex text-[var(--df-sidebar-muted)] hover:text-white p-1 rounded cursor-pointer"
+          aria-label={railCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={railCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {railCollapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </button>
         <button
           type="button"
           onClick={onCloseMobile}
@@ -596,8 +646,8 @@ export function DentflowSidebar({
         </button>
       </div>
 
-      {/* Navigation Sections with Dropdowns strictly on group title buttons */}
-      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-2">
+      {/* Navigation Sections */}
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto overflow-x-visible px-2 py-2.5 space-y-2.5">
         {DENTFLOW_SIDEBAR_SECTIONS.map((section, idx) => {
           const visibleItems = section.items.filter((item) =>
             canRoleAccessNavItem(state.activeRole, item, state.rolePermissions),
@@ -605,16 +655,16 @@ export function DentflowSidebar({
           if (visibleItems.length === 0) return null;
 
           const hasTitle = Boolean(section.title && section.title.trim().length > 0);
-          const isCollapsed = hasTitle && Boolean(collapsedGroups[section.title]);
+          const isCollapsed = !railCollapsed && hasTitle && Boolean(collapsedGroups[section.title]);
 
           return (
             <div key={section.title || `section-${idx}`} className="space-y-0.5">
-              {/* Group Title with Dropdown Option (only when title is present) */}
-              {hasTitle && (
+              {/* Group Title (hidden when icon-only rail is collapsed; divider shown instead) */}
+              {hasTitle && !railCollapsed && (
                 <button
                   type="button"
                   onClick={() => toggleGroup(section.title)}
-                  className="w-full flex items-center justify-between px-2.5 py-1 text-[9.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)] hover:text-white rounded transition-colors cursor-pointer group"
+                  className="w-full flex items-center justify-between px-2.5 py-1 text-[10.5px] font-bold tracking-wider uppercase text-[var(--df-sidebar-section)] hover:text-white rounded transition-colors cursor-pointer group"
                   aria-expanded={!isCollapsed}
                 >
                   <span>{section.title}</span>
@@ -625,8 +675,11 @@ export function DentflowSidebar({
                   />
                 </button>
               )}
+              {hasTitle && railCollapsed && idx > 0 && (
+                <div className="my-1.5 border-t border-[var(--df-sidebar-border)]/70" />
+              )}
 
-              {/* Group Items - clean uniform links without separate dropdown buttons */}
+              {/* Group Items */}
               {!isCollapsed && (
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
@@ -641,39 +694,49 @@ export function DentflowSidebar({
                     const Icon = NAV_ICONS[item.id] || Home;
 
                     return (
-                      <li key={item.id}>
+                      <li key={item.id} className="relative group/nav">
                         <Link
                           href={href}
                           onClick={onCloseMobile}
-                          className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors group cursor-pointer ${
+                          title={railCollapsed ? item.label : undefined}
+                          aria-label={item.label}
+                          className={`w-full flex items-center ${
+                            railCollapsed ? "justify-center px-2" : "justify-between px-2.5"
+                          } gap-2 py-2 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
                             isItemExactActive
                               ? "bg-[var(--df-sidebar-active)] text-white font-semibold"
                               : isFamilyActive
                               ? "text-white font-semibold bg-[var(--df-sidebar-hover)]/70"
-                              : "text-[var(--df-sidebar-text)]/85 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
+                              : "text-[var(--df-sidebar-text)]/90 hover:bg-[var(--df-sidebar-hover)] hover:text-white"
                           }`}
                         >
-                          <span className="flex items-center gap-2 min-w-0">
+                          <span className="flex items-center gap-2.5 min-w-0">
                             <Icon
-                              className={`h-3.5 w-3.5 shrink-0 ${
+                              className={`h-4 w-4 shrink-0 ${
                                 isFamilyActive
                                   ? "text-white"
-                                  : "text-[var(--df-sidebar-muted)] group-hover:text-white"
+                                  : "text-[var(--df-sidebar-muted)] group-hover/nav:text-white"
                               }`}
                             />
-                            <span className="truncate">{item.label}</span>
+                            {!railCollapsed && <span className="truncate">{item.label}</span>}
                           </span>
 
-                          <span className="flex items-center gap-1.5 shrink-0">
-                            {item.badgeType === "unique" && <DentflowUniquePill dark />}
-                            {item.badgeType === "new" && <DentflowNewPill dark />}
-                            {item.badgeType === "count" && (
-                              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)]">
-                                {postOpAlertCount || item.badgeText}
-                              </span>
-                            )}
-                          </span>
+                          {!railCollapsed && item.badgeType === "count" && (
+                            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1.5 rounded-full text-[10.5px] font-bold bg-[var(--df-sidebar-hover)] text-white border border-[var(--df-sidebar-border)] shrink-0">
+                              {postOpAlertCount || item.badgeText}
+                            </span>
+                          )}
                         </Link>
+
+                        {/* Floating Tooltip when rail is collapsed */}
+                        {railCollapsed && (
+                          <span
+                            role="tooltip"
+                            className="pointer-events-none opacity-0 group-hover/nav:opacity-100 group-focus-within/nav:opacity-100 transition-opacity absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1 rounded-lg bg-[#0B1F1A] text-white text-xs font-semibold whitespace-nowrap shadow-lg border border-[var(--df-sidebar-border)] z-50"
+                          >
+                            {item.label}
+                          </span>
+                        )}
                       </li>
                     );
                   })}
