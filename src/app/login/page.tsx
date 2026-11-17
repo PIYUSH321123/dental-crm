@@ -81,6 +81,8 @@ const ROLE_OPTIONS: {
   },
 ];
 
+const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -158,9 +160,15 @@ function LoginFormInner() {
         </Link>
       </div>
 
-      <div className="max-w-4xl mx-auto w-full my-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Standard Email & Password Login Card */}
-        <div className="lg:col-span-6 df-card p-6 sm:p-7 space-y-5">
+      <div
+        className={`mx-auto w-full my-8 ${
+          IS_DEMO_MODE
+            ? "max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+            : "max-w-md"
+        }`}
+      >
+        {/* Left / Primary: Standard Email & Password Login Card */}
+        <div className={`${IS_DEMO_MODE ? "lg:col-span-6" : ""} df-card p-6 sm:p-7 space-y-5`}>
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-[var(--df-teal)] flex items-center justify-center text-white font-bold">
               W
@@ -175,7 +183,9 @@ function LoginFormInner() {
             <p className="text-xs text-[var(--df-text-muted)] mt-1">
               {searchParams.get("next")
                 ? "Please sign in to continue to your requested portal."
-                : "Enter your work email or choose a role profile to test role-based access."}
+                : IS_DEMO_MODE
+                ? "Enter your work email or choose a role profile to test role-based access."
+                : "Enter your clinic work email and password to sign in."}
             </p>
           </div>
 
@@ -216,25 +226,27 @@ function LoginFormInner() {
               </div>
             </div>
 
-            <div>
-              <label className="block font-semibold mb-1 text-[var(--df-text)]">Account role</label>
-              <select
-                aria-label="Account role"
-                value={selectedIdx}
-                onChange={(e) => {
-                  const idx = Number(e.target.value);
-                  setSelectedIdx(idx);
-                  setEmail(ROLE_OPTIONS[idx].email);
-                }}
-                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 font-medium"
-              >
-                {ROLE_OPTIONS.map((opt, idx) => (
-                  <option key={`${opt.role}-${opt.label}`} value={idx}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {IS_DEMO_MODE && (
+              <div>
+                <label className="block font-semibold mb-1 text-[var(--df-text)]">Account role (demo)</label>
+                <select
+                  aria-label="Account role"
+                  value={selectedIdx}
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    setSelectedIdx(idx);
+                    setEmail(ROLE_OPTIONS[idx].email);
+                  }}
+                  className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 font-medium"
+                >
+                  {ROLE_OPTIONS.map((opt, idx) => (
+                    <option key={`${opt.role}-${opt.label}`} value={idx}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -253,32 +265,34 @@ function LoginFormInner() {
           </div>
         </div>
 
-        {/* Right: Role-Based Instant Sign-In Cards */}
-        <div className="lg:col-span-6 df-card p-6 space-y-3.5">
-          <div>
-            <h2 className="text-sm font-bold text-[var(--df-text)]">
-              Instant role-based sign-in
-            </h2>
-            <p className="text-xs text-[var(--df-text-muted)] mt-0.5">
-              Click any role below to verify its exact post-login redirect and route permissions.
-            </p>
-          </div>
+        {/* Right: Role-Based Instant Sign-In Cards (Demo mode only) */}
+        {IS_DEMO_MODE && (
+          <div className="lg:col-span-6 df-card p-6 space-y-3.5">
+            <div>
+              <h2 className="text-sm font-bold text-[var(--df-text)]">
+                Instant role-based sign-in
+              </h2>
+              <p className="text-xs text-[var(--df-text-muted)] mt-0.5">
+                Click any role below to verify its exact post-login redirect and route permissions.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {ROLE_OPTIONS.map((opt) => (
-              <button
-                key={`${opt.role}-${opt.label}`}
-                type="button"
-                disabled={loading}
-                onClick={() => signInAs(opt.role, opt.setupCompleted, opt.email, opt.doctorName)}
-                className="text-left p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] hover:border-[var(--df-teal)] hover:bg-[var(--df-teal-soft)]/35 transition-colors cursor-pointer"
-              >
-                <p className="text-xs font-bold text-[var(--df-text)]">{opt.label}</p>
-                <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">{opt.sublabel}</p>
-              </button>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {ROLE_OPTIONS.map((opt) => (
+                <button
+                  key={`${opt.role}-${opt.label}`}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => signInAs(opt.role, opt.setupCompleted, opt.email, opt.doctorName)}
+                  className="text-left p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] hover:border-[var(--df-teal)] hover:bg-[var(--df-teal-soft)]/35 transition-colors cursor-pointer"
+                >
+                  <p className="text-xs font-bold text-[var(--df-text)]">{opt.label}</p>
+                  <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">{opt.sublabel}</p>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <p className="text-center text-[11px] text-[var(--df-text-muted)]">

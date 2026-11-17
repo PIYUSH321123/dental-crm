@@ -365,23 +365,25 @@ export function DentflowPageHeader({
           )}
         </div>
 
-        {/* Role Switcher (enforces Settings > Users & roles matrix live) */}
-        <div className="relative hidden lg:block">
-          <select
-            aria-label="Active role"
-            value={state.activeRole}
-            onChange={(e) => setActiveRole(e.target.value as DentflowRoleKey)}
-            title="Switch active staff role (controlled by Settings > Users & roles)"
-            className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-2.5 pr-6 py-1.5 text-[11px] font-semibold text-[var(--df-teal)] hover:border-[var(--df-teal-border)] focus:outline-none cursor-pointer"
-          >
-            {DENTFLOW_ROLES.map((r) => (
-              <option key={r} value={r}>
-                Role: {r}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="h-3 w-3 text-[var(--df-teal)] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+        {/* Role Switcher (demo mode only — hidden in production unless NEXT_PUBLIC_DEMO_MODE=true) */}
+        {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && (
+          <div className="relative hidden lg:block">
+            <select
+              aria-label="Active role"
+              value={state.activeRole}
+              onChange={(e) => setActiveRole(e.target.value as DentflowRoleKey)}
+              title="Switch active staff role (controlled by Settings > Users & roles)"
+              className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-2.5 pr-6 py-1.5 text-[11px] font-semibold text-[var(--df-teal)] hover:border-[var(--df-teal-border)] focus:outline-none cursor-pointer"
+            >
+              {DENTFLOW_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  Role: {r}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="h-3 w-3 text-[var(--df-teal)] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        )}
 
         {/* User Profile & Account Dropdown (matching reference image) */}
         <div className="relative">
