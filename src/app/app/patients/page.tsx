@@ -35,6 +35,7 @@ import {
   DentflowUniquePill,
 } from "@/components/dental/dentflow-primitives";
 import { CONSENT_TEXT_VERSIONS } from "@/lib/dentflow-migrations";
+import { computeChartSummary, CONDITION_BY_CODE, TOOTH_CONDITIONS } from "@/lib/dental-chart-logic";
 import { useDentflow } from "@/lib/dentflow-store";
 import { ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
 import { DentflowPatient, PatientConsentRecord } from "@/types/dentflow";
@@ -427,15 +428,6 @@ function PatientsPageInner() {
         </div>
       </div>
 
-      {/* Chrome-style Tab Bar for Patient Section */}
-      <DentflowChromeTabs
-        activeId="overview"
-        tabs={[
-          { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
-          { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
-        ]}
-      />
-
       {/* Filter Card */}
       <div className="df-card p-3 sm:p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
@@ -662,17 +654,21 @@ function PatientsPageInner() {
                           <button
                             type="button"
                             onClick={() => handleOpenProfile(patient)}
-                            title="View patient profile"
-                            className="p-1.5 rounded-lg hover:bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] hover:text-[var(--df-teal)] cursor-pointer"
+                            title={`Open ${patient.name}'s profile, dental chart & plans`}
+                            aria-label={`View profile for ${patient.name}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal)] text-xs font-semibold text-[var(--df-text-secondary)] hover:text-[var(--df-teal)] cursor-pointer transition-colors"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>Profile</span>
                           </button>
                           <Link
                             href={`/app/calendar?bookPatientId=${patient.id}`}
-                            title="Book appointment"
-                            className="p-1.5 rounded-lg hover:bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] hover:text-[var(--df-teal)]"
+                            title={`Book appointment for ${patient.name}`}
+                            aria-label={`Book appointment for ${patient.name}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[var(--df-teal-border)] bg-[var(--df-teal-soft)]/60 hover:bg-[var(--df-teal-soft)] text-xs font-semibold text-[var(--df-teal)] transition-colors"
                           >
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>Book</span>
                           </Link>
                         </div>
                       </td>
@@ -817,11 +813,11 @@ function PatientsPageInner() {
                 <div>
                   <label className="block font-semibold mb-1 text-[var(--df-text)]">Age</label>
                   <input
-                    type="number"
-                    min={0}
-                    max={120}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="31"
                     value={form.age}
-                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    onChange={(e) => setForm({ ...form, age: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                     className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
                   />
                 </div>
@@ -1227,9 +1223,9 @@ function PatientsPageInner() {
             </div>
           )}
 
-          {/* Quick Navigation Tabs */}
+          {/* Quick Navigation Tabs — Chart & Plans now lives inside Patient Profile */}
           <div className="flex border-b border-[var(--df-border)] gap-2 overflow-x-auto pb-1 text-xs">
-            {["Overview", "Dental chart", "Treatment plans", "Prescriptions", "Billing"].map((tab) => (
+            {["Overview", "Chart & Plans", "Prescriptions", "Billing"].map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -1339,22 +1335,124 @@ function PatientsPageInner() {
             </div>
           )}
 
-          {activeProfileTab !== "Overview" && (
+          {activeProfileTab === "Chart & Plans" && (() => {
+            const patChart = state.dentalCharts?.[selectedPatient.id];
+            const chartSum = patChart
+              ? computeChartSummary(patChart.teeth, patChart.lastDentitionView)
+              : null;
+            const patPlans = state.treatmentPlans.filter((tp) => tp.patientId === selectedPatient.id);
+
+            return (
+              <div className="space-y-4">
+                {/* Inline Dental Chart Summary */}
+                <div className="df-card p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-xs text-[var(--df-text)]">Dental Chart Summary</p>
+                      <p className="text-[11px] text-[var(--df-text-muted)]">
+                        {patChart
+                          ? `Last charted ${patChart.lastChartedLabel} by ${patChart.lastChartedBy}`
+                          : "Ready for initial charting"}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/app/dental-chart?patientId=${selectedPatient.id}`}
+                      className="df-btn-primary px-3 py-1.5 text-xs font-semibold shrink-0"
+                    >
+                      Open Dental Chart →
+                    </Link>
+                  </div>
+
+                  {chartSum && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {TOOTH_CONDITIONS.filter(
+                        (c) => c.code !== "healthy" && (chartSum.byCondition[c.code] || 0) > 0,
+                      ).map((c) => (
+                        <span
+                          key={c.code}
+                          style={{
+                            backgroundColor: c.badgeBg,
+                            color: c.badgeText,
+                            borderColor: c.stroke,
+                          }}
+                          className="px-2 py-0.5 rounded-full text-[11px] font-bold border"
+                        >
+                          {c.shortCode} · {c.label}: {chartSum.byCondition[c.code]}
+                        </span>
+                      ))}
+                      {Object.keys(chartSum.byCondition).length === 0 && (
+                        <span className="text-xs text-[var(--df-text-muted)]">All teeth charted healthy</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Inline Treatment Plans Summary */}
+                <div className="df-card p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-bold text-xs text-[var(--df-text)]">Treatment Plans</p>
+                    <Link
+                      href="/app/treatment-plans"
+                      className="df-btn-secondary px-3 py-1.5 text-xs font-semibold shrink-0"
+                    >
+                      Open Plans →
+                    </Link>
+                  </div>
+
+                  {patPlans.length > 0 ? (
+                    patPlans.map((tp) => (
+                      <div
+                        key={tp.id}
+                        className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-[var(--df-text)]">
+                            {tp.planCode} · {tp.pipelineStep}
+                          </span>
+                          <span className="font-bold text-xs text-[var(--df-teal)]">
+                            ₹{tp.costSummary.planTotal.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          {tp.stages.map((st) => (
+                            <div key={st.id} className="flex items-center justify-between text-[11px]">
+                              <span className="text-[var(--df-text-secondary)]">
+                                {st.stageNum}. {st.procedure} (Tooth {st.tooth})
+                              </span>
+                              <DentflowStatusPill
+                                label={st.status}
+                                tone={st.status === "Done" ? "green" : st.status === "Booked" ? "blue" : "amber"}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : selectedPatient.openPlanSummary ? (
+                    <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs space-y-1">
+                      <p className="font-bold text-[var(--df-text)]">
+                        {selectedPatient.openPlanSummary.planCode} · {selectedPatient.openPlanSummary.title}
+                      </p>
+                      <p className="text-[var(--df-text-muted)]">
+                        {selectedPatient.openPlanSummary.stageLabel} · {selectedPatient.openPlanSummary.nextSitting}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[var(--df-text-muted)]">No active treatment plans recorded yet.</p>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {(activeProfileTab === "Prescriptions" || activeProfileTab === "Billing") && (
             <div className="p-6 text-center df-card space-y-2">
               <p className="font-bold text-xs text-[var(--df-text)]">View {activeProfileTab} in Clinical Section</p>
               <p className="text-xs text-[var(--df-text-muted)]">
-                Access full interactive clinical records, charts, and financial statements.
+                Access full interactive prescriptions and billing statements for {selectedPatient.name}.
               </p>
               <Link
-                href={
-                  activeProfileTab === "Dental chart"
-                    ? "/app/dental-chart"
-                    : activeProfileTab === "Treatment plans"
-                    ? "/app/treatment-plans"
-                    : activeProfileTab === "Prescriptions"
-                    ? "/app/prescriptions"
-                    : "/app/billing"
-                }
+                href={activeProfileTab === "Prescriptions" ? "/app/prescriptions" : "/app/billing"}
                 className="df-btn-primary px-4 py-2 text-xs font-semibold inline-block mt-2"
               >
                 Open {activeProfileTab} →
