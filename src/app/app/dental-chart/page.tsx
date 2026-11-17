@@ -1,17 +1,25 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Sparkles,
-  Check,
-  X,
-  Upload,
-  ChevronLeft,
-  ChevronRight,
   Activity,
+  AlertTriangle,
   Camera,
+  Check,
+  History,
+  Keyboard,
+  Maximize2,
+  Plus,
+  Printer,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+  Upload,
   Users,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,241 +28,691 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
-import { useDentflow } from "@/lib/dentflow-store";
+import { DetailedToothRootSvg, ToothSvg, ToothSvgDefs } from "@/components/dental/tooth-svg";
 import {
-  DENTAL_IMAGING_ITEMS,
-  ODONTOGRAM_TEETH,
-  OdontogramTooth,
-  PERIODONTAL_LOWER_LEFT,
-} from "@/lib/mock/dentflow";
-
-const CHILD_UPPER = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
-const CHILD_LOWER = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
-
-const TOOTH_STATUS_STYLES: Record<OdontogramTooth["status"], { box: string; badge: string }> = {
-  healthy: {
-    box: "border-[var(--df-border-strong)] bg-[var(--df-surface)] text-[var(--df-text)]",
-    badge: "text-[var(--df-text-muted)]",
-  },
-  caries: {
-    box: "border-[var(--df-status-red-text)] bg-[var(--df-status-red-bg)]/50 text-[var(--df-status-red-text)]",
-    badge: "text-[var(--df-status-red-text)]",
-  },
-  filled: {
-    box: "border-[var(--df-status-blue-text)] bg-[var(--df-status-blue-bg)]/50 text-[var(--df-status-blue-text)]",
-    badge: "text-[var(--df-status-blue-text)]",
-  },
-  crown: {
-    box: "border-[var(--df-status-amber-text)] bg-[var(--df-status-amber-bg)]/60 text-[var(--df-status-amber-text)]",
-    badge: "text-[var(--df-status-amber-text)]",
-  },
-  root_canal: {
-    box: "border-[var(--df-status-purple-text)] bg-[var(--df-status-purple-bg)]/60 text-[var(--df-status-purple-text)]",
-    badge: "text-[var(--df-status-purple-text)]",
-  },
-  missing: {
-    box: "border-dashed border-[var(--df-border-strong)] bg-[var(--df-surface-muted)] text-[var(--df-text-muted)]",
-    badge: "text-[var(--df-text-muted)]",
-  },
-  planned: {
-    box: "border-[var(--df-teal)] bg-[var(--df-teal-soft)]/50 text-[var(--df-teal)]",
-    badge: "text-[var(--df-teal)]",
-  },
-};
+  ALL_PERMANENT_FDI,
+  ALL_PRIMARY_FDI,
+  ALL_VALID_FDI,
+  applyConditionToTooth,
+  computeChartSummary,
+  CONDITION_BY_CODE,
+  createHealthyTooth,
+  createSeedDentalChart,
+  diffCharts,
+  formatToothNumber,
+  getAllToothConditions,
+  getToothDisplayName,
+  LOWER_LEFT_PERMANENT,
+  LOWER_LEFT_PRIMARY,
+  LOWER_RIGHT_PERMANENT,
+  LOWER_RIGHT_PRIMARY,
+  removeConditionFromTooth,
+  setToothEruptionState,
+  toggleSurfaceCondition,
+  TOOTH_CONDITIONS,
+  UPPER_LEFT_PERMANENT,
+  UPPER_LEFT_PRIMARY,
+  UPPER_RIGHT_PERMANENT,
+  UPPER_RIGHT_PRIMARY,
+} from "@/lib/dental-chart-logic";
+import { useDentflow } from "@/lib/dentflow-store";
+import { ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
+import {
+  DentalNumberingSystem,
+  DentitionView,
+  EruptionState,
+  PatientDentalChart,
+  ToothChartRecord,
+  ToothConditionCode,
+  ToothSurface,
+} from "@/types/dentflow";
 
 function DentalChartContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab") === "imaging" ? "imaging" : "chart";
-  const { logPatientRead, logAuditEvent } = useDentflow();
+  const { state, updateState, logPatientRead, logAuditEvent } = useDentflow();
 
-  const [dentitionType, setDentitionType] = useState<"adult" | "child" | "mixed">("adult");
+  const initialPatientId =
+    searchParams.get("patientId") || state.patients[0]?.id || "pat-priya";
+  const [selectedPatientId, setSelectedPatientId] = useState<string>(initialPatientId);
+
+  const activePatient = useMemo(() => {
+    return (
+      state.patients.find((p) => p.id === selectedPatientId) || state.patients[0]
+    );
+  }, [state.patients, selectedPatientId]);
+
+  const activeChart: PatientDentalChart = useMemo(() => {
+    const pid = activePatient?.id || "pat-priya";
+    return (
+      state.dentalCharts?.[pid] ||
+      createSeedDentalChart(pid, activePatient?.age || 34)
+    );
+  }, [state.dentalCharts, activePatient]);
+
+  const numberingSystem: DentalNumberingSystem =
+    state.clinicSetup.numberingSystem || "FDI";
+  const actorName = ROLE_USER_PROFILES[state.activeRole]?.name || "Clinic Dentist";
+
   const [selectedToothNum, setSelectedToothNum] = useState<number>(36);
-  const [teethState, setTeethState] = useState<Record<number, OdontogramTooth>>(ODONTOGRAM_TEETH);
-  const [perioRows, setPerioRows] = useState(PERIODONTAL_LOWER_LEFT);
-  const [compareBaseline, setCompareBaseline] = useState(false);
-  const [imagingDrawerOpen, setImagingDrawerOpen] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState([
-    {
-      id: "ai-36",
-      tooth: 36,
-      finding: "Deep disto-occlusal radiolucency abutting distal pulp horn (confidence 0.94)",
-      status: "Pending" as "Pending" | "Accepted" | "Rejected",
-    },
-    {
-      id: "ai-37",
-      tooth: 37,
-      finding: "Intact occlusal composite restoration, normal lamina dura (confidence 0.89)",
-      status: "Pending" as "Pending" | "Accepted" | "Rejected",
-    },
-  ]);
+  const [activeCondition, setActiveCondition] = useState<ToothConditionCode>("caries");
+  const [multiSelectedFdis, setMultiSelectedFdis] = useState<number[]>([]);
+  const [legendHighlight, setLegendHighlight] = useState<ToothConditionCode | null>(null);
+  const [showRoots, setShowRoots] = useState<boolean>(true);
+  const [zoomScale, setZoomScale] = useState<number>(1);
+  const [compareHistoryId, setCompareHistoryId] = useState<string | null>(null);
+  const [keyBuffer, setKeyBuffer] = useState<string>("");
+  const [showShortcuts, setShowShortcuts] = useState<boolean>(false);
+  const [hoveredToothFdi, setHoveredToothFdi] = useState<number | null>(null);
+  const [newProcName, setNewProcName] = useState<string>("");
+  const [newProcFee, setNewProcFee] = useState<string>("2500");
+
+  // Click-drag multi-select & pinch-zoom refs
+  const isDraggingRef = useRef<boolean>(false);
+  const dragStartFdiRef = useRef<number | null>(null);
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
+  const keyBufferTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dentitionView: DentitionView = activeChart.lastDentitionView || "adult";
 
   useEffect(() => {
-    logPatientRead("Priya Deshmukh", "Dental chart", "READ");
-  }, [logPatientRead]);
+    if (activePatient) {
+      logPatientRead(activePatient.name, "Dental chart", "READ");
+    }
+  }, [activePatient, logPatientRead]);
 
-  const selectedTooth: OdontogramTooth = teethState[selectedToothNum] || {
-    number: selectedToothNum,
-    status: "healthy",
-    name: `Tooth ${selectedToothNum}`,
-    surfaces: { B: false, M: false, O: false, D: false, L: false },
-  };
+  // Persist chart mutation helper
+  const mutateActiveChart = useCallback(
+    (updater: (chart: PatientDentalChart) => PatientDentalChart) => {
+      const pid = activePatient?.id || "pat-priya";
+      updateState((prev) => {
+        const current =
+          prev.dentalCharts?.[pid] ||
+          createSeedDentalChart(pid, activePatient?.age || 34);
+        const updated = updater(current);
+        return {
+          ...prev,
+          dentalCharts: {
+            ...(prev.dentalCharts || {}),
+            [pid]: updated,
+          },
+        };
+      });
+    },
+    [activePatient, updateState],
+  );
 
-  const toggleSurface = (surf: "B" | "M" | "O" | "D" | "L") => {
-    const prevTooth = teethState[selectedToothNum];
-    const prevVal = Boolean(prevTooth?.surfaces?.[surf]);
-    setTeethState((prev) => {
-      const current = prev[selectedToothNum] || {
-        number: selectedToothNum,
-        status: "healthy" as const,
-        name: `Tooth ${selectedToothNum}`,
-      };
-      const curSurf = current.surfaces || { B: false, M: false, O: false, D: false, L: false };
-      const updated = { ...curSurf, [surf]: !curSurf[surf] };
-      const activeLetters = (["M", "O", "D", "B", "L"] as const).filter((k) => updated[k]);
+  const selectedTooth: ToothChartRecord =
+    activeChart.teeth[selectedToothNum] || createHealthyTooth(selectedToothNum);
+
+  // Paint condition directly on clicked surface
+  const handleClickSurface = useCallback(
+    (fdi: number, surface: ToothSurface) => {
+      setSelectedToothNum(fdi);
+      mutateActiveChart((chart) => {
+        const cur = chart.teeth[fdi] || createHealthyTooth(fdi);
+        const next = toggleSurfaceCondition(cur, surface, activeCondition, actorName);
+        return {
+          ...chart,
+          lastChartedLabel: "Today",
+          lastChartedBy: actorName,
+          teeth: { ...chart.teeth, [fdi]: next },
+        };
+      });
+      logAuditEvent({
+        patientName: activePatient?.name || "Patient",
+        screenName: "Dental chart",
+        action: "CHART_SURFACE_UPDATE",
+        entityType: "dental_chart",
+        entityId: `tooth-${fdi}`,
+        details: `Tooth ${formatToothNumber(fdi, numberingSystem)} surface ${surface} painted with ${activeCondition}`,
+      });
+    },
+    [activeCondition, actorName, activePatient, logAuditEvent, mutateActiveChart, numberingSystem],
+  );
+
+  // Whole-tooth condition apply (single or batch multi-selected)
+  const handleApplyCondition = useCallback(
+    (cond: ToothConditionCode, targetFdis: number[]) => {
+      if (targetFdis.length === 0) return;
+      mutateActiveChart((chart) => {
+        const nextTeeth = { ...chart.teeth };
+        for (const fdi of targetFdis) {
+          const cur = nextTeeth[fdi] || createHealthyTooth(fdi);
+          nextTeeth[fdi] = applyConditionToTooth(cur, cond, actorName);
+        }
+        return {
+          ...chart,
+          lastChartedLabel: "Today",
+          lastChartedBy: actorName,
+          teeth: nextTeeth,
+        };
+      });
+      const labels = targetFdis.map((f) => formatToothNumber(f, numberingSystem)).join(", ");
+      logAuditEvent({
+        patientName: activePatient?.name || "Patient",
+        screenName: "Dental chart",
+        action: "CHART_STATUS_UPDATE",
+        entityType: "dental_chart",
+        entityId: `teeth-${targetFdis.join("-")}`,
+        details: `Applied "${CONDITION_BY_CODE[cond].label}" to tooth(s) ${labels}`,
+      });
+      toast.success(
+        `Applied ${CONDITION_BY_CODE[cond].label} to ${targetFdis.length > 1 ? `${targetFdis.length} teeth` : `tooth ${labels}`}`,
+      );
+    },
+    [actorName, activePatient, logAuditEvent, mutateActiveChart, numberingSystem],
+  );
+
+  const handleRemoveCondition = (fdi: number, cond: ToothConditionCode) => {
+    mutateActiveChart((chart) => {
+      const cur = chart.teeth[fdi] || createHealthyTooth(fdi);
       return {
-        ...prev,
-        [selectedToothNum]: {
-          ...current,
-          surfaces: updated,
-          conditionText:
-            current.status === "caries"
-              ? `Deep caries (${activeLetters.join(", ") || "None"}) — near pulp`
-              : current.conditionText,
-        },
+        ...chart,
+        teeth: { ...chart.teeth, [fdi]: removeConditionFromTooth(cur, cond, actorName) },
       };
     });
     logAuditEvent({
-      patientName: "Priya Deshmukh",
+      patientName: activePatient?.name || "Patient",
       screenName: "Dental chart",
-      action: "CHART_SURFACE_UPDATE",
+      action: "CHART_CONDITION_REMOVED",
       entityType: "dental_chart",
-      entityId: `tooth-${selectedToothNum}`,
-      details: `Tooth ${selectedToothNum} surface ${surf} ${prevVal ? "cleared" : "marked"}`,
+      entityId: `tooth-${fdi}`,
+      details: `Removed "${CONDITION_BY_CODE[cond].label}" from tooth ${formatToothNumber(fdi, numberingSystem)}`,
     });
   };
 
-  const handleStatusChange = (status: OdontogramTooth["status"]) => {
-    const prevStatus = teethState[selectedToothNum]?.status || "healthy";
-    const badgeMap: Partial<Record<OdontogramTooth["status"], string>> = {
-      caries: "C",
-      filled: "F",
-      crown: "Cr",
-      root_canal: "RCT",
-      planned: "P",
-    };
-    setTeethState((prev) => {
-      const current = prev[selectedToothNum] || {
-        number: selectedToothNum,
-        status: "healthy" as const,
-        name: `Tooth ${selectedToothNum}`,
-      };
+  const handleDentitionChange = (view: DentitionView) => {
+    mutateActiveChart((chart) => ({ ...chart, lastDentitionView: view }));
+    if (view === "child" && !ALL_PRIMARY_FDI.includes(selectedToothNum)) {
+      setSelectedToothNum(75);
+    } else if (view === "adult" && !ALL_PERMANENT_FDI.includes(selectedToothNum)) {
+      setSelectedToothNum(36);
+    }
+  };
+
+  const handleEruptionChange = (fdi: number, stateVal: EruptionState) => {
+    mutateActiveChart((chart) => {
+      const cur = chart.teeth[fdi] || createHealthyTooth(fdi);
       return {
-        ...prev,
-        [selectedToothNum]: {
-          ...current,
-          status,
-          badge: badgeMap[status],
-        },
+        ...chart,
+        teeth: { ...chart.teeth, [fdi]: setToothEruptionState(cur, stateVal, actorName) },
       };
     });
     logAuditEvent({
-      patientName: "Priya Deshmukh",
+      patientName: activePatient?.name || "Patient",
       screenName: "Dental chart",
-      action: "CHART_STATUS_UPDATE",
+      action: "CHART_ERUPTION_UPDATE",
       entityType: "dental_chart",
-      entityId: `tooth-${selectedToothNum}`,
-      details: `Tooth ${selectedToothNum} status changed: ${prevStatus} → ${status}`,
+      entityId: `tooth-${fdi}`,
+      details: `Tooth ${formatToothNumber(fdi, numberingSystem)} eruption state set to ${stateVal}`,
     });
-    toast.success(`Tooth ${selectedToothNum} updated to ${status.replace("_", " ")}`);
   };
 
-  const renderToothBox = (num: number) => {
-    const tooth = teethState[num] || {
-      number: num,
-      status: "healthy" as const,
-      name: `Tooth ${num}`,
+  // Drag multi-select handlers
+  useEffect(() => {
+    const handlePointerUp = () => {
+      isDraggingRef.current = false;
+      dragStartFdiRef.current = null;
     };
-    const isSelected = selectedToothNum === num;
-    const isMissing = tooth.status === "missing";
-    const style = TOOTH_STATUS_STYLES[tooth.status];
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => window.removeEventListener("pointerup", handlePointerUp);
+  }, []);
+
+  const handlePointerDownTooth = (fdi: number) => {
+    isDraggingRef.current = true;
+    dragStartFdiRef.current = fdi;
+  };
+
+  const handlePointerEnterTooth = (fdi: number) => {
+    if (!isDraggingRef.current || dragStartFdiRef.current === null) return;
+    if (fdi === dragStartFdiRef.current) return;
+    setMultiSelectedFdis((prev) => {
+      const next = new Set(prev);
+      next.add(dragStartFdiRef.current!);
+      next.add(fdi);
+      return Array.from(next);
+    });
+  };
+
+  const handleSelectTooth = (fdi: number, e: React.MouseEvent) => {
+    setSelectedToothNum(fdi);
+    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+      setMultiSelectedFdis((prev) =>
+        prev.includes(fdi) ? prev.filter((x) => x !== fdi) : [...prev, fdi],
+      );
+    } else if (multiSelectedFdis.length > 0 && !isDraggingRef.current) {
+      setMultiSelectedFdis([]);
+    }
+  };
+
+  // Ordered navigation rows for arrow keys
+  const upperRowFdis = useMemo<number[]>(
+    () =>
+      dentitionView === "child"
+        ? [...UPPER_RIGHT_PRIMARY, ...UPPER_LEFT_PRIMARY]
+        : [...UPPER_RIGHT_PERMANENT, ...UPPER_LEFT_PERMANENT],
+    [dentitionView],
+  );
+  const lowerRowFdis = useMemo<number[]>(
+    () =>
+      dentitionView === "child"
+        ? [...LOWER_RIGHT_PRIMARY, ...LOWER_LEFT_PRIMARY]
+        : [...LOWER_RIGHT_PERMANENT, ...LOWER_LEFT_PERMANENT],
+    [dentitionView],
+  );
+
+  // Keyboard shortcuts: tooth number typing, 1-9 conditions, Arrow keys, Esc
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === "Escape") {
+        setMultiSelectedFdis([]);
+        setLegendHighlight(null);
+        setCompareHistoryId(null);
+        setKeyBuffer("");
+        return;
+      }
+
+      // Arrow keys move between teeth
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const row = upperRowFdis.includes(selectedToothNum) ? upperRowFdis : lowerRowFdis;
+        const idx = row.indexOf(selectedToothNum);
+        if (idx >= 0) {
+          const nextIdx =
+            e.key === "ArrowLeft"
+              ? Math.max(0, idx - 1)
+              : Math.min(row.length - 1, idx + 1);
+          setSelectedToothNum(row[nextIdx]);
+        }
+        return;
+      }
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        const inUpper = upperRowFdis.includes(selectedToothNum);
+        const fromRow = inUpper ? upperRowFdis : lowerRowFdis;
+        const toRow = inUpper ? lowerRowFdis : upperRowFdis;
+        const idx = fromRow.indexOf(selectedToothNum);
+        if (idx >= 0 && toRow[idx] !== undefined) {
+          setSelectedToothNum(toRow[idx]);
+        }
+        return;
+      }
+
+      // Digits: 2-digit FDI tooth jump OR 1-9 condition shortcut
+      if (/^[0-9]$/.test(e.key)) {
+        const nextBuf = `${keyBuffer}${e.key}`.slice(-2);
+        const asNum = Number(nextBuf);
+
+        if (nextBuf.length === 2 && ALL_VALID_FDI.includes(asNum)) {
+          setSelectedToothNum(asNum);
+          setKeyBuffer("");
+          if (keyBufferTimerRef.current) clearTimeout(keyBufferTimerRef.current);
+          toast.info(`Selected tooth ${formatToothNumber(asNum, numberingSystem)}`);
+          return;
+        }
+
+        // Single digit 1-9 also selects condition immediately while buffering for potential 2-digit FDI
+        const condMatch = TOOTH_CONDITIONS.find((c) => c.shortcutKey === e.key);
+        if (condMatch && keyBuffer.length === 0) {
+          setActiveCondition(condMatch.code);
+        }
+
+        setKeyBuffer(nextBuf);
+        if (keyBufferTimerRef.current) clearTimeout(keyBufferTimerRef.current);
+        keyBufferTimerRef.current = setTimeout(() => setKeyBuffer(""), 850);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [keyBuffer, lowerRowFdis, numberingSystem, selectedToothNum, upperRowFdis]);
+
+  // Summary counts & history diff
+  const summary = useMemo(
+    () => computeChartSummary(activeChart.teeth, dentitionView),
+    [activeChart.teeth, dentitionView],
+  );
+
+  const compareSnapshot = useMemo(
+    () => activeChart.history.find((h) => h.id === compareHistoryId) || null,
+    [activeChart.history, compareHistoryId],
+  );
+
+  const chartDiffs = useMemo(() => {
+    if (!compareSnapshot) return [];
+    return diffCharts(compareSnapshot.teeth, activeChart.teeth);
+  }, [compareSnapshot, activeChart.teeth]);
+
+  const diffByFdi = useMemo(() => {
+    const map: Record<number, string> = {};
+    for (const d of chartDiffs) {
+      map[d.fdi] = d.added.length > 0 ? `+${d.added.length}` : "Δ";
+    }
+    return map;
+  }, [chartDiffs]);
+
+  // Pinch-zoom touch handlers for tablet
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDistRef.current = Math.hypot(dx, dy);
+      pinchStartScaleRef.current = zoomScale;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchStartDistRef.current) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / pinchStartDistRef.current;
+      setZoomScale(Math.min(1.6, Math.max(0.75, Number((pinchStartScaleRef.current * ratio).toFixed(2)))));
+    }
+  };
+
+  const renderTooth = (fdi: number, compact = false) => {
+    const tooth = activeChart.teeth[fdi] || createHealthyTooth(fdi);
+    const allConds = getAllToothConditions(tooth);
+    const matchesLegend = legendHighlight ? allConds.includes(legendHighlight) : false;
+    const isDimmed = Boolean(legendHighlight && !matchesLegend);
+    const hasLinkedImg = activeChart.imaging.some((img) => img.linkedTeeth.includes(fdi));
 
     return (
-      <button
-        key={num}
-        type="button"
-        onClick={() => setSelectedToothNum(num)}
-        title={`Tooth ${num}: ${tooth.name} (${tooth.status})`}
-        className={`relative flex flex-col items-center justify-between w-9 sm:w-10 h-14 rounded-lg border text-center transition-all cursor-pointer shrink-0 ${
-          style.box
-        } ${
-          isSelected
-            ? "ring-2 ring-[var(--df-sidebar-bg)] shadow-sm scale-[1.03] z-10"
-            : "hover:border-[var(--df-teal)]"
-        }`}
-      >
-        <span className="text-[11px] font-semibold pt-1.5 text-[var(--df-text)]">{num}</span>
-        <div className="flex-1 flex items-center justify-center">
-          {isMissing ? (
-            <span className="text-[11px] text-[var(--df-text-muted)] select-none">×</span>
-          ) : tooth.badge ? (
-            <span className={`text-[11px] font-bold ${style.badge}`}>{tooth.badge}</span>
-          ) : null}
-        </div>
-        <div className="h-1 w-full" />
-      </button>
+      <ToothSvg
+        key={fdi}
+        tooth={tooth}
+        displayNumber={formatToothNumber(fdi, numberingSystem)}
+        selected={selectedToothNum === fdi}
+        multiSelected={multiSelectedFdis.includes(fdi)}
+        highlighted={matchesLegend}
+        dimmed={isDimmed}
+        diffBadge={diffByFdi[fdi]}
+        hasLinkedImaging={hasLinkedImg}
+        compact={compact}
+        onSelectTooth={handleSelectTooth}
+        onClickSurface={handleClickSurface}
+        onPointerDownTooth={handlePointerDownTooth}
+        onPointerEnterTooth={handlePointerEnterTooth}
+        onHoverTooth={setHoveredToothFdi}
+      />
     );
   };
 
-  const upperLeftNums =
-    dentitionType === "child" ? CHILD_UPPER.slice(0, 5) : [18, 17, 16, 15, 14, 13, 12, 11];
-  const upperRightNums =
-    dentitionType === "child" ? CHILD_UPPER.slice(5) : [21, 22, 23, 24, 25, 26, 27, 28];
-  const lowerLeftNums =
-    dentitionType === "child" ? CHILD_LOWER.slice(0, 5) : [48, 47, 46, 45, 44, 43, 42, 41];
-  const lowerRightNums =
-    dentitionType === "child" ? CHILD_LOWER.slice(5) : [31, 32, 33, 34, 35, 36, 37, 38];
+  // Flow charted tooth findings & planned procedures directly into Treatment Plans without re-typing
+  const handleAddToTreatmentPlan = () => {
+    if (!activePatient) return;
+    const proceduresToPush =
+      selectedTooth.plannedProcedures.length > 0
+        ? selectedTooth.plannedProcedures
+        : [
+            {
+              id: `pp-auto-${Date.now()}`,
+              name: `${CONDITION_BY_CODE[getAllToothConditions(selectedTooth)[0] || "planned"].label} treatment`,
+              fee: 2500,
+            },
+          ];
+
+    const toothLabel = formatToothNumber(selectedTooth.fdi, numberingSystem);
+    updateState((prev) => {
+      const planIdx = prev.treatmentPlans.findIndex((tp) => tp.patientId === activePatient.id);
+      const targetIdx = planIdx >= 0 ? planIdx : 0;
+      const nextPlans = prev.treatmentPlans.map((tp, idx) => {
+        if (idx !== targetIdx) return tp;
+        let nextStageNum = tp.stages.length + 1;
+        let addedFee = 0;
+        const newStages = proceduresToPush.map((proc) => {
+          addedFee += proc.fee;
+          return {
+            id: `st-chart-${Date.now()}-${nextStageNum}`,
+            stageNum: nextStageNum++,
+            procedure: selectedTooth.finding
+              ? `${proc.name} (${selectedTooth.finding.slice(0, 48)})`
+              : proc.name,
+            tooth: toothLabel,
+            doctor: actorName,
+            visitLabel: "Not scheduled",
+            fee: proc.fee,
+            status: "Not booked" as const,
+          };
+        });
+        return {
+          ...tp,
+          stages: [...tp.stages, ...newStages],
+          costSummary: {
+            ...tp.costSummary,
+            planTotal: tp.costSummary.planTotal + addedFee,
+            balance: tp.costSummary.balance + addedFee,
+          },
+        };
+      });
+      return { ...prev, treatmentPlans: nextPlans };
+    });
+
+    logAuditEvent({
+      patientName: activePatient.name,
+      screenName: "Dental chart",
+      action: "CHART_TO_PLAN",
+      entityType: "dental_chart",
+      entityId: `tooth-${selectedTooth.fdi}`,
+      details: `Transferred ${proceduresToPush.length} procedure(s) from tooth ${toothLabel} into treatment plan`,
+    });
+    toast.success(`Transferred tooth ${toothLabel} findings & procedures to treatment plan!`);
+    router.push("/app/treatment-plans");
+  };
+
+  const handleSaveSnapshot = () => {
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    const snapId = `hist-${Date.now()}`;
+    mutateActiveChart((chart) => ({
+      ...chart,
+      history: [
+        ...chart.history,
+        {
+          id: snapId,
+          dateLabel,
+          recordedAt: now.toISOString(),
+          recordedBy: actorName,
+          note: "Clinical checkpoint saved",
+          teeth: JSON.parse(JSON.stringify(chart.teeth)),
+        },
+      ],
+    }));
+    logAuditEvent({
+      patientName: activePatient?.name || "Patient",
+      screenName: "Dental chart",
+      action: "CHART_SNAPSHOT_SAVED",
+      entityType: "dental_chart",
+      entityId: snapId,
+      details: `Saved chart history snapshot (${dateLabel})`,
+    });
+    toast.success(`Saved chart snapshot for ${dateLabel}`);
+  };
 
   return (
-    <div>
+    <div className="space-y-4">
+      <ToothSvgDefs />
+
       <DentflowPageHeader
-        title="Dental chart · Priya Deshmukh"
-        subtitle="FDI numbering · last charted 12 Sep by Dr. Sneha"
+        title={`Dental chart · ${activePatient?.name || "Patient"}`}
+        subtitle={`${numberingSystem} numbering · last charted ${activeChart.lastChartedLabel} by ${activeChart.lastChartedBy}`}
       />
 
-      {/* Chrome-style Tab Bar for Patient Section */}
-      <div className="mb-4">
-        <DentflowChromeTabs
-          activeId="chart"
-          tabs={[
-            { id: "overview", label: "Overview", href: "/app/patients", icon: Users },
-            { id: "chart", label: "Chart & Plans", href: "/app/dental-chart", icon: Activity },
-          ]}
-        />
+      {/* Patient Selector + High-Visibility Clinical Alert Strip */}
+      <div className="df-card p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="chart-patient-select"
+              className="text-xs font-bold text-[var(--df-text-muted)]"
+            >
+              Patient:
+            </label>
+            <select
+              id="chart-patient-select"
+              value={selectedPatientId}
+              onChange={(e) => {
+                setSelectedPatientId(e.target.value);
+                setMultiSelectedFdis([]);
+                setCompareHistoryId(null);
+              }}
+              className="rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--df-text)] cursor-pointer"
+            >
+              {state.patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.age}y {p.gender[0]} · {p.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Clinical Alert Strip: Allergies, Anxiety, Systemic conditions */}
+          {activePatient && (
+            <div className="flex flex-wrap items-center gap-1.5" role="region" aria-label="Patient clinical alerts">
+              {activePatient.allergies.length > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--df-status-red-bg)] text-[var(--df-status-red-text)] border border-[var(--df-status-red-border)]">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Allergy: {activePatient.allergies.join(", ")}
+                </span>
+              ) : (
+                <DentflowStatusPill label="NKDA (No known allergies)" tone="green" />
+              )}
+
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                  activePatient.comfortProfile.anxietyScore >= 6
+                    ? "bg-[var(--df-status-amber-bg)] text-[var(--df-status-amber-text)] border-[var(--df-status-amber-border)]"
+                    : "bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] border-[var(--df-border)]"
+                }`}
+              >
+                Anxiety: {activePatient.comfortProfile.anxietyScore}/10
+                {activePatient.comfortProfile.autoBufferMin > 0
+                  ? ` (+${activePatient.comfortProfile.autoBufferMin}m)`
+                  : ""}
+              </span>
+
+              {activePatient.conditions && activePatient.conditions !== "None" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--df-status-blue-bg)] text-[var(--df-status-blue-text)] border border-[var(--df-status-blue-border)]">
+                  Systemic: {activePatient.conditions}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Print / PDF + Numbering indicator */}
+        <div className="flex items-center gap-2 print:hidden">
+          <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-[var(--df-text-secondary)]">
+            {numberingSystem}
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowShortcuts((v) => !v)}
+            aria-label="Toggle keyboard shortcuts help"
+            className="df-btn-secondary inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs cursor-pointer"
+          >
+            <Keyboard className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Shortcuts</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="df-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs cursor-pointer"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            <span>Print / PDF</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        {/* Left 8-col area: Odontogram + Periodontal + Imaging */}
-        <div className="xl:col-span-8 space-y-4">
-          {/* Odontogram */}
-          <div className="df-card p-5 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-bold text-[var(--df-text)]">Odontogram</h2>
+      {/* Keyboard Shortcuts Bar (collapsible) */}
+      {showShortcuts && (
+        <div className="df-card px-4 py-2.5 text-xs text-[var(--df-text-secondary)] flex flex-wrap items-center justify-between gap-2 bg-[var(--df-surface-muted)] print:hidden">
+          <div className="flex flex-wrap items-center gap-3">
+            <span><kbd className="px-1.5 py-0.5 rounded bg-white border font-mono text-[11px]">36</kbd> Type FDI tooth # to jump</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-white border font-mono text-[11px]">1–9</kbd> Pick condition</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-white border font-mono text-[11px]">← → ↑ ↓</kbd> Navigate teeth</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-white border font-mono text-[11px]">Drag / Shift+Click</kbd> Multi-select</span>
+            <span><kbd className="px-1.5 py-0.5 rounded bg-white border font-mono text-[11px]">Esc</kbd> Clear selection</span>
+          </div>
+          {keyBuffer && (
+            <span className="font-mono font-bold text-[var(--df-teal)]">Typed: {keyBuffer}_</span>
+          )}
+        </div>
+      )}
 
+      {/* Summary Strip Above Chart */}
+      <div className="df-card px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-bold text-[var(--df-text-muted)] uppercase tracking-wider text-[10.5px]">
+            Chart summary:
+          </span>
+          {TOOTH_CONDITIONS.filter(
+            (c) => c.code !== "healthy" && (summary.byCondition[c.code] || 0) > 0,
+          ).map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => setLegendHighlight((cur) => (cur === c.code ? null : c.code))}
+              style={{
+                backgroundColor: c.badgeBg,
+                color: c.badgeText,
+                borderColor: c.stroke,
+              }}
+              className="px-2 py-0.5 rounded-full text-xs font-bold border cursor-pointer hover:opacity-90"
+            >
+              {c.shortCode} · {c.label}: {summary.byCondition[c.code]}
+            </button>
+          ))}
+          {Object.keys(summary.byCondition).length === 0 && (
+            <span className="text-[var(--df-text-muted)]">All teeth charted healthy</span>
+          )}
+        </div>
+        <div className="font-semibold text-[var(--df-teal)]">
+          Planned procedures: {summary.plannedProceduresCount} (₹
+          {summary.plannedProceduresTotalFee.toLocaleString("en-IN")})
+        </div>
+      </div>
+
+      {/* Main Layout: Left 8-col Odontogram + Right 4-col Selected Tooth Panel */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        <div className="xl:col-span-8 space-y-4">
+          {/* Odontogram Card */}
+          <div className="df-card p-4 sm:p-5 space-y-4">
+            {/* Top Controls: Dentition View + History Compare + Zoom */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[var(--df-canvas-subtle)] border border-[var(--df-border)]">
                 {(
                   [
                     { id: "adult", label: "Adult" },
-                    { id: "child", label: "Child (primary)" },
+                    { id: "child", label: "Child (Primary)" },
                     { id: "mixed", label: "Mixed" },
                   ] as const
                 ).map((tab) => (
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setDentitionType(tab.id)}
-                    className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
-                      dentitionType === tab.id
+                    onClick={() => handleDentitionChange(tab.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                      dentitionView === tab.id
                         ? "bg-[var(--df-sidebar-bg)] text-white"
                         : "text-[var(--df-text-secondary)] hover:text-[var(--df-text)]"
                     }`}
@@ -263,400 +721,611 @@ function DentalChartContent() {
                   </button>
                 ))}
               </div>
+
+              {/* History Compare + Zoom controls */}
+              <div className="flex flex-wrap items-center gap-2 print:hidden">
+                <div className="inline-flex items-center gap-1.5">
+                  <History className="h-3.5 w-3.5 text-[var(--df-text-muted)]" />
+                  <select
+                    aria-label="Compare chart with historical date"
+                    value={compareHistoryId || ""}
+                    onChange={(e) => setCompareHistoryId(e.target.value || null)}
+                    className="rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1 text-xs font-medium text-[var(--df-text)] cursor-pointer"
+                  >
+                    <option value="">Compare with date...</option>
+                    {activeChart.history.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.dateLabel} ({h.recordedBy})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleSaveSnapshot}
+                    className="df-btn-secondary px-2.5 py-1 text-xs cursor-pointer"
+                  >
+                    Save snapshot
+                  </button>
+                </div>
+
+                {/* Zoom controls (complementing tablet pinch-zoom) */}
+                <div className="inline-flex items-center gap-1 border border-[var(--df-border)] rounded-lg bg-[var(--df-surface)] p-0.5">
+                  <button
+                    type="button"
+                    aria-label="Zoom out odontogram"
+                    onClick={() => setZoomScale((z) => Math.max(0.75, Number((z - 0.1).toFixed(2))))}
+                    className="p-1 rounded hover:bg-[var(--df-surface-hover)] cursor-pointer"
+                  >
+                    <ZoomOut className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="text-[11px] font-mono px-1">{Math.round(zoomScale * 100)}%</span>
+                  <button
+                    type="button"
+                    aria-label="Zoom in odontogram"
+                    onClick={() => setZoomScale((z) => Math.min(1.5, Number((z + 0.1).toFixed(2))))}
+                    className="p-1 rounded hover:bg-[var(--df-surface-hover)] cursor-pointer"
+                  >
+                    <ZoomIn className="h-3.5 w-3.5" />
+                  </button>
+                  {zoomScale !== 1 && (
+                    <button
+                      type="button"
+                      aria-label="Reset zoom"
+                      onClick={() => setZoomScale(1)}
+                      className="p-1 rounded hover:bg-[var(--df-surface-hover)] cursor-pointer"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {dentitionType === "mixed" && (
-              <div className="px-3 py-1.5 rounded-lg bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] text-[11px] text-[var(--df-teal)] font-medium">
-                Mixed dentition overlay active · Click any FDI permanent tooth (or switch to Child for deciduous 55–85)
+            {/* Paint-First Condition Palette */}
+            <div className="p-2.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2 print:hidden">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                  1. Pick condition → 2. Tap surfaces to paint (or drag teeth to multi-select)
+                </span>
+                {multiSelectedFdis.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-blue-700">
+                      {multiSelectedFdis.length} selected
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleApplyCondition(activeCondition, multiSelectedFdis);
+                        setMultiSelectedFdis([]);
+                      }}
+                      className="df-btn-primary px-2.5 py-1 text-[11px] cursor-pointer"
+                    >
+                      Apply {CONDITION_BY_CODE[activeCondition].label}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMultiSelectedFdis([])}
+                      className="df-btn-secondary px-2 py-1 text-[11px] cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {TOOTH_CONDITIONS.map((cond) => {
+                  const isActive = activeCondition === cond.code;
+                  return (
+                    <button
+                      key={cond.code}
+                      type="button"
+                      onClick={() => setActiveCondition(cond.code)}
+                      style={
+                        isActive
+                          ? { backgroundColor: cond.stroke, color: "#FFFFFF", borderColor: cond.stroke }
+                          : { backgroundColor: cond.badgeBg, color: cond.badgeText, borderColor: cond.stroke }
+                      }
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer ${
+                        isActive ? "ring-2 ring-offset-1 ring-[var(--df-sidebar-bg)] shadow-xs" : "opacity-90 hover:opacity-100"
+                      }`}
+                    >
+                      {cond.shortcutKey && (
+                        <span className="text-[9.5px] opacity-75 font-mono">{cond.shortcutKey}</span>
+                      )}
+                      <span>{cond.shortCode}</span>
+                      <span className="font-semibold">{cond.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* History Diff Banner when comparing */}
+            {compareSnapshot && (
+              <div className="p-3 rounded-xl bg-[var(--df-alert-amber-bg)] border border-[var(--df-status-amber-border)] space-y-1.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold text-[var(--df-status-amber-text)]">
+                    Comparing current chart vs {compareSnapshot.dateLabel} (by {compareSnapshot.recordedBy})
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCompareHistoryId(null)}
+                    className="text-xs font-semibold underline cursor-pointer"
+                  >
+                    Exit compare
+                  </button>
+                </div>
+                {chartDiffs.length === 0 ? (
+                  <p className="text-[var(--df-text-secondary)]">No changes detected since {compareSnapshot.dateLabel}.</p>
+                ) : (
+                  <ul className="space-y-0.5 text-[var(--df-text-secondary)]">
+                    {chartDiffs.map((d) => (
+                      <li key={d.fdi}>
+                        <strong>Tooth {formatToothNumber(d.fdi, numberingSystem)}</strong>:{" "}
+                        {d.added.length > 0 && `Added ${d.added.join(", ")}. `}
+                        {d.removed.length > 0 && `Resolved ${d.removed.join(", ")}. `}
+                        {d.surfaceChanges.length > 0 && `Surfaces (${d.surfaceChanges.join("; ")})`}
+                        {d.changedBy && <span className="text-[var(--df-text-muted)]"> — by {d.changedBy}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
-            {/* Upper Arch */}
-            <div className="space-y-2">
-              <p className="text-center text-[11px] text-[var(--df-text-muted)] font-medium">
-                Upper · patient&apos;s right ← → patient&apos;s left
-              </p>
-              <div className="flex items-center justify-center gap-1.5 overflow-x-auto pb-1">
-                <div className="flex items-center gap-1">{upperLeftNums.map(renderToothBox)}</div>
-                <div className="w-[1.5px] h-12 bg-[var(--df-border-strong)] mx-1 shrink-0" />
-                <div className="flex items-center gap-1">{upperRightNums.map(renderToothBox)}</div>
-              </div>
-              <div className="flex items-center gap-2 px-1">
-                <ChevronLeft className="h-3 w-3 text-[var(--df-text-muted)] shrink-0" />
-                <div className="h-2 flex-1 rounded-full bg-[var(--df-border-strong)]/60" />
-                <ChevronRight className="h-3 w-3 text-[var(--df-text-muted)] shrink-0" />
-              </div>
-            </div>
+            {/* Arch Canvas (No horizontal scrollbars; tablet pinch-zoom enabled) */}
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              className="w-full py-2 overflow-visible"
+            >
+              <div
+                style={{
+                  transform: `scale(${zoomScale})`,
+                  transformOrigin: "top center",
+                }}
+                className="space-y-4 transition-transform"
+              >
+                {/* Upper Arch */}
+                <div className="space-y-1.5">
+                  <p className="text-center text-xs text-[var(--df-text-muted)] font-semibold">
+                    Upper Arch · Patient&apos;s Right (Q1) ← Midline → Patient&apos;s Left (Q2)
+                  </p>
 
-            {/* Lower Arch */}
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center justify-center gap-1.5 overflow-x-auto pb-1">
-                <div className="flex items-center gap-1">{lowerLeftNums.map(renderToothBox)}</div>
-                <div className="w-[1.5px] h-12 bg-[var(--df-border-strong)] mx-1 shrink-0" />
-                <div className="flex items-center gap-1">{lowerRightNums.map(renderToothBox)}</div>
-              </div>
-              <div className="flex items-center gap-2 px-1">
-                <ChevronLeft className="h-3 w-3 text-[var(--df-text-muted)] shrink-0" />
-                <div className="h-2 flex-1 rounded-full bg-[var(--df-border-strong)]/60" />
-                <ChevronRight className="h-3 w-3 text-[var(--df-text-muted)] shrink-0" />
-              </div>
-              <p className="text-center text-[11px] text-[var(--df-text-muted)] font-medium">Lower</p>
-            </div>
-
-            {/* Legend */}
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-3 border-t border-[var(--df-border)] text-[11px] text-[var(--df-text-secondary)]">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-border-strong)] bg-[var(--df-surface)]" />
-                Healthy
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-status-red-text)] bg-[var(--df-status-red-bg)]" />
-                Caries
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-status-blue-text)] bg-[var(--df-status-blue-bg)]" />
-                Filled
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-status-amber-text)] bg-[var(--df-status-amber-bg)]" />
-                Crown
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-status-purple-text)] bg-[var(--df-status-purple-bg)]" />
-                Root canal
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-dashed border-[var(--df-border-strong)] bg-[var(--df-surface-muted)]" />
-                Missing
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded border border-[var(--df-teal)] bg-[var(--df-teal-soft)]" />
-                Planned
-              </span>
-            </div>
-          </div>
-
-          {/* Periodontal chart + Imaging */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Periodontal chart · lower left */}
-            <div className="df-card p-4 space-y-3">
-              <h3 className="text-xs font-bold text-[var(--df-text)]">
-                Periodontal chart · lower left
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--df-border)] text-[var(--df-text-muted)]">
-                      <th className="py-1.5 pr-2 text-left font-medium">Tooth</th>
-                      {perioRows.map((r) => (
-                        <th
-                          key={r.tooth}
-                          className="py-1.5 px-1.5 text-center font-bold text-[var(--df-text)]"
-                        >
-                          {r.tooth}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-[var(--df-border)]">
-                      <td className="py-2 pr-2 font-medium text-[var(--df-text-muted)] whitespace-nowrap">
-                        Pocket (mm)
-                      </td>
-                      {perioRows.map((r, idx) => (
-                        <td key={r.tooth} className="py-2 px-1 text-center">
-                          {r.pocket !== null ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const prevP = r.pocket;
-                                const nextP = prevP !== null ? (prevP >= 6 ? 2 : prevP + 1) : null;
-                                setPerioRows((prev) =>
-                                  prev.map((item, i) => {
-                                    if (i !== idx || item.pocket === null) return item;
-                                    const updatedP = item.pocket >= 6 ? 2 : item.pocket + 1;
-                                    return { ...item, pocket: updatedP, alert: updatedP >= 5 };
-                                  }),
-                                );
-                                if (prevP !== null && nextP !== null) {
-                                  logAuditEvent({
-                                    patientName: "Priya Deshmukh",
-                                    screenName: "Dental chart",
-                                    action: "PERIO_UPDATE",
-                                    entityType: "dental_chart",
-                                    entityId: `perio-${r.tooth}`,
-                                    details: `Tooth ${r.tooth} pocket depth updated: ${prevP}mm → ${nextP}mm`,
-                                  });
-                                }
-                              }}
-                              title="Click to adjust pocket depth"
-                              className={`inline-block px-1.5 py-0.5 rounded font-semibold cursor-pointer ${
-                                r.pocket >= 5
-                                  ? "bg-[var(--df-status-red-bg)] text-[var(--df-status-red-text)] font-bold"
-                                  : "text-[var(--df-text)] hover:bg-[var(--df-surface-hover)]"
-                              }`}
-                            >
-                              {r.pocket}
-                            </button>
-                          ) : (
-                            <span className="text-[var(--df-text-muted)]">—</span>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-b border-[var(--df-border)]">
-                      <td className="py-2 pr-2 font-medium text-[var(--df-text-muted)] whitespace-nowrap">
-                        Bleeding
-                      </td>
-                      {perioRows.map((r) => (
-                        <td key={r.tooth} className="py-2 px-1 text-center">
-                          {r.bleeding && (
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--df-status-red-text)]" />
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2 pr-2 font-medium text-[var(--df-text-muted)] whitespace-nowrap">
-                        Mobility
-                      </td>
-                      {perioRows.map((r) => (
-                        <td
-                          key={r.tooth}
-                          className="py-2 px-1 text-center text-[var(--df-text-muted)]"
-                        >
-                          {r.mobility !== null ? r.mobility : ""}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="pt-1 border-t border-[var(--df-border)] flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCompareBaseline((v) => !v)}
-                  className="text-[11px] text-[var(--df-text-muted)] hover:text-[var(--df-teal)] font-medium cursor-pointer text-left"
-                >
-                  Pockets ≥ 5 mm shaded. Compare with 12 Mar charting →
-                </button>
-              </div>
-              {compareBaseline && (
-                <div className="p-2.5 rounded-lg bg-[var(--df-alert-amber-bg)] border border-[var(--df-status-amber-border)] text-[11px] text-[var(--df-text-secondary)]">
-                  Baseline (12 Mar): Tooth 36 pocket was 4 mm, now 5 mm (+1 mm with distal bleeding).
-                </div>
-              )}
-            </div>
-
-            {/* Imaging */}
-            <div className="df-card p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-bold text-[var(--df-text)]">Imaging</h3>
-                <button
-                  type="button"
-                  onClick={() => setImagingDrawerOpen(true)}
-                  className="df-btn-secondary px-2.5 py-1 text-[11px] cursor-pointer"
-                >
-                  Upload / RVG import
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                {DENTAL_IMAGING_ITEMS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      if (item.hasAnnotation) {
-                        setImagingDrawerOpen(true);
-                      } else {
-                        toast.info(`Viewing ${item.title} (${item.date})`);
-                      }
-                    }}
-                    className="group text-left cursor-pointer"
-                  >
-                    <div className="aspect-[4/3] rounded-lg bg-[var(--df-sidebar-bg)] border border-[var(--df-border-strong)] flex items-center justify-center relative overflow-hidden group-hover:ring-2 group-hover:ring-[var(--df-teal)] transition-all">
-                      <svg viewBox="0 0 100 75" className="w-full h-full">
-                        <rect width="100" height="75" className="fill-[#0B161C]" />
-                        {item.hasAnnotation ? (
-                          <>
-                            <ellipse cx="50" cy="38" rx="18" ry="24" className="fill-[#CBD5E1]/25" />
-                            <circle
-                              cx="50"
-                              cy="37"
-                              r="12"
-                              fill="none"
-                              stroke="var(--df-unique-dark-text)"
-                              strokeWidth="2.5"
-                            />
-                          </>
-                        ) : (
-                          <path
-                            d="M 18 52 Q 50 28 82 52"
-                            stroke="#64748B"
-                            strokeWidth="2.5"
-                            fill="none"
-                          />
-                        )}
-                      </svg>
+                  {dentitionView !== "child" && (
+                    <div className="flex items-center justify-center gap-1 flex-wrap lg:flex-nowrap">
+                      <div className="flex items-center gap-1">
+                        {UPPER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      </div>
+                      <div className="w-[2px] h-24 bg-[var(--df-teal)]/50 mx-1.5 shrink-0 rounded-full" aria-label="Upper midline" />
+                      <div className="flex items-center gap-1">
+                        {UPPER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      </div>
                     </div>
-                    <p className="text-[11px] font-bold text-[var(--df-text)] mt-1.5">
-                      {item.title}
-                    </p>
-                    <p className="text-[10px] text-[var(--df-text-muted)]">{item.date}</p>
-                  </button>
-                ))}
-              </div>
+                  )}
 
-              <p className="text-[11px] text-[var(--df-text-muted)] pt-1 border-t border-[var(--df-border)]">
-                Images are linked to teeth. Annotate → use in patient explainer.
-              </p>
+                  {/* Primary Upper Row (Child view OR aligned under permanent 15..11 | 21..25 in Mixed view) */}
+                  {(dentitionView === "child" || dentitionView === "mixed") && (
+                    <div className="flex items-center justify-center gap-1 pt-1">
+                      <div className="flex items-center gap-1">
+                        {UPPER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      </div>
+                      <div className="w-[2px] h-20 bg-purple-400/60 mx-1.5 shrink-0 rounded-full" />
+                      <div className="flex items-center gap-1">
+                        {UPPER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Occlusal Plane Divider */}
+                <div className="border-t-2 border-dashed border-[var(--df-border-strong)] my-2" />
+
+                {/* Lower Arch */}
+                <div className="space-y-1.5">
+                  {/* Primary Lower Row (Child view OR aligned over permanent 45..41 | 31..35 in Mixed view) */}
+                  {(dentitionView === "child" || dentitionView === "mixed") && (
+                    <div className="flex items-center justify-center gap-1 pb-1">
+                      <div className="flex items-center gap-1">
+                        {LOWER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      </div>
+                      <div className="w-[2px] h-20 bg-purple-400/60 mx-1.5 shrink-0 rounded-full" />
+                      <div className="flex items-center gap-1">
+                        {LOWER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      </div>
+                    </div>
+                  )}
+
+                  {dentitionView !== "child" && (
+                    <div className="flex items-center justify-center gap-1 flex-wrap lg:flex-nowrap">
+                      <div className="flex items-center gap-1">
+                        {LOWER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      </div>
+                      <div className="w-[2px] h-24 bg-[var(--df-teal)]/50 mx-1.5 shrink-0 rounded-full" aria-label="Lower midline" />
+                      <div className="flex items-center gap-1">
+                        {LOWER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-center text-xs text-[var(--df-text-muted)] font-semibold">
+                    Lower Arch · Patient&apos;s Right (Q4) ← Midline → Patient&apos;s Left (Q3)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Clickable Legend (Highlights matching teeth; included in Print/PDF) */}
+            <div className="pt-3 border-t border-[var(--df-border)] space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] text-[var(--df-text-muted)]">
+                <span className="font-bold uppercase tracking-wider">
+                  Legend (click condition to highlight matching teeth)
+                </span>
+                {legendHighlight && (
+                  <button
+                    type="button"
+                    onClick={() => setLegendHighlight(null)}
+                    className="text-[var(--df-teal)] font-semibold underline cursor-pointer print:hidden"
+                  >
+                    Clear highlight
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {TOOTH_CONDITIONS.filter((c) => c.code !== "healthy").map((c) => {
+                  const isHighlighted = legendHighlight === c.code;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() =>
+                        setLegendHighlight((cur) => (cur === c.code ? null : c.code))
+                      }
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] font-medium border cursor-pointer transition-all ${
+                        isHighlighted
+                          ? "ring-2 ring-amber-500 border-amber-500 bg-amber-50 font-bold"
+                          : "border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal)]"
+                      }`}
+                    >
+                      <span
+                        style={{
+                          backgroundColor: c.badgeBg,
+                          color: c.badgeText,
+                          borderColor: c.stroke,
+                        }}
+                        className="px-1 rounded text-[9.5px] font-bold border"
+                      >
+                        {c.shortCode}
+                      </span>
+                      <span className="text-[var(--df-text-secondary)]">{c.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right 4-col panel: Selected tooth detail */}
+        {/* Right 4-col Selected-Tooth Detail Panel */}
         <div className="xl:col-span-4 df-card p-5 space-y-4">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="df-serif text-3xl font-semibold text-[var(--df-text)]">
-                {selectedTooth.number}
-              </span>
-              <span className="text-xs font-medium text-[var(--df-text-muted)]">
-                {selectedTooth.name}
-              </span>
-            </div>
-            <p className="text-xs font-bold text-[var(--df-status-red-text)] mt-1">
-              {selectedTooth.conditionText ||
-                (selectedTooth.status === "healthy"
-                  ? "Healthy tooth structure"
-                  : `${selectedTooth.status.replace("_", " ")} recorded`)}
-            </p>
-          </div>
-
-          {/* Condition quick status pills */}
-          <div className="flex flex-wrap gap-1">
-            {(["healthy", "caries", "filled", "crown", "root_canal", "planned"] as const).map(
-              (st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => handleStatusChange(st)}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border cursor-pointer capitalize ${
-                    selectedTooth.status === st
-                      ? "bg-[var(--df-sidebar-bg)] text-white border-[var(--df-sidebar-bg)]"
-                      : "bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] border-[var(--df-border)]"
-                  }`}
-                >
-                  {st.replace("_", " ")}
-                </button>
-              ),
-            )}
-          </div>
-
-          {/* Surfaces Cross */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-[var(--df-text-muted)]">Surfaces</p>
-            <div className="flex flex-col items-center justify-center py-2">
-              <button
-                type="button"
-                onClick={() => toggleSurface("B")}
-                className={`h-8 w-8 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  selectedTooth.surfaces?.B
-                    ? "bg-[var(--df-status-red-text)] text-white"
-                    : "bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                }`}
-              >
-                B
-              </button>
-              <div className="flex items-center gap-1.5 my-1.5">
-                {(["M", "O", "D"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleSurface(s)}
-                    className={`h-8 w-8 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                      selectedTooth.surfaces?.[s]
-                        ? "bg-[var(--df-status-red-text)] text-white"
-                        : "bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="df-serif text-3xl font-semibold text-[var(--df-text)]">
+                  {formatToothNumber(selectedTooth.fdi, numberingSystem)}
+                </span>
+                <span className="text-xs font-medium text-[var(--df-text-muted)]">
+                  {getToothDisplayName(selectedTooth.fdi)}
+                </span>
               </div>
+              {numberingSystem !== "FDI" && (
+                <p className="text-[11px] text-[var(--df-text-muted)] font-mono">
+                  FDI #{selectedTooth.fdi}
+                </p>
+              )}
+            </div>
+
+            {/* Show roots toggle */}
+            <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--df-text-secondary)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showRoots}
+                onChange={(e) => setShowRoots(e.target.checked)}
+                className="h-3.5 w-3.5 rounded accent-[var(--df-teal)]"
+              />
+              <span>Show roots</span>
+            </label>
+          </div>
+
+          {/* Large Crown & Roots SVG + Interactive Surfaces */}
+          <DetailedToothRootSvg
+            tooth={selectedTooth}
+            displayNumber={formatToothNumber(selectedTooth.fdi, numberingSystem)}
+            showRoots={showRoots}
+            onClickSurface={(surf) => handleClickSurface(selectedTooth.fdi, surf)}
+          />
+
+          {/* Root & Eruption Controls */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
+                Eruption state
+              </label>
+              <select
+                aria-label="Tooth eruption state"
+                value={selectedTooth.eruptionState}
+                onChange={(e) =>
+                  handleEruptionChange(selectedTooth.fdi, e.target.value as EruptionState)
+                }
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1.5 text-xs"
+              >
+                <option value="erupted">Erupted</option>
+                <option value="partially_erupted">Partially erupted</option>
+                <option value="unerupted">Unerupted</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[var(--df-text-muted)] mb-1">
+                Alveolar bone level
+              </label>
+              <select
+                aria-label="Bone level"
+                value={selectedTooth.rootFlags?.boneLossLevel || "normal"}
+                onChange={(e) => {
+                  const val = e.target.value as "normal" | "mild" | "moderate" | "severe";
+                  mutateActiveChart((chart) => {
+                    const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                    return {
+                      ...chart,
+                      teeth: {
+                        ...chart.teeth,
+                        [selectedTooth.fdi]: {
+                          ...cur,
+                          rootFlags: { ...cur.rootFlags, boneLossLevel: val },
+                        },
+                      },
+                    };
+                  });
+                }}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1.5 text-xs"
+              >
+                <option value="normal">Normal</option>
+                <option value="mild">Mild loss</option>
+                <option value="moderate">Moderate loss</option>
+                <option value="severe">Severe loss</option>
+              </select>
+            </div>
+          </div>
+
+          {showRoots && (
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(selectedTooth.rootFlags?.rctObturation)}
+                  onChange={(e) =>
+                    mutateActiveChart((chart) => {
+                      const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                      return {
+                        ...chart,
+                        teeth: {
+                          ...chart.teeth,
+                          [selectedTooth.fdi]: {
+                            ...cur,
+                            rootFlags: { ...cur.rootFlags, rctObturation: e.target.checked },
+                          },
+                        },
+                      };
+                    })
+                  }
+                  className="h-3.5 w-3.5 rounded accent-[var(--df-teal)]"
+                />
+                <span>RCT obturation</span>
+              </label>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={Boolean(selectedTooth.rootFlags?.apicalLesion)}
+                  onChange={(e) =>
+                    mutateActiveChart((chart) => {
+                      const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                      return {
+                        ...chart,
+                        teeth: {
+                          ...chart.teeth,
+                          [selectedTooth.fdi]: {
+                            ...cur,
+                            rootFlags: { ...cur.rootFlags, apicalLesion: e.target.checked },
+                          },
+                        },
+                      };
+                    })
+                  }
+                  className="h-3.5 w-3.5 rounded accent-red-600"
+                />
+                <span>Apical lesion</span>
+              </label>
+            </div>
+          )}
+
+          {/* Active Conditions on this tooth (multi-condition chips) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[var(--df-text-muted)]">
+                Recorded conditions
+              </span>
               <button
                 type="button"
-                onClick={() => toggleSurface("L")}
-                className={`h-8 w-8 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  selectedTooth.surfaces?.L
-                    ? "bg-[var(--df-status-red-text)] text-white"
-                    : "bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-[var(--df-text-secondary)]"
-                }`}
+                onClick={() => handleApplyCondition(activeCondition, [selectedTooth.fdi])}
+                className="text-[11px] font-bold text-[var(--df-teal)] hover:underline cursor-pointer"
               >
-                L
+                + Apply {CONDITION_BY_CODE[activeCondition].label}
               </button>
             </div>
-          </div>
-
-          {/* Finding */}
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold text-[var(--df-text-muted)]">Finding</p>
-            <div className="rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] p-3 text-xs text-[var(--df-text-secondary)] leading-relaxed">
-              {selectedTooth.finding || "No abnormal clinical findings recorded."}
-            </div>
-          </div>
-
-          {/* Planned on this tooth */}
-          <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-[var(--df-text-muted)]">
-              Planned on this tooth
-            </p>
-            <div className="space-y-1.5">
-              {selectedTooth.planned && selectedTooth.planned.length > 0 ? (
-                selectedTooth.planned.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs"
-                  >
-                    <span className="font-semibold text-[var(--df-text)]">{item.name}</span>
-                    <span className="font-bold text-[var(--df-text)]">{item.price}</span>
-                  </div>
-                ))
+            <div className="flex flex-wrap gap-1.5">
+              {getAllToothConditions(selectedTooth).length === 0 ? (
+                <span className="text-xs text-[var(--df-text-muted)]">Healthy tooth structure</span>
               ) : (
-                <p className="text-xs text-[var(--df-text-muted)] italic">
-                  No procedures currently planned on tooth {selectedTooth.number}.
-                </p>
+                getAllToothConditions(selectedTooth).map((c) => {
+                  const meta = CONDITION_BY_CODE[c];
+                  return (
+                    <span
+                      key={c}
+                      style={{
+                        backgroundColor: meta.badgeBg,
+                        color: meta.badgeText,
+                        borderColor: meta.stroke,
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border"
+                    >
+                      <span>{meta.shortCode} · {meta.label}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${meta.label}`}
+                        onClick={() => handleRemoveCondition(selectedTooth.fdi, c)}
+                        className="hover:opacity-70 cursor-pointer"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  );
+                })
               )}
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="pt-2 space-y-2">
+          {/* Editable Clinical Findings Notes */}
+          <div className="space-y-1">
+            <label className="block text-[11px] font-semibold text-[var(--df-text-muted)]">
+              Clinical findings notes
+            </label>
+            <textarea
+              rows={2}
+              value={selectedTooth.finding || ""}
+              placeholder="Enter clinical findings (flows directly into treatment plan & explainer)..."
+              onChange={(e) => {
+                const text = e.target.value;
+                mutateActiveChart((chart) => {
+                  const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                  return {
+                    ...chart,
+                    teeth: { ...chart.teeth, [selectedTooth.fdi]: { ...cur, finding: text } },
+                  };
+                });
+              }}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] p-2.5 text-xs text-[var(--df-text)]"
+            />
+          </div>
+
+          {/* Planned Procedures on this tooth */}
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold text-[var(--df-text-muted)]">
+              Planned procedures on tooth {formatToothNumber(selectedTooth.fdi, numberingSystem)}
+            </p>
+            <div className="space-y-1.5">
+              {selectedTooth.plannedProcedures.map((proc) => (
+                <div
+                  key={proc.id}
+                  className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] text-xs"
+                >
+                  <span className="font-semibold text-[var(--df-text)]">{proc.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[var(--df-text)]">
+                      ₹{proc.fee.toLocaleString("en-IN")}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${proc.name}`}
+                      onClick={() =>
+                        mutateActiveChart((chart) => {
+                          const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                          return {
+                            ...chart,
+                            teeth: {
+                              ...chart.teeth,
+                              [selectedTooth.fdi]: {
+                                ...cur,
+                                plannedProcedures: cur.plannedProcedures.filter((x) => x.id !== proc.id),
+                              },
+                            },
+                          };
+                        })
+                      }
+                      className="text-[var(--df-text-muted)] hover:text-red-600 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick add planned procedure */}
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                placeholder="Add procedure (e.g. Composite filling)"
+                value={newProcName}
+                onChange={(e) => setNewProcName(e.target.value)}
+                className="flex-1 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 text-xs"
+              />
+              <input
+                type="number"
+                aria-label="Procedure fee"
+                value={newProcFee}
+                onChange={(e) => setNewProcFee(e.target.value)}
+                className="w-20 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1.5 text-xs"
+              />
+              <button
+                type="button"
+                aria-label="Add planned procedure"
+                onClick={() => {
+                  if (!newProcName.trim()) return;
+                  const proc = {
+                    id: `pp-${Date.now()}`,
+                    name: newProcName.trim(),
+                    fee: Math.max(0, Number(newProcFee) || 0),
+                  };
+                  mutateActiveChart((chart) => {
+                    const cur = chart.teeth[selectedTooth.fdi] || createHealthyTooth(selectedTooth.fdi);
+                    return {
+                      ...chart,
+                      teeth: {
+                        ...chart.teeth,
+                        [selectedTooth.fdi]: {
+                          ...cur,
+                          plannedProcedures: [...cur.plannedProcedures, proc],
+                        },
+                      },
+                    };
+                  });
+                  setNewProcName("");
+                }}
+                className="df-btn-secondary p-1.5 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Actions: Flow findings directly to Treatment Plan & Patient Explainer */}
+          <div className="pt-2 space-y-2 print:hidden">
             <button
               type="button"
-              onClick={() => {
-                logAuditEvent({
-                  patientName: "Priya Deshmukh",
-                  screenName: "Dental chart",
-                  action: "CHART_TO_PLAN",
-                  entityType: "dental_chart",
-                  entityId: `tooth-${selectedTooth.number}`,
-                  details: `Tooth ${selectedTooth.number} (${selectedTooth.status}) added to treatment plan TP-2231`,
-                });
-                toast.success(
-                  `Tooth ${selectedTooth.number} added to treatment plan TP-2231`,
-                );
-                router.push("/app/treatment-plans");
-              }}
+              onClick={handleAddToTreatmentPlan}
               className="w-full df-btn-primary py-2.5 text-xs cursor-pointer"
             >
               Add to treatment plan
             </button>
             <button
               type="button"
-              onClick={() => router.push("/app/explainers")}
+              onClick={() =>
+                router.push(
+                  `/app/explainers?patientId=${activePatient?.id || "pat-priya"}&tooth=${selectedTooth.fdi}`,
+                )
+              }
               className="w-full df-btn-secondary py-2.5 text-xs cursor-pointer"
             >
               Create patient explainer
@@ -664,130 +1333,6 @@ function DentalChartContent() {
           </div>
         </div>
       </div>
-
-      {/* Imaging + AI X-ray detection drawer */}
-      <DentflowDrawer
-        open={imagingDrawerOpen}
-        onClose={() => setImagingDrawerOpen(false)}
-        title="Imaging & AI radiograph assist"
-        subtitle="IOPA 36 · dentist review required before writing chart"
-      >
-        <div className="space-y-4">
-          <div className="aspect-[16/10] rounded-xl bg-[#0B161C] border border-[var(--df-border-strong)] relative flex items-center justify-center overflow-hidden">
-            <svg viewBox="0 0 240 150" className="w-full h-full">
-              <rect width="240" height="150" fill="#0B161C" />
-              <path
-                d="M 85 32 Q 100 18 120 18 Q 140 18 155 32 L 160 88 Q 152 132 136 135 Q 126 105 120 88 Q 114 105 104 135 Q 88 132 80 88 Z"
-                fill="#CBD5E1"
-                opacity="0.82"
-              />
-              <path
-                d="M 102 48 Q 120 42 138 48 L 132 85 Q 126 115 120 82 Q 114 115 108 85 Z"
-                fill="#0F172A"
-              />
-              <circle
-                cx="128"
-                cy="52"
-                r="18"
-                fill="none"
-                stroke="#F5B076"
-                strokeWidth="3"
-              />
-              <text x="128" y="56" fill="#F5B076" fontSize="10" fontWeight="700" textAnchor="middle">
-                36 OD
-              </text>
-            </svg>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--df-text)]">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--df-teal)]" />
-                AI X-ray suggestions (AiSuggestion)
-              </span>
-              <DentflowStatusPill label="Pending review" tone="amber" />
-            </div>
-            {aiSuggestions.map((s) => (
-              <div
-                key={s.id}
-                className="p-2.5 rounded-lg bg-[var(--df-surface)] border border-[var(--df-border)] space-y-2"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-semibold text-[var(--df-text)]">
-                    Tooth {s.tooth}: {s.finding}
-                  </p>
-                  <DentflowStatusPill
-                    label={s.status}
-                    tone={
-                      s.status === "Accepted"
-                        ? "green"
-                        : s.status === "Rejected"
-                        ? "red"
-                        : "amber"
-                    }
-                  />
-                </div>
-                {s.status === "Pending" && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAiSuggestions((prev) =>
-                          prev.map((x) => (x.id === s.id ? { ...x, status: "Accepted" } : x)),
-                        );
-                        setSelectedToothNum(s.tooth);
-                        logAuditEvent({
-                          patientName: "Priya Deshmukh",
-                          screenName: "Dental chart",
-                          action: "AI_FINDING_ACCEPTED",
-                          entityType: "dental_chart",
-                          entityId: s.id,
-                          details: `Accepted AI radiograph finding on tooth ${s.tooth}: ${s.finding}`,
-                        });
-                        toast.success(`Accepted AI finding for tooth ${s.tooth}`);
-                      }}
-                      className="inline-flex items-center gap-1 df-btn-primary px-2.5 py-1 text-[11px] cursor-pointer"
-                    >
-                      <Check className="h-3 w-3" /> Accept to chart
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAiSuggestions((prev) =>
-                          prev.map((x) => (x.id === s.id ? { ...x, status: "Rejected" } : x)),
-                        );
-                        logAuditEvent({
-                          patientName: "Priya Deshmukh",
-                          screenName: "Dental chart",
-                          action: "AI_FINDING_REJECTED",
-                          entityType: "dental_chart",
-                          entityId: s.id,
-                          details: `Rejected AI radiograph finding on tooth ${s.tooth}`,
-                        });
-                        toast.info(`Dismissed suggestion for tooth ${s.tooth}`);
-                      }}
-                      className="inline-flex items-center gap-1 df-btn-secondary px-2.5 py-1 text-[11px] cursor-pointer"
-                    >
-                      <X className="h-3 w-3" /> Reject
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              toast.success("DICOM / RVG scan queued & linked to tooth 36");
-              setImagingDrawerOpen(false);
-            }}
-            className="w-full inline-flex items-center justify-center gap-2 df-btn-secondary py-2.5 text-xs cursor-pointer"
-          >
-            <Upload className="h-3.5 w-3.5" /> Import RVG / OPG from sensor
-          </button>
-        </div>
-      </DentflowDrawer>
     </div>
   );
 }
@@ -805,4 +1350,3 @@ export default function DentalChartPage() {
     </Suspense>
   );
 }
-

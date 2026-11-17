@@ -27,12 +27,117 @@ export type PatientAppView =
   | "recovery"
   | "aligner";
 
+export type DentalNumberingSystem = "FDI" | "Universal" | "Palmer";
+export type DentitionView = "adult" | "child" | "mixed";
+
+export type ToothConditionCode =
+  | "healthy"
+  | "caries"
+  | "filled"
+  | "sealant"
+  | "crown"
+  | "veneer"
+  | "bridge_pontic"
+  | "implant"
+  | "root_canal"
+  | "fractured"
+  | "impacted"
+  | "attrition"
+  | "missing"
+  | "extraction_planned"
+  | "planned";
+
+export type ToothSurface = "B" | "M" | "O" | "D" | "L";
+export type EruptionState = "erupted" | "unerupted" | "partially_erupted";
+
+export interface ToothPlannedProcedure {
+  id: string;
+  name: string;
+  fee: number;
+}
+
+export interface ToothChartRecord {
+  fdi: number;
+  conditions: ToothConditionCode[]; // whole-tooth or summary conditions (multi-condition supported)
+  surfaceConditions: Partial<Record<ToothSurface, ToothConditionCode>>;
+  eruptionState: EruptionState;
+  finding?: string;
+  rootFlags?: {
+    rctObturation?: boolean;
+    apicalLesion?: boolean;
+    boneLossLevel?: "normal" | "mild" | "moderate" | "severe";
+  };
+  plannedProcedures: ToothPlannedProcedure[];
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export type PerioSiteKey = "MB" | "B" | "DB" | "ML" | "L" | "DL";
+
+export interface PerioToothRecord {
+  fdi: number;
+  pocketDepth: Record<PerioSiteKey, number | null>;
+  recession: Record<PerioSiteKey, number | null>;
+  bleeding: Record<PerioSiteKey, boolean>;
+  mobility: 0 | 1 | 2 | 3 | null;
+  furcation: 0 | 1 | 2 | 3 | null;
+}
+
+export interface PerioSnapshot {
+  id: string;
+  dateLabel: string;
+  recordedAt: string;
+  recordedBy: string;
+  teeth: Record<number, PerioToothRecord>;
+}
+
+export interface ChartHistorySnapshot {
+  id: string;
+  dateLabel: string;
+  recordedAt: string;
+  recordedBy: string;
+  note?: string;
+  teeth: Record<number, ToothChartRecord>;
+}
+
+export interface ImageAnnotationItem {
+  id: string;
+  xPct: number; // 0..100
+  yPct: number; // 0..100
+  label: string;
+  toothFdi?: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface DentalImagingRecord {
+  id: string;
+  title: string;
+  modality: "IOPA" | "OPG" | "Bitewing" | "CBCT" | "Intraoral";
+  date: string;
+  linkedTeeth: number[];
+  annotations: ImageAnnotationItem[];
+}
+
+export interface PatientDentalChart {
+  patientId: string;
+  lastDentitionView: DentitionView;
+  lastChartedLabel: string;
+  lastChartedBy: string;
+  teeth: Record<number, ToothChartRecord>;
+  history: ChartHistorySnapshot[];
+  perioCurrent: Record<number, PerioToothRecord>;
+  perioHistory: PerioSnapshot[];
+  imaging: DentalImagingRecord[];
+}
+
 export interface ClinicSetupConfig {
   completed: boolean;
   clinicGroupName: string;
   gstin: string;
   city: string;
   phone: string;
+  numberingSystem?: DentalNumberingSystem;
   branches: { id: string; name: string; chairs: number; address: string }[];
   chairsAndRooms: string[];
   workingHours: string;
@@ -513,6 +618,7 @@ export interface DentflowAppState {
   tenantAccounts: TenantAccountRecord[];
   dpdpAccessLogs: DentflowAuditLogEntry[];
   prescriptionConfig?: ClinicPrescriptionConfig;
+  dentalCharts?: Record<string, PatientDentalChart>;
   clinicSetup: ClinicSetupConfig;
   patientApp: {
     selectedPatientId: string;

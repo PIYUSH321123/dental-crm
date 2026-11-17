@@ -1,4 +1,5 @@
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
+import { createSeedDentalChart } from "@/lib/dental-chart-logic";
 import { DEFAULT_CLINIC_PRESCRIPTION_CONFIG } from "@/lib/prescription-validation";
 import { INITIAL_ROLE_PERMISSIONS } from "@/lib/dentflow-theme";
 import {
@@ -6,9 +7,10 @@ import {
   DentflowAuditLogEntry,
   DentflowPatient,
   PatientConsentRecord,
+  PatientDentalChart,
 } from "@/types/dentflow";
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const CONSENT_TEXT_VERSIONS = {
   dpdp: {
@@ -69,15 +71,32 @@ export function migrateDentflowState(raw: unknown): DentflowAppState {
   }
 
   const parsed = raw as Partial<DentflowAppState>;
+  const patients = Array.isArray(parsed.patients)
+    ? parsed.patients.map(migratePatient)
+    : INITIAL_DENTFLOW_STATE.patients.map(migratePatient);
+
+  // Preserve existing dental charts and seed missing patients without data loss
+  const existingCharts = (parsed.dentalCharts || {}) as Record<string, PatientDentalChart>;
+  const dentalCharts: Record<string, PatientDentalChart> = { ...existingCharts };
+  for (const p of patients) {
+    if (!dentalCharts[p.id]) {
+      dentalCharts[p.id] = createSeedDentalChart(p.id, p.age);
+    }
+  }
+
   const merged: DentflowAppState = {
     ...INITIAL_DENTFLOW_STATE,
     ...parsed,
+    clinicSetup: {
+      ...INITIAL_DENTFLOW_STATE.clinicSetup,
+      ...(parsed.clinicSetup || {}),
+      numberingSystem: parsed.clinicSetup?.numberingSystem || "FDI",
+    },
     rolePermissions: parsed.rolePermissions?.length
       ? parsed.rolePermissions
       : INITIAL_ROLE_PERMISSIONS,
-    patients: Array.isArray(parsed.patients)
-      ? parsed.patients.map(migratePatient)
-      : INITIAL_DENTFLOW_STATE.patients.map(migratePatient),
+    patients,
+    dentalCharts,
     dpdpAccessLogs: Array.isArray(parsed.dpdpAccessLogs)
       ? parsed.dpdpAccessLogs.map(migrateAuditEntry)
       : INITIAL_DENTFLOW_STATE.dpdpAccessLogs.map(migrateAuditEntry),
