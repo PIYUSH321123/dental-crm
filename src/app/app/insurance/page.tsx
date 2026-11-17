@@ -28,6 +28,7 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { formatRelativeFullDate } from "@/lib/date-helpers";
 import { useDentflow } from "@/lib/dentflow-store";
 
 interface InsuranceClaim {
@@ -59,7 +60,7 @@ const INITIAL_CLAIMS: InsuranceClaim[] = [
     approvedAmount: 21500,
     copayAmount: 2500,
     status: "Approved",
-    filingDate: "28 Sep 2026",
+    filingDate: formatRelativeFullDate(-1),
     turnaroundTime: "35 mins",
   },
   {
@@ -74,7 +75,7 @@ const INITIAL_CLAIMS: InsuranceClaim[] = [
     approvedAmount: 8500,
     copayAmount: 0,
     status: "Settled",
-    filingDate: "26 Sep 2026",
+    filingDate: formatRelativeFullDate(-3),
     turnaroundTime: "40 mins",
   },
   {
@@ -89,7 +90,7 @@ const INITIAL_CLAIMS: InsuranceClaim[] = [
     approvedAmount: 0,
     copayAmount: 0,
     status: "Under Query",
-    filingDate: "29 Sep 2026",
+    filingDate: formatRelativeFullDate(0),
     turnaroundTime: "Awaiting OPG",
   },
   {

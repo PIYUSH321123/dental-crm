@@ -7,6 +7,7 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { formatRelativeFullDate, getCurrentYear } from "@/lib/date-helpers";
 import { useDentflow } from "@/lib/dentflow-store";
 
 interface InvoiceLineItem {
@@ -64,7 +65,7 @@ export default function BillingPage() {
   const handleRecordPayment = () => {
     const newInv = {
       id: `inv-${Date.now()}`,
-      invoiceNumber: "INV-SR-2026-04418",
+      invoiceNumber: `INV-SR-${getCurrentYear()}-04418`,
       patientName: "Neha Gupta",
       method: splitPayment ? "Cash + UPI" : payTab,
       amount: dueNow,
@@ -85,7 +86,7 @@ export default function BillingPage() {
     <div>
       <DentflowPageHeader
         title="Billing"
-        subtitle="Invoice INV-SR-2026-04418 · Neha Gupta"
+        subtitle={`Invoice INV-SR-${getCurrentYear()}-04418 · Neha Gupta`}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
@@ -215,7 +216,9 @@ export default function BillingPage() {
               <button
                 type="button"
                 onClick={() =>
-                  toast.success("Downloaded Tally XML voucher export for 29 Sep 2026")
+                  toast.success(
+                    `Downloaded Tally XML voucher export for ${formatRelativeFullDate(0)}`,
+                  )
                 }
                 className="df-btn-secondary inline-flex items-center gap-1.5 px-3 py-1 text-xs cursor-pointer"
               >

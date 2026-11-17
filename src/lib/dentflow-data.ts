@@ -1,5 +1,21 @@
+import {
+  formatRelativeDayMonth,
+  formatRelativeFullDate,
+  formatRelativeWeekdayDayMonth,
+} from "@/lib/date-helpers";
 import { INITIAL_ROLE_PERMISSIONS } from "@/lib/dentflow-theme";
 import { DentflowAppState } from "@/types/dentflow";
+
+const TODAY_DM = formatRelativeDayMonth(0);
+const TODAY_FULL = formatRelativeFullDate(0);
+const DAYS_AGO_2 = formatRelativeDayMonth(-2);
+const DAYS_AGO_3 = formatRelativeDayMonth(-3);
+const DAYS_AGO_4 = formatRelativeDayMonth(-4);
+const DAYS_AGO_7 = formatRelativeDayMonth(-7);
+const DAYS_AGO_14 = formatRelativeDayMonth(-14);
+const DAYS_AGO_16 = formatRelativeDayMonth(-16);
+const DAYS_AGO_18 = formatRelativeDayMonth(-18);
+const NEXT_SITTING_DAY = formatRelativeWeekdayDayMonth(2);
 
 export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
   activeRole: "Owner",
@@ -28,7 +44,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       pregnancy: "No",
       habits: "Non-smoker · no gutka",
       lastHba1c: "6.9% · Aug 2026",
-      medicalUpdatedAt: "Updated by patient · 27 Sep",
+      medicalUpdatedAt: `Updated by patient · ${DAYS_AGO_2}`,
       comfortProfile: {
         anxietyScore: 7,
         triggers: ["Injections", "Drill sound", "Gagging"],
@@ -51,19 +67,19 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
         title: "RCT 36 + zirconia crown",
         total: 24000,
         stageLabel: "Stage 2 of 3 · ₹9,000 paid",
-        nextSitting: "next sitting Thu 1 Oct",
+        nextSitting: `next sitting ${NEXT_SITTING_DAY}`,
       },
       consents: [
-        { id: "c1", title: "Medical history form", status: "Signed", dateOrNote: "27 Sep" },
-        { id: "c2", title: "RCT informed consent (e-sign)", status: "Signed", dateOrNote: "12 Sep" },
-        { id: "c3", title: "Photo & X-ray sharing consent", status: "Signed", dateOrNote: "12 Sep" },
+        { id: "c1", title: "Medical history form", status: "Signed", dateOrNote: DAYS_AGO_2 },
+        { id: "c2", title: "RCT informed consent (e-sign)", status: "Signed", dateOrNote: DAYS_AGO_16 },
+        { id: "c3", title: "Photo & X-ray sharing consent", status: "Signed", dateOrNote: DAYS_AGO_16 },
         { id: "c4", title: "Crown consent", status: "Due", dateOrNote: "Due before stage 3" },
       ],
       recentActivity: [
-        { date: "27 Sep", text: "Opened treatment explainer in Hindi (watched 2:10)" },
-        { date: "26 Sep", text: "Paid ₹7,500 by UPI AutoPay · EMI 1 of 3" },
-        { date: "12 Sep", text: "Scaling done · RCT 36 planned by Dr. Sneha" },
-        { date: "10 Sep", text: "Self-check: photo triage \"see within 2–3 days\"" },
+        { date: DAYS_AGO_2, text: "Opened treatment explainer in Hindi (watched 2:10)" },
+        { date: DAYS_AGO_3, text: "Paid ₹7,500 by UPI AutoPay · EMI 1 of 3" },
+        { date: DAYS_AGO_16, text: "Scaling done · RCT 36 planned by Dr. Sneha" },
+        { date: DAYS_AGO_18, text: "Self-check: photo triage \"see within 2–3 days\"" },
       ],
       distanceKm: 1.8,
       language: "हिन्दी",
@@ -91,7 +107,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       pregnancy: "No",
       habits: "Non-smoker",
       lastHba1c: "—",
-      medicalUpdatedAt: "26 Sep",
+      medicalUpdatedAt: DAYS_AGO_3,
       comfortProfile: {
         anxietyScore: 3,
         triggers: [],
@@ -99,8 +115,8 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
         autoBufferMin: 0,
       },
       familyMembers: [{ id: "pat-rohan", initials: "RM", name: "Rohan", relation: "Me", age: 41 }],
-      consents: [{ id: "c5", title: "Extraction consent (e-sign)", status: "Signed", dateOrNote: "26 Sep" }],
-      recentActivity: [{ date: "29 Sep", text: "Day 3 post-op alert: pain 8/10, swelling reported" }],
+      consents: [{ id: "c5", title: "Extraction consent (e-sign)", status: "Signed", dateOrNote: DAYS_AGO_3 }],
+      recentActivity: [{ date: TODAY_DM, text: "Day 3 post-op alert: pain 8/10, swelling reported" }],
       distanceKm: 3.1,
       language: "English",
       whatsappConsent: true,
@@ -127,7 +143,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       pregnancy: "No",
       habits: "Non-smoker",
       lastHba1c: "—",
-      medicalUpdatedAt: "29 Sep",
+      medicalUpdatedAt: TODAY_DM,
       comfortProfile: {
         anxietyScore: 2,
         triggers: [],
@@ -138,7 +154,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
         { id: "pat-meera", initials: "MN", name: "Meera Nair", relation: "Me", age: 45 },
       ],
       consents: [],
-      recentActivity: [{ date: "29 Sep", text: "Scaling & polishing completed · ₹1,500 paid via UPI" }],
+      recentActivity: [{ date: TODAY_DM, text: "Scaling & polishing completed · ₹1,500 paid via UPI" }],
       distanceKm: 2.0,
       language: "English",
       whatsappConsent: true,
@@ -165,7 +181,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       pregnancy: "No",
       habits: "Non-smoker",
       lastHba1c: "—",
-      medicalUpdatedAt: "25 Sep",
+      medicalUpdatedAt: DAYS_AGO_4,
       comfortProfile: {
         anxietyScore: 6,
         triggers: ["Waiting"],
@@ -176,7 +192,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
         { id: "pat-kavya", initials: "KR", name: "Kavya", relation: "Me", age: 26 },
       ],
       consents: [],
-      recentActivity: [{ date: "29 Sep", text: "Aligner tray 10 of 24 · 20h 40m worn today" }],
+      recentActivity: [{ date: TODAY_DM, text: "Aligner tray 10 of 24 · 20h 40m worn today" }],
       distanceKm: 2.4,
       language: "English",
       whatsappConsent: true,
@@ -384,12 +400,12 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-priya",
       patientName: "Priya Deshmukh",
       proposedBy: "Dr. Sneha Kulkarni",
-      proposedDate: "12 Sep",
+      proposedDate: DAYS_AGO_16,
       pipelineStep: "In progress",
       pipelineDates: {
-        Proposed: "12 Sep",
-        Explained: "12 Sep · WhatsApp",
-        Accepted: "14 Sep · e-sign",
+        Proposed: DAYS_AGO_16,
+        Explained: `${DAYS_AGO_16} · WhatsApp`,
+        Accepted: `${DAYS_AGO_14} · e-sign`,
         "In progress": "Stage 2 of 3",
         Completed: "—",
         Review: "6-month recall",
@@ -426,7 +442,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
           procedure: "Scaling & polishing",
           tooth: "All",
           doctor: "Dr. Sneha",
-          visitLabel: "12 Sep",
+          visitLabel: DAYS_AGO_16,
           fee: 1500,
           status: "Done",
         },
@@ -436,7 +452,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
           procedure: "Root canal · sitting 1",
           tooth: "36",
           doctor: "Dr. Sneha",
-          visitLabel: "29 Sep",
+          visitLabel: TODAY_DM,
           fee: 8000,
           status: "Done",
         },
@@ -446,7 +462,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
           procedure: "Root canal · sitting 2",
           tooth: "36",
           doctor: "Dr. Sneha",
-          visitLabel: "Thu 1 Oct, 10:00",
+          visitLabel: `${NEXT_SITTING_DAY}, 10:00 AM`,
           fee: 0,
           includedInPrev: true,
           status: "Booked",
@@ -478,9 +494,9 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
         lendingPartner: "Bajaj Finserv Health",
       },
       engagement: {
-        sentInfo: "Explainer sent 12 Sep in हिन्दी · opened 3 times · watched 2:10 of 2:30",
+        sentInfo: `Explainer sent ${DAYS_AGO_16} in हिन्दी · opened 3 times · watched 2:10 of 2:30`,
         watchedInfo: "2:10 of 2:30",
-        acceptedInfo: "Accepted Option A by e-sign on 14 Sep",
+        acceptedInfo: `Accepted Option A by e-sign on ${DAYS_AGO_14}`,
       },
     },
   ],
@@ -491,8 +507,8 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-priya",
       patientName: "Priya Deshmukh",
       patientMeta: "34 F · DF-10482",
-      date: "29 Sep 2026",
-      contextSubtitle: "After RCT 36 sitting 1 · 29 Sep",
+      date: TODAY_FULL,
+      contextSubtitle: `After RCT 36 sitting 1 · ${TODAY_DM}`,
       template: "Post-RCT",
       diagnosis: "Irreversible pulpitis, 36 — RCT initiated",
       allergyAlert: {
@@ -529,7 +545,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       ],
       advice:
         "Avoid chewing on the left side until the crown is fitted. Warm salt-water rinse twice a day. Call the clinic if swelling increases.",
-      nextVisit: "Thu 1 Oct, 10:00",
+      nextVisit: `${NEXT_SITTING_DAY}, 10:00 AM`,
       signedDigitally: true,
       sentOnWhatsApp: true,
     },
@@ -541,7 +557,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-rohan",
       patientName: "Rohan Mehta",
       procedure: "Extraction 48",
-      procedureDate: "26 Sep",
+      procedureDate: DAYS_AGO_3,
       doctor: "Dr. Farhan A.",
       dayLabel: "Day 3",
       checkInsCompleted: ["D1", "D3"],
@@ -626,7 +642,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-priya",
       patientName: "Priya Deshmukh",
       procedure: "RCT 36",
-      procedureDate: "29 Sep",
+      procedureDate: TODAY_DM,
       doctor: "Dr. Sneha K.",
       dayLabel: "Day 0",
       checkInsCompleted: [],
@@ -639,7 +655,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-manoj",
       patientName: "Manoj Tiwari",
       procedure: "Surgical ext. 38",
-      procedureDate: "26 Sep",
+      procedureDate: DAYS_AGO_3,
       doctor: "Dr. Farhan A.",
       dayLabel: "Day 3",
       checkInsCompleted: ["D1", "D3"],
@@ -652,7 +668,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       patientId: "pat-anjali",
       patientName: "Anjali Rao",
       procedure: "RCT 26",
-      procedureDate: "22 Sep",
+      procedureDate: DAYS_AGO_7,
       doctor: "Dr. Sneha K.",
       dayLabel: "Day 7",
       checkInsCompleted: ["D1", "D3", "D7"],
@@ -1263,10 +1279,10 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       tooth: "46",
       materialShade: "Zirconia · A2",
       labPartner: "Precision Dental Lab",
-      dueLabel: "Fit today 1:00 pm",
+      dueLabel: "Fit today 1:00 PM",
       status: "Received",
       doctor: "Dr. Sneha K.",
-      clinicDueDate: "29 Sep",
+      clinicDueDate: TODAY_DM,
     },
     {
       id: "lc-9",
@@ -1277,10 +1293,10 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       tooth: "Full",
       materialShade: "Acrylic · A3",
       labPartner: "Precision Dental Lab",
-      dueLabel: "Trial today 11:30",
+      dueLabel: "Trial today 11:30 AM",
       status: "Received",
       doctor: "Dr. Sneha K.",
-      clinicDueDate: "29 Sep",
+      clinicDueDate: TODAY_DM,
     },
     {
       id: "lc-10",
@@ -1291,10 +1307,10 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
       tooth: "46",
       materialShade: "Zirconia · A2",
       labPartner: "Crown Craft",
-      dueLabel: "Fitted 25 Sep",
+      dueLabel: `Fitted ${DAYS_AGO_4}`,
       status: "Fitted / closed",
       doctor: "Dr. Farhan Ali",
-      clinicDueDate: "25 Sep",
+      clinicDueDate: DAYS_AGO_4,
     },
     {
       id: "lc-11",
@@ -1869,7 +1885,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
   dpdpAccessLogs: [
     {
       id: "dl-1",
-      timestamp: "29 Sep, 10:02 am",
+      timestamp: `${TODAY_DM}, 10:02 AM`,
       actor: "Dr. Sneha Kulkarni",
       role: "Owner",
       patientName: "Priya Deshmukh",
@@ -1878,7 +1894,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
     },
     {
       id: "dl-2",
-      timestamp: "29 Sep, 09:58 am",
+      timestamp: `${TODAY_DM}, 9:58 AM`,
       actor: "Anita Pawar",
       role: "Front desk",
       patientName: "Priya Deshmukh",
@@ -1887,7 +1903,7 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
     },
     {
       id: "dl-3",
-      timestamp: "29 Sep, 09:14 am",
+      timestamp: `${TODAY_DM}, 9:14 AM`,
       actor: "Dr. Farhan Ali",
       role: "Visiting",
       patientName: "Rohan Mehta",

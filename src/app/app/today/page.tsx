@@ -11,6 +11,7 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { formatRelativeHeaderDate } from "@/lib/date-helpers";
 import { StatusTone } from "@/lib/dentflow-theme";
 import { useDentflow } from "@/lib/dentflow-store";
 import { formatClinicTime, sortByTime } from "@/lib/time-utils";
@@ -125,7 +126,7 @@ export default function TodayFrontDeskPage() {
     <div>
       <DentflowPageHeader
         title={`Good morning, ${greetingName}`}
-        subtitle={`Tuesday, 29 September · ${24 + state.appointments.length} appointments across 4 chairs`}
+        subtitle={`${formatRelativeHeaderDate(0)} · ${24 + state.appointments.length} appointments across 4 chairs`}
       />
 
       {/* 5 KPI Cards */}

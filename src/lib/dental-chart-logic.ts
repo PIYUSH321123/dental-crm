@@ -9,6 +9,10 @@ import type {
   ToothConditionCode,
   ToothSurface,
 } from "../types/dentflow";
+import {
+  formatRelativeFullDate,
+  getRelativeIsoTimestamp,
+} from "./date-helpers.ts";
 
 export const UPPER_RIGHT_PERMANENT = [18, 17, 16, 15, 14, 13, 12, 11] as const;
 export const UPPER_LEFT_PERMANENT = [21, 22, 23, 24, 25, 26, 27, 28] as const;
@@ -772,25 +776,33 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
   const defaultView: DentitionView =
     patientAge <= 6 ? "child" : patientAge <= 12 ? "mixed" : "adult";
 
+  const recentChartDate = formatRelativeFullDate(-14);
+  const recentChartIso = getRelativeIsoTimestamp(-14, 11, 30);
+  const recentAnnotIso = getRelativeIsoTimestamp(-14, 11, 35);
+  const sixMonthDate = formatRelativeFullDate(-180);
+  const sixMonthIso = getRelativeIsoTimestamp(-180, 10, 15);
+  const sixMonthPerioIso = getRelativeIsoTimestamp(-180, 10, 20);
+  const bitewingDate = formatRelativeFullDate(-178);
+
   return {
     patientId,
     lastDentitionView: defaultView,
-    lastChartedLabel: "12 Sep 2026",
+    lastChartedLabel: recentChartDate,
     lastChartedBy: "Dr. Sneha Kulkarni",
     teeth,
     history: [
       {
         id: `hist-${patientId}-1`,
-        dateLabel: "12 Mar 2026",
-        recordedAt: "2026-03-12T10:15:00.000Z",
+        dateLabel: sixMonthDate,
+        recordedAt: sixMonthIso,
         recordedBy: "Dr. Arjun Mehta",
         note: "6-month routine check-up baseline",
         teeth: baselineTeeth,
       },
       {
         id: `hist-${patientId}-2`,
-        dateLabel: "12 Sep 2026",
-        recordedAt: "2026-09-12T11:30:00.000Z",
+        dateLabel: recentChartDate,
+        recordedAt: recentChartIso,
         recordedBy: "Dr. Sneha Kulkarni",
         note: "Pre-RCT charting & IOPA 36 review",
         teeth: JSON.parse(JSON.stringify(teeth)),
@@ -800,8 +812,8 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
     perioHistory: [
       {
         id: `perio-hist-${patientId}-1`,
-        dateLabel: "12 Mar 2026",
-        recordedAt: "2026-03-12T10:20:00.000Z",
+        dateLabel: sixMonthDate,
+        recordedAt: sixMonthPerioIso,
         recordedBy: "Dr. Arjun Mehta",
         teeth: perioBaseline,
       },
@@ -813,7 +825,7 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
               id: "iopa-36",
               title: "IOPA · 36",
               modality: "IOPA",
-              date: "12 Sep 2026",
+              date: recentChartDate,
               linkedTeeth: [36, 37],
               annotations: [
                 {
@@ -823,7 +835,7 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
                   label: "36 OD deep caries near distal pulp horn",
                   toothFdi: 36,
                   createdBy: "Dr. Sneha Kulkarni",
-                  createdAt: "2026-09-12T11:35:00.000Z",
+                  createdAt: recentAnnotIso,
                 },
               ],
             },
@@ -831,7 +843,7 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
               id: "opg-1",
               title: "OPG Full Arch",
               modality: "OPG",
-              date: "12 Sep 2026",
+              date: recentChartDate,
               linkedTeeth: [16, 25, 36, 46],
               annotations: [],
             },
@@ -839,7 +851,7 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
               id: "bw-l",
               title: "Bitewing Left",
               modality: "Bitewing",
-              date: "14 Mar 2026",
+              date: bitewingDate,
               linkedTeeth: [25, 26, 36, 37],
               annotations: [],
             },
@@ -849,7 +861,7 @@ export function createSeedDentalChart(patientId: string, patientAge = 34): Patie
               id: `opg-${patientId}`,
               title: "Baseline OPG",
               modality: "OPG",
-              date: "12 Sep 2026",
+              date: recentChartDate,
               linkedTeeth: [16, 26, 36, 46],
               annotations: [],
             },

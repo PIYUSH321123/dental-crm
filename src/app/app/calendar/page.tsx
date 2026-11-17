@@ -47,6 +47,7 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { getRelativeIsoDate } from "@/lib/date-helpers";
 import { useDentflow } from "@/lib/dentflow-store";
 import { StatusTone } from "@/lib/dentflow-theme";
 import {
@@ -154,10 +155,10 @@ function getDateKey(d: Date): string {
 
 function getBaseScheduleForDate(date: Date): AppointmentBlock[] {
   const key = getDateKey(date);
-  if (key === "2026-10-01") return INITIAL_BLOCKS;
-  if (key === "2026-10-02") return OCT_2_BLOCKS;
-  if (key === "2026-10-03") return OCT_3_BLOCKS;
-  if (key === "2026-10-04") return OCT_4_BLOCKS;
+  if (key === getRelativeIsoDate(0)) return INITIAL_BLOCKS;
+  if (key === getRelativeIsoDate(1)) return OCT_2_BLOCKS;
+  if (key === getRelativeIsoDate(2)) return OCT_3_BLOCKS;
+  if (key === getRelativeIsoDate(3)) return OCT_4_BLOCKS;
 
   const dayOfWeek = date.getDay();
   if (dayOfWeek === 0) {
@@ -381,9 +382,9 @@ function CalendarPageInner() {
   const { state, updateState } = useDentflow();
   const timeFormat: ClinicTimeFormat = state.clinicSetup.timeFormat || "12h";
 
-  // Calendar View Controls - defaults to chair-wise "Day" calendar with drag-and-drop rescheduling
+  // Calendar View Controls - defaults to chair-wise "Day" calendar on today's date
   const [viewMode, setViewMode] = useState<"Day" | "List" | "Week">("Day");
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 9, 1)); // 1 Oct 2026
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [doctorFilter, setDoctorFilter] = useState("All Doctors");
   const [chairFilter, setChairFilter] = useState("All Chairs");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -478,7 +479,7 @@ function CalendarPageInner() {
   const [videoConsults, setVideoConsults] = useState<VideoConsultationItem[]>(INITIAL_VIDEO_CONSULTS);
   const [videoPatientId, setVideoPatientId] = useState("pat-priya");
   const [videoDoctor, setVideoDoctor] = useState("Dr. Sneha Kulkarni");
-  const [videoDate, setVideoDate] = useState("2026-10-01");
+  const [videoDate, setVideoDate] = useState(() => getRelativeIsoDate(0));
   const [videoTime, setVideoTime] = useState("11:30 AM");
   const [videoReason, setVideoReason] = useState("Aligner tracking check & post-op sensitivity");
   const [activeCall, setActiveCall] = useState<VideoConsultationItem | null>(null);
