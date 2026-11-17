@@ -1,25 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Video,
+  Activity,
+  AlertTriangle,
   Calendar,
-  Clock,
-  User,
   CheckCircle,
+  Clock,
   Copy,
   ExternalLink,
+  FileText,
+  Image as ImageIcon,
+  Maximize2,
+  MessageSquare,
   Mic,
   MicOff,
-  VideoOff,
-  Share2,
+  PanelRightClose,
+  PanelRightOpen,
   PhoneOff,
-  MessageSquare,
-  FileText,
-  Sparkles,
-  Send,
   Plus,
+  Send,
+  Share2,
+  Sparkles,
+  User,
+  Video,
+  VideoOff,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -27,13 +35,23 @@ import {
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import {
+  CONDITION_BY_CODE,
+  createSeedDentalChart,
+  formatToothNumber,
+} from "@/lib/dental-chart-logic";
 import { useDentflow } from "@/lib/dentflow-store";
+import { formatClinicTime } from "@/lib/time-utils";
+import { DentalImagingRecord } from "@/types/dentflow";
 
 export default function VideoConsultPage() {
   const { state } = useDentflow();
+  const timeFormat = state.clinicSetup.timeFormat || "12h";
+  const numberingSystem = state.clinicSetup.numberingSystem || "FDI";
 
   const [activeTab, setActiveTab] = useState<"consults" | "schedule" | "instant">("consults");
   const [activeCallRoom, setActiveCallRoom] = useState<{
+    patientId?: string;
     patientName: string;
     patientPhone: string;
     doctorName: string;
@@ -41,15 +59,21 @@ export default function VideoConsultPage() {
     reason: string;
   } | null>(null);
 
+  // Collapsible clinical side panel during active call
+  const [clinicalPanelOpen, setClinicalPanelOpen] = useState(true);
+  const [clinicalPanelTab, setClinicalPanelTab] = useState<"chart" | "imaging" | "chat">("chart");
+  const [previewImage, setPreviewImage] = useState<DentalImagingRecord | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
+
   // Call simulation states
   const [callDuration, setCallDuration] = useState(128); // seconds
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [callChatMessages, setCallChatMessages] = useState<Array<{ sender: string; text: string; time: string }>>([
-    { sender: "System", text: "End-to-end encrypted dental tele-consultation session connected.", time: "10:30 am" },
-    { sender: "Patient", text: "Hello doctor, can you hear me properly?", time: "10:31 am" },
-    { sender: "Doctor", text: "Yes Priya ji, loud and clear. Let us review the lower molar sensitivity.", time: "10:31 am" },
+    { sender: "System", text: "End-to-end encrypted dental tele-consultation session connected.", time: "10:30 AM" },
+    { sender: "Patient", text: "Hello doctor, can you hear me properly?", time: "10:31 AM" },
+    { sender: "Doctor", text: "Yes Priya ji, loud and clear. Let us review the lower molar sensitivity.", time: "10:31 AM" },
   ]);
   const [chatInput, setChatInput] = useState("");
 
@@ -65,6 +89,7 @@ export default function VideoConsultPage() {
 
   interface VideoConsultItem {
     id: string;
+    patientId?: string;
     patientName: string;
     patientPhone: string;
     doctorName: string;
@@ -76,6 +101,7 @@ export default function VideoConsultPage() {
   const [consults, setConsults] = useState<VideoConsultItem[]>([
     {
       id: "vc-1",
+      patientId: "pat-priya",
       patientName: "Priya Deshmukh",
       patientPhone: "+91 98220 44100",
       doctorName: "Dr. Sneha Kulkarni",
@@ -85,33 +111,66 @@ export default function VideoConsultPage() {
     },
     {
       id: "vc-2",
+      patientId: "pat-rahul",
       patientName: "Rahul Varma",
       patientPhone: "+91 98220 12345",
       doctorName: "Dr. Arjun Mehta",
-      time: "02:00 PM",
+      time: "2:00 PM",
       status: "Scheduled",
       reason: "Post-extraction day 3 bleeding check",
     },
     {
       id: "vc-3",
-      patientName: "Sunita Rao",
+      patientId: "pat-meera",
+      patientName: "Meera Nair",
       patientPhone: "+91 98220 67890",
       doctorName: "Dr. Sneha Kulkarni",
-      time: "04:30 PM",
+      time: "4:30 PM",
       status: "Scheduled",
       reason: "Clear aligner fit verification & attachment check",
     },
   ]);
+
+  // Resolve active patient & dental chart for the in-call collapsible clinical panel
+  const callPatient = useMemo(() => {
+    if (!activeCallRoom) return null;
+    if (activeCallRoom.patientId) {
+      const byId = state.patients.find((p) => p.id === activeCallRoom.patientId);
+      if (byId) return byId;
+    }
+    const byName = state.patients.find(
+      (p) => p.name.toLowerCase() === activeCallRoom.patientName.toLowerCase(),
+    );
+    return byName || state.patients[0] || null;
+  }, [activeCallRoom, state.patients]);
+
+  const callPatientChart = useMemo(() => {
+    if (!callPatient) return null;
+    return state.dentalCharts?.[callPatient.id] || createSeedDentalChart(callPatient.id, callPatient.age);
+  }, [callPatient, state.dentalCharts]);
+
+  const chartedTeethSummary = useMemo(() => {
+    if (!callPatientChart) return [];
+    return Object.values(callPatientChart.teeth)
+      .filter(
+        (t) =>
+          t.conditions.some((c) => c !== "healthy") ||
+          Object.keys(t.surfaceConditions || {}).length > 0 ||
+          (t.plannedProcedures?.length || 0) > 0,
+      )
+      .sort((a, b) => a.fdi - b.fdi);
+  }, [callPatientChart]);
 
   const handleScheduleConsult = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const pat = state.patients.find((p) => p.id === schedulePatientId) || state.patients[0];
     const newConsult: VideoConsultItem = {
       id: `vc-${Date.now()}`,
+      patientId: pat?.id,
       patientName: pat ? pat.name : "Scheduled Patient",
       patientPhone: pat ? pat.phone : "+91 98220 12345",
       doctorName: scheduleDoctor,
-      time: scheduleTime || "11:30 AM",
+      time: formatClinicTime(scheduleTime || "11:30 AM", timeFormat),
       status: "Scheduled",
       reason: scheduleReason || "Tele-dentistry review",
     };
@@ -263,7 +322,7 @@ export default function VideoConsultPage() {
                       />
                     </div>
                     <p className="text-xs text-[var(--df-text-muted)]">
-                      {vc.time} · Doctor: {vc.doctorName}
+                      {formatClinicTime(vc.time, timeFormat)} · Doctor: {vc.doctorName}
                     </p>
                     <p className="text-xs text-[var(--df-text)] bg-[var(--df-surface-muted)]/60 px-2 py-1 rounded inline-block mt-1">
                       Reason: {vc.reason}
@@ -286,7 +345,11 @@ export default function VideoConsultPage() {
                     <button
                       type="button"
                       onClick={() => {
+                        setClinicalPanelOpen(true);
+                        setClinicalPanelTab("chart");
+                        setPreviewImage(null);
                         setActiveCallRoom({
+                          patientId: vc.patientId,
                           patientName: vc.patientName,
                           patientPhone: vc.patientPhone,
                           doctorName: vc.doctorName,
@@ -462,14 +525,32 @@ export default function VideoConsultPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="px-3 py-1 bg-zinc-800 rounded-lg text-xs font-mono font-medium">
                 {formatTimer(callDuration)}
               </div>
+              <button
+                type="button"
+                onClick={() => setClinicalPanelOpen((prev) => !prev)}
+                aria-expanded={clinicalPanelOpen}
+                aria-label={clinicalPanelOpen ? "Collapse patient chart and imaging side panel" : "Expand patient chart and imaging side panel"}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                  clinicalPanelOpen
+                    ? "bg-teal-900/60 border-teal-500/60 text-teal-200 hover:bg-teal-900"
+                    : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                }`}
+              >
+                {clinicalPanelOpen ? (
+                  <PanelRightClose className="h-3.5 w-3.5" />
+                ) : (
+                  <PanelRightOpen className="h-3.5 w-3.5" />
+                )}
+                <span>{clinicalPanelOpen ? "Hide Chart & Imaging" : "Show Chart & Imaging"}</span>
+              </button>
               <Link
                 href="/app/prescriptions"
                 target="_blank"
-                className="px-3 py-1 bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 bg-[var(--df-teal)] hover:bg-[var(--df-teal-hover)] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
                 <FileText className="h-3.5 w-3.5" />
                 Write Rx
@@ -477,22 +558,131 @@ export default function VideoConsultPage() {
             </div>
           </div>
 
-          {/* Video Frames Center */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 my-4 min-h-0">
-            {/* Main Patient Video */}
-            <div className="md:col-span-2 relative bg-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center overflow-hidden">
-              <div className="text-center space-y-3">
-                <div className="w-24 h-24 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center mx-auto text-zinc-400">
-                  <User className="h-12 w-12" />
+          {/* Video Frames + Collapsible Clinical Side Panel (Chart, Imaging & Chat) */}
+          <div className="flex-1 flex flex-col lg:flex-row gap-4 my-4 min-h-0">
+            {/* Main Patient Video (expands smoothly when side panel is collapsed) */}
+            <div className="flex-1 relative bg-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center overflow-hidden min-h-[260px]">
+              {previewImage ? (
+                /* Enlarged In-Call Radiograph Lightbox inside Video Stage */
+                <div className="absolute inset-0 bg-black/95 flex flex-col p-4 z-20">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                    <div>
+                      <p className="text-xs font-bold text-white">{previewImage.title}</p>
+                      <p className="text-[11px] text-zinc-400">
+                        {previewImage.modality} · {previewImage.date} · Linked teeth:{" "}
+                        {previewImage.linkedTeeth
+                          .map((fdi) => `#${formatToothNumber(fdi, numberingSystem)}`)
+                          .join(", ") || "Full arch"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewZoom((z) => (z >= 1.8 ? 1 : +(z + 0.4).toFixed(1)))}
+                        aria-label="Zoom radiograph"
+                        className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <ZoomIn className="h-3.5 w-3.5" />
+                        <span>{Math.round(previewZoom * 100)}%</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewImage(null);
+                          setPreviewZoom(1);
+                        }}
+                        aria-label="Close radiograph preview"
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center overflow-auto p-3">
+                    <div
+                      style={{ transform: `scale(${previewZoom})` }}
+                      className="relative w-full max-w-lg aspect-[16/10] rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-zinc-950 border border-zinc-700 overflow-hidden transition-transform"
+                    >
+                      <svg viewBox="0 0 320 200" className="w-full h-full">
+                        <defs>
+                          <radialGradient id="vc-rad-glow" cx="50%" cy="48%" r="55%">
+                            <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.4" />
+                            <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+                          </radialGradient>
+                        </defs>
+                        <rect width="320" height="200" fill="url(#vc-rad-glow)" />
+                        <path
+                          d="M45 140 Q160 112 275 140"
+                          stroke="#64748b"
+                          strokeWidth="2"
+                          fill="none"
+                          opacity="0.55"
+                        />
+                        {[75, 118, 160, 202, 245].map((cx, i) => (
+                          <g key={cx} opacity={i === 2 ? 0.95 : 0.65}>
+                            <rect
+                              x={cx - 14}
+                              y="62"
+                              width="28"
+                              height="36"
+                              rx="8"
+                              fill="#cbd5e1"
+                              fillOpacity="0.28"
+                              stroke="#e2e8f0"
+                              strokeWidth="1.4"
+                            />
+                            <path
+                              d={`M${cx - 8} 98 L${cx - 5} 145 M${cx + 8} 98 L${cx + 5} 145`}
+                              stroke="#cbd5e1"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              opacity="0.5"
+                            />
+                          </g>
+                        ))}
+                        {previewImage.annotations.map((ann) => (
+                          <g key={ann.id}>
+                            <circle
+                              cx={(ann.xPct / 100) * 320}
+                              cy={(ann.yPct / 100) * 200}
+                              r="5"
+                              fill="#f59e0b"
+                              stroke="#fff"
+                              strokeWidth="1.5"
+                            />
+                            <text
+                              x={(ann.xPct / 100) * 320 + 8}
+                              y={(ann.yPct / 100) * 200 + 3}
+                              fill="#fef3c7"
+                              fontSize="9"
+                              fontWeight="bold"
+                            >
+                              {ann.label}
+                            </text>
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-base">{activeCallRoom.patientName}</p>
-                  <p className="text-xs text-zinc-400">Live Video Stream · 1080p</p>
+              ) : (
+                <div className="text-center space-y-3">
+                  <div className="w-24 h-24 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center mx-auto text-zinc-400">
+                    <User className="h-12 w-12" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-base">{activeCallRoom.patientName}</p>
+                    <p className="text-xs text-zinc-400">
+                      {isScreenSharing
+                        ? "Sharing Clinical Screen & Chart with Patient · 1080p"
+                        : "Live Video Stream · 1080p"}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Doctor PiP Video */}
-              <div className="absolute bottom-4 right-4 w-40 h-28 bg-zinc-800 rounded-xl border border-zinc-700 overflow-hidden shadow-2xl flex items-center justify-center">
+              <div className="absolute bottom-4 right-4 w-40 h-28 bg-zinc-800 rounded-xl border border-zinc-700 overflow-hidden shadow-2xl flex items-center justify-center z-10">
                 {isVideoOff ? (
                   <VideoOff className="h-6 w-6 text-zinc-500" />
                 ) : (
@@ -504,52 +694,298 @@ export default function VideoConsultPage() {
               </div>
             </div>
 
-            {/* In-Call Chat Drawer */}
-            <div className="bg-zinc-900/90 rounded-2xl border border-zinc-800 flex flex-col p-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
-                <MessageSquare className="h-4 w-4 text-[var(--df-teal)]" />
-                Session Notes & In-Call Chat
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-2 py-3 text-xs">
-                {callChatMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-2.5 rounded-xl ${
-                      msg.sender === "Doctor"
-                        ? "bg-[var(--df-teal)]/20 border border-[var(--df-teal)]/40 ml-4"
-                        : msg.sender === "System"
-                        ? "bg-zinc-800/60 text-zinc-400 text-center text-[10px]"
-                        : "bg-zinc-800 border border-zinc-700 mr-4"
+            {/* Collapsible Clinical Side Panel (Patient Chart, Linked Imaging & In-Call Chat) */}
+            {clinicalPanelOpen && (
+              <aside
+                aria-label="Patient chart, imaging, and call chat"
+                className="w-full lg:w-[390px] shrink-0 bg-zinc-900/95 rounded-2xl border border-zinc-800 flex flex-col overflow-hidden"
+              >
+                {/* Sub-tabs */}
+                <div className="grid grid-cols-3 gap-1 p-2 border-b border-zinc-800 bg-zinc-950/60">
+                  <button
+                    type="button"
+                    onClick={() => setClinicalPanelTab("chart")}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                      clinicalPanelTab === "chart"
+                        ? "bg-[var(--df-teal)] text-white"
+                        : "text-zinc-300 hover:bg-zinc-800"
                     }`}
                   >
-                    <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
-                      <span className="font-semibold">{msg.sender}</span>
-                      <span>{msg.time}</span>
-                    </div>
-                    <p className="text-zinc-200">{msg.text}</p>
-                  </div>
-                ))}
-              </div>
+                    <Activity className="h-3.5 w-3.5" />
+                    <span>Chart</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClinicalPanelTab("imaging")}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                      clinicalPanelTab === "imaging"
+                        ? "bg-[var(--df-teal)] text-white"
+                        : "text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    <span>Imaging ({callPatientChart?.imaging.length || 0})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClinicalPanelTab("chat")}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                      clinicalPanelTab === "chat"
+                        ? "bg-[var(--df-teal)] text-white"
+                        : "text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Chat</span>
+                  </button>
+                </div>
 
-              <form onSubmit={handleSendChat} className="flex items-center gap-2 pt-2 border-t border-zinc-800">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Send message to patient..."
-                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-[var(--df-teal)]"
-                />
-                <button
-                  type="submit"
-                  aria-label="Send chat message"
-                  title="Send chat message"
-                  className="p-2 bg-[var(--df-teal)] rounded-lg text-white hover:bg-[var(--df-teal-hover)] cursor-pointer"
-                >
-                  <Send className="h-3 w-3" />
-                </button>
-              </form>
-            </div>
+                {/* Patient Clinical Alerts Strip (always visible in Chart & Imaging tabs) */}
+                {callPatient && clinicalPanelTab !== "chat" && (
+                  <div className="px-3.5 py-2.5 bg-zinc-950/50 border-b border-zinc-800 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-zinc-100 truncate">
+                        {callPatient.name} · {callPatient.age}y {callPatient.gender}
+                      </span>
+                      <Link
+                        href={`/app/dental-chart?patientId=${callPatient.id}`}
+                        target="_blank"
+                        className="text-[11px] font-semibold text-teal-400 hover:text-teal-300 inline-flex items-center gap-1 shrink-0"
+                      >
+                        <span>Full chart</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {callPatient.allergies.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-950/90 text-red-200 border border-red-700/60">
+                          <AlertTriangle className="h-3 w-3" />
+                          Allergy: {callPatient.allergies.join(", ")}
+                        </span>
+                      )}
+                      {callPatient.comfortProfile.anxietyScore >= 5 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-950/90 text-amber-200 border border-amber-700/60">
+                          Anxiety {callPatient.comfortProfile.anxietyScore}/10
+                        </span>
+                      )}
+                      {callPatient.conditions && callPatient.conditions !== "None reported" && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          {callPatient.conditions}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB A: Patient Dental Chart Summary */}
+                {clinicalPanelTab === "chart" && (
+                  <div className="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                      <span>Charted Findings ({chartedTeethSummary.length} teeth)</span>
+                      <span className="font-mono">{numberingSystem}</span>
+                    </div>
+
+                    {chartedTeethSummary.length === 0 ? (
+                      <p className="text-zinc-400 italic py-4 text-center">
+                        No active dental findings charted for this patient yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {chartedTeethSummary.map((tooth) => {
+                          const surfacePairs = Object.entries(tooth.surfaceConditions || {});
+                          return (
+                            <div
+                              key={tooth.fdi}
+                              className="p-2.5 rounded-xl bg-zinc-800/80 border border-zinc-700/80 space-y-1.5"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono font-bold text-white">
+                                  Tooth #{formatToothNumber(tooth.fdi, numberingSystem)}
+                                </span>
+                                <div className="flex flex-wrap gap-1 justify-end">
+                                  {tooth.conditions
+                                    .filter((c) => c !== "healthy")
+                                    .map((code) => {
+                                      const meta = CONDITION_BY_CODE[code];
+                                      return (
+                                        <span
+                                          key={code}
+                                          className="px-1.5 py-0.5 rounded text-[10px] font-bold border"
+                                          style={{
+                                            backgroundColor: meta.badgeBg,
+                                            borderColor: meta.stroke,
+                                            color: meta.badgeText,
+                                          }}
+                                        >
+                                          {meta.shortCode} · {meta.label}
+                                        </span>
+                                      );
+                                    })}
+                                </div>
+                              </div>
+
+                              {surfacePairs.length > 0 && (
+                                <p className="text-[11px] text-zinc-300">
+                                  Surfaces:{" "}
+                                  {surfacePairs
+                                    .map(
+                                      ([surf, code]) =>
+                                        `${surf} (${CONDITION_BY_CODE[code]?.label || code})`,
+                                    )
+                                    .join(" · ")}
+                                </p>
+                              )}
+
+                              {tooth.finding && (
+                                <p className="text-[11px] text-zinc-400 leading-snug">
+                                  {tooth.finding}
+                                </p>
+                              )}
+
+                              {tooth.plannedProcedures.length > 0 && (
+                                <div className="pt-1 border-t border-zinc-700/70 space-y-0.5">
+                                  {tooth.plannedProcedures.map((proc) => (
+                                    <div
+                                      key={proc.id}
+                                      className="flex items-center justify-between text-[11px] text-teal-300"
+                                    >
+                                      <span className="truncate">{proc.name}</span>
+                                      <span className="font-mono shrink-0">
+                                        ₹{proc.fee.toLocaleString("en-IN")}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB B: Patient Imaging Thumbnails */}
+                {clinicalPanelTab === "imaging" && (
+                  <div className="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs">
+                    <p className="text-[11px] text-zinc-400">
+                      Click any radiograph to inspect in full call stage or share with the patient.
+                    </p>
+
+                    {!callPatientChart || callPatientChart.imaging.length === 0 ? (
+                      <p className="text-zinc-400 italic py-4 text-center">
+                        No radiographs linked to this patient yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {callPatientChart.imaging.map((img) => {
+                          const isOpen = previewImage?.id === img.id;
+                          return (
+                            <button
+                              key={img.id}
+                              type="button"
+                              onClick={() => {
+                                setPreviewZoom(1);
+                                setPreviewImage(isOpen ? null : img);
+                              }}
+                              className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                                isOpen
+                                  ? "bg-teal-950/60 border-teal-400"
+                                  : "bg-zinc-800/80 border-zinc-700 hover:border-teal-500/60"
+                              }`}
+                            >
+                              {/* Radiograph SVG Thumbnail */}
+                              <div className="h-14 w-20 rounded-lg bg-slate-950 border border-zinc-700 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                <svg viewBox="0 0 80 56" className="w-full h-full">
+                                  <rect width="80" height="56" fill="#090d16" />
+                                  {[18, 33, 48, 62].map((x) => (
+                                    <rect
+                                      key={x}
+                                      x={x - 5}
+                                      y="14"
+                                      width="10"
+                                      height="24"
+                                      rx="3"
+                                      fill="#cbd5e1"
+                                      fillOpacity="0.32"
+                                      stroke="#94a3b8"
+                                      strokeWidth="0.9"
+                                    />
+                                  ))}
+                                </svg>
+                                <Maximize2 className="h-3 w-3 text-teal-300 absolute bottom-1 right-1" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-zinc-100 truncate">{img.title}</p>
+                                <p className="text-[11px] text-zinc-400 mt-0.5">
+                                  {img.modality} · {img.date}
+                                </p>
+                                <p className="text-[10px] text-teal-300 mt-0.5 truncate">
+                                  Teeth:{" "}
+                                  {img.linkedTeeth.length > 0
+                                    ? img.linkedTeeth
+                                        .map((fdi) => `#${formatToothNumber(fdi, numberingSystem)}`)
+                                        .join(", ")
+                                    : "Full arch"}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB C: In-Call Chat Drawer */}
+                {clinicalPanelTab === "chat" && (
+                  <div className="flex-1 flex flex-col min-h-0 p-3.5">
+                    <div className="flex-1 overflow-y-auto space-y-2 pb-3 text-xs">
+                      {callChatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-2.5 rounded-xl ${
+                            msg.sender === "Doctor"
+                              ? "bg-[var(--df-teal)]/20 border border-[var(--df-teal)]/40 ml-4"
+                              : msg.sender === "System"
+                              ? "bg-zinc-800/60 text-zinc-400 text-center text-[10px]"
+                              : "bg-zinc-800 border border-zinc-700 mr-4"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1">
+                            <span className="font-semibold">{msg.sender}</span>
+                            <span>{msg.time}</span>
+                          </div>
+                          <p className="text-zinc-200">{msg.text}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <form
+                      onSubmit={handleSendChat}
+                      className="flex items-center gap-2 pt-2 border-t border-zinc-800"
+                    >
+                      <input
+                        type="text"
+                        aria-label="Send message to patient"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Send message to patient..."
+                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-[var(--df-teal)]"
+                      />
+                      <button
+                        type="submit"
+                        aria-label="Send chat message"
+                        title="Send chat message"
+                        className="p-2 bg-[var(--df-teal)] rounded-lg text-white hover:bg-[var(--df-teal-hover)] cursor-pointer"
+                      >
+                        <Send className="h-3 w-3" />
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </aside>
+            )}
           </div>
 
           {/* Bottom Call Controls */}
