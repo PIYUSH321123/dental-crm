@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
-import { INITIAL_ROLE_PERMISSIONS } from "@/lib/dentflow-theme";
+import { migrateDentflowState } from "@/lib/dentflow-migrations";
 import { DentflowAppState } from "@/types/dentflow";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -15,18 +15,19 @@ function ensureState(): DentflowAppState {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (!fs.existsSync(STATE_FILE)) {
-      fs.writeFileSync(STATE_FILE, JSON.stringify(INITIAL_DENTFLOW_STATE, null, 2), "utf-8");
-      return INITIAL_DENTFLOW_STATE;
+      const initial = migrateDentflowState(INITIAL_DENTFLOW_STATE);
+      fs.writeFileSync(STATE_FILE, JSON.stringify(initial, null, 2), "utf-8");
+      return initial;
     }
     const raw = fs.readFileSync(STATE_FILE, "utf-8");
-    const parsed = JSON.parse(raw) as DentflowAppState;
-    return {
-      ...INITIAL_DENTFLOW_STATE,
-      ...parsed,
-      rolePermissions: INITIAL_ROLE_PERMISSIONS,
-    };
+    const parsed = JSON.parse(raw);
+    const migrated = migrateDentflowState(parsed);
+    if (!parsed?.schemaVersion || parsed.schemaVersion < (migrated.schemaVersion ?? 1)) {
+      fs.writeFileSync(STATE_FILE, JSON.stringify(migrated, null, 2), "utf-8");
+    }
+    return migrated;
   } catch {
-    return INITIAL_DENTFLOW_STATE;
+    return migrateDentflowState(INITIAL_DENTFLOW_STATE);
   }
 }
 

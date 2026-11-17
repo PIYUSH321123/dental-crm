@@ -34,8 +34,10 @@ import {
   DentflowStatusPill,
   DentflowUniquePill,
 } from "@/components/dental/dentflow-primitives";
+import { CONSENT_TEXT_VERSIONS } from "@/lib/dentflow-migrations";
 import { useDentflow } from "@/lib/dentflow-store";
-import { DentflowPatient } from "@/types/dentflow";
+import { ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
+import { DentflowPatient, PatientConsentRecord } from "@/types/dentflow";
 
 const ALLERGY_OPTIONS = ["Penicillin", "Sulfa drugs", "NSAIDs / Ibuprofen", "Latex", "Local anaesthetic", "Aspirin"];
 const CONDITION_OPTIONS = ["Diabetes", "Hypertension", "Cardiac condition", "Asthma", "Thyroid", "Bleeding disorder"];
@@ -61,8 +63,7 @@ function PatientsPageInner() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [actionMenuPatientId, setActionMenuPatientId] = useState<string | null>(null);
 
-  // New Patient Form State
-  const [form, setForm] = useState({
+  const INITIAL_REGISTRATION_FORM = {
     firstName: "",
     lastName: "",
     dob: "1995-05-12",
@@ -70,7 +71,8 @@ function PatientsPageInner() {
     gender: "Female" as "Female" | "Male" | "Other",
     photo: "",
     phone: "",
-    whatsappConsent: true,
+    whatsappConsent: false,
+    whatsappDeclined: false,
     email: "",
     address: "",
     city: "Pune",
@@ -86,9 +88,13 @@ function PatientsPageInner() {
     triggers: [] as string[],
     comfortNotes: "",
     source: "Google search",
-    treatmentConsent: true,
-    dpdpConsent: true,
-  });
+    treatmentConsent: false,
+    dpdpConsent: false,
+  };
+
+  // New Patient Form State — all consents start unticked by default
+  const [form, setForm] = useState(INITIAL_REGISTRATION_FORM);
+  const [consentError, setConsentError] = useState<string | null>(null);
 
   // URL sync for profile drawer
   useEffect(() => {
@@ -201,6 +207,7 @@ function PatientsPageInner() {
 
   // Save new patient
   const handleSavePatient = (andBookAppointment = false) => {
+    setConsentError(null);
     if (!form.firstName.trim() || !form.lastName.trim()) {
       toast.error("Please enter first and last name.");
       return;
@@ -219,16 +226,90 @@ function PatientsPageInner() {
       return;
     }
 
+    // Explicit consent enforcement (DPDP Act 2023 + Clinical Exam + explicit WhatsApp choice)
+    if (!form.dpdpConsent) {
+      const msg = "Explicit DPDP data privacy consent must be ticked before registering a patient.";
+      setConsentError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!form.treatmentConsent) {
+      const msg = "Explicit general examination & diagnosis consent must be ticked before registering.";
+      setConsentError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!form.whatsappConsent && !form.whatsappDeclined) {
+      const msg = "Please explicitly tick WhatsApp consent (opt-in) or mark WhatsApp updates as declined.";
+      setConsentError(msg);
+      toast.error(msg);
+      return;
+    }
+
     const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     const autoBuffer = form.anxietyScore >= 5 ? 15 : 0;
     const newId = `pat-${Date.now()}`;
     const newCode = `DF-${Math.floor(10000 + Math.random() * 90000)}`;
+    const nowIso = new Date().toISOString();
+    const nowDisplay = new Date().toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const recorderProfile = ROLE_USER_PROFILES[state.activeRole];
+    const recordedBy = recorderProfile?.name || "Clinic Staff";
+
+    const consentRecords: PatientConsentRecord[] = [
+      {
+        id: `c-exam-${Date.now()}`,
+        type: "clinical_exam",
+        title: CONSENT_TEXT_VERSIONS.clinicalExam.title,
+        status: "Signed",
+        dateOrNote: `Signed ${nowDisplay} · ${CONSENT_TEXT_VERSIONS.clinicalExam.version}`,
+        recordedAt: nowIso,
+        consentTextVersion: CONSENT_TEXT_VERSIONS.clinicalExam.version,
+        consentTextSnapshot: CONSENT_TEXT_VERSIONS.clinicalExam.text,
+        recordedBy,
+        recordedByRole: state.activeRole,
+        explicitlyAccepted: true,
+      },
+      {
+        id: `c-dpdp-${Date.now()}`,
+        type: "dpdp",
+        title: CONSENT_TEXT_VERSIONS.dpdp.title,
+        status: "Signed",
+        dateOrNote: `Signed ${nowDisplay} · ${CONSENT_TEXT_VERSIONS.dpdp.version}`,
+        recordedAt: nowIso,
+        consentTextVersion: CONSENT_TEXT_VERSIONS.dpdp.version,
+        consentTextSnapshot: CONSENT_TEXT_VERSIONS.dpdp.text,
+        recordedBy,
+        recordedByRole: state.activeRole,
+        explicitlyAccepted: true,
+      },
+      {
+        id: `c-wa-${Date.now()}`,
+        type: "whatsapp",
+        title: CONSENT_TEXT_VERSIONS.whatsapp.title,
+        status: form.whatsappConsent ? "Signed" : "Declined",
+        dateOrNote: form.whatsappConsent
+          ? `Opted in ${nowDisplay} · ${CONSENT_TEXT_VERSIONS.whatsapp.version}`
+          : `Declined ${nowDisplay} · ${CONSENT_TEXT_VERSIONS.whatsapp.version}`,
+        recordedAt: nowIso,
+        consentTextVersion: CONSENT_TEXT_VERSIONS.whatsapp.version,
+        consentTextSnapshot: CONSENT_TEXT_VERSIONS.whatsapp.text,
+        recordedBy,
+        recordedByRole: state.activeRole,
+        explicitlyAccepted: form.whatsappConsent,
+      },
+    ];
 
     const newPatient: DentflowPatient = {
       id: newId,
       code: newCode,
       name: fullName,
       age: parseInt(form.age, 10) || 30,
+      dob: form.dob,
       gender: form.gender,
       phone: `+91 ${cleanPhone.slice(-10)}`,
       homeBranch: state.activeBranch.replace(" branch", "") || "Station Road",
@@ -252,11 +333,8 @@ function PatientsPageInner() {
         autoBufferMin: autoBuffer,
       },
       familyMembers: [{ id: newId, initials: `${form.firstName[0]}${form.lastName[0]}`, name: fullName, relation: "Me", age: parseInt(form.age, 10) || 30 }],
-      consents: [
-        { id: `c-${Date.now()}`, title: "Medical history & consent", status: "Signed", dateOrNote: "Signed today" },
-        { id: `c-dpdp-${Date.now()}`, title: "DPDP privacy consent", status: "Signed", dateOrNote: "Signed today" },
-      ],
-      recentActivity: [{ date: "Today", text: "Patient registered at clinic front desk" }],
+      consents: consentRecords,
+      recentActivity: [{ date: "Today", text: `Registered by ${recordedBy} (consents: ${CONSENT_TEXT_VERSIONS.dpdp.version}, ${CONSENT_TEXT_VERSIONS.whatsapp.version})` }],
       distanceKm: 2.1,
       language: form.preferredLanguage,
       whatsappConsent: form.whatsappConsent,
@@ -265,12 +343,29 @@ function PatientsPageInner() {
       referredCount: 0,
     };
 
+    const consentAuditEntry = {
+      id: `dl-consent-${Date.now()}`,
+      timestamp: nowDisplay,
+      isoTimestamp: nowIso,
+      actor: recordedBy,
+      role: state.activeRole,
+      patientName: fullName,
+      screenName: "Patients",
+      action: "CONSENT_RECORDED",
+      entityType: "consent" as const,
+      entityId: newId,
+      details: `DPDP (${CONSENT_TEXT_VERSIONS.dpdp.version}): Signed; Exam (${CONSENT_TEXT_VERSIONS.clinicalExam.version}): Signed; WhatsApp (${CONSENT_TEXT_VERSIONS.whatsapp.version}): ${form.whatsappConsent ? "Opted in" : "Declined"}`,
+    };
+
     updateState((prev) => ({
       ...prev,
       patients: [newPatient, ...prev.patients],
+      dpdpAccessLogs: [consentAuditEntry, ...prev.dpdpAccessLogs].slice(0, 200),
     }));
 
-    toast.success(`Patient ${fullName} (${newCode}) registered successfully!`);
+    toast.success(`Patient ${fullName} (${newCode}) registered with audited consent!`);
+    setForm(INITIAL_REGISTRATION_FORM);
+    setConsentError(null);
     setNewPatientOpen(false);
 
     if (andBookAppointment) {
@@ -681,15 +776,45 @@ function PatientsPageInner() {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl px-3 py-2"
               />
-              <label className="flex items-center gap-2 mt-1.5 text-[11px] text-[var(--df-text-secondary)] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.whatsappConsent}
-                  onChange={(e) => setForm({ ...form, whatsappConsent: e.target.checked })}
-                  className="h-3.5 w-3.5 rounded text-[var(--df-teal)]"
-                />
-                <span>WhatsApp consent given for appointment & explainer updates</span>
-              </label>
+              <div className="mt-2 p-2.5 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-1.5">
+                <p className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                  WhatsApp Communication Consent * ({CONSENT_TEXT_VERSIONS.whatsapp.version})
+                </p>
+                <label className="flex items-start gap-2 text-[11px] text-[var(--df-text-secondary)] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.whatsappConsent}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setForm({
+                        ...form,
+                        whatsappConsent: checked,
+                        whatsappDeclined: checked ? false : form.whatsappDeclined,
+                      });
+                      setConsentError(null);
+                    }}
+                    className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
+                  />
+                  <span>{CONSENT_TEXT_VERSIONS.whatsapp.text}</span>
+                </label>
+                <label className="flex items-start gap-2 text-[11px] text-[var(--df-text-muted)] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.whatsappDeclined}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setForm({
+                        ...form,
+                        whatsappDeclined: checked,
+                        whatsappConsent: checked ? false : form.whatsappConsent,
+                      });
+                      setConsentError(null);
+                    }}
+                    className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
+                  />
+                  <span>Patient declined WhatsApp updates (record opt-out)</span>
+                </label>
+              </div>
             </div>
 
             <div>
@@ -874,30 +999,69 @@ function PatientsPageInner() {
               </select>
             </div>
 
-            <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2">
+            <div
+              className={`p-3 rounded-xl border space-y-2.5 ${
+                consentError
+                  ? "bg-red-50/70 border-red-300"
+                  : "bg-[var(--df-surface-muted)] border-[var(--df-border)]"
+              }`}
+            >
+              <div className="flex items-center justify-between text-[10.5px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                <span>Mandatory Explicit Consents *</span>
+                <span>Recorded by: {ROLE_USER_PROFILES[state.activeRole]?.name}</span>
+              </div>
+
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
+                  required
                   checked={form.treatmentConsent}
-                  onChange={(e) => setForm({ ...form, treatmentConsent: e.target.checked })}
+                  onChange={(e) => {
+                    setForm({ ...form, treatmentConsent: e.target.checked });
+                    setConsentError(null);
+                  }}
                   className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
                 />
-                <span className="text-[11px] text-[var(--df-text-secondary)]">
-                  Clinical general examination and diagnosis consent
+                <span className="text-[11px] text-[var(--df-text-secondary)] leading-snug">
+                  <strong className="text-[var(--df-text)]">
+                    {CONSENT_TEXT_VERSIONS.clinicalExam.title} *
+                  </strong>{" "}
+                  <span className="font-mono text-[10px] text-[var(--df-text-muted)]">
+                    ({CONSENT_TEXT_VERSIONS.clinicalExam.version})
+                  </span>
+                  <br />
+                  {CONSENT_TEXT_VERSIONS.clinicalExam.text}
                 </span>
               </label>
 
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
+                  required
                   checked={form.dpdpConsent}
-                  onChange={(e) => setForm({ ...form, dpdpConsent: e.target.checked })}
+                  onChange={(e) => {
+                    setForm({ ...form, dpdpConsent: e.target.checked });
+                    setConsentError(null);
+                  }}
                   className="h-3.5 w-3.5 mt-0.5 rounded text-[var(--df-teal)]"
                 />
-                <span className="text-[11px] text-[var(--df-text-secondary)]">
-                  Digital Personal Data Protection (DPDP Act 2023) consent for health record storage & WhatsApp communications
+                <span className="text-[11px] text-[var(--df-text-secondary)] leading-snug">
+                  <strong className="text-[var(--df-text)]">
+                    {CONSENT_TEXT_VERSIONS.dpdp.title} *
+                  </strong>{" "}
+                  <span className="font-mono text-[10px] text-[var(--df-text-muted)]">
+                    ({CONSENT_TEXT_VERSIONS.dpdp.version})
+                  </span>
+                  <br />
+                  {CONSENT_TEXT_VERSIONS.dpdp.text}
                 </span>
               </label>
+
+              {consentError && (
+                <p role="alert" className="text-[11px] font-semibold text-red-700 pt-1">
+                  {consentError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -1040,6 +1204,40 @@ function PatientsPageInner() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Recorded Consents (DPDP Audit) */}
+              <div className="df-card p-3.5 space-y-2">
+                <p className="font-bold text-xs text-[var(--df-text)]">Recorded Consents (DPDP Audit)</p>
+                {selectedPatient.consents.length === 0 ? (
+                  <p className="text-[11px] text-[var(--df-text-muted)]">No consents recorded yet.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {selectedPatient.consents.map((c) => (
+                      <div
+                        key={c.id}
+                        className="p-2 rounded-lg bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-0.5 text-[11px]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-[var(--df-text)]">{c.title}</span>
+                          <DentflowStatusPill
+                            label={c.status}
+                            tone={c.status === "Signed" ? "green" : c.status === "Declined" ? "red" : "amber"}
+                          />
+                        </div>
+                        <p className="text-[10.5px] text-[var(--df-text-muted)]">
+                          {c.consentTextVersion && (
+                            <span className="font-mono mr-1.5">{c.consentTextVersion}</span>
+                          )}
+                          {c.recordedBy && <span>· Recorded by {c.recordedBy}</span>}
+                          {c.recordedAt
+                            ? ` · ${new Date(c.recordedAt).toLocaleString("en-IN")}`
+                            : ` · ${c.dateOrNote}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Recent Activity & DPDP */}

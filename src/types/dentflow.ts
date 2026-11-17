@@ -42,11 +42,41 @@ export interface ClinicSetupConfig {
   whatsappNumber: string;
 }
 
+export interface PatientConsentRecord {
+  id: string;
+  type?: "dpdp" | "whatsapp" | "clinical_exam" | "procedure" | "other";
+  title: string;
+  status: "Signed" | "Due" | "Declined";
+  dateOrNote: string;
+  recordedAt?: string; // ISO 8601 timestamp
+  consentTextVersion?: string; // e.g., "DPDP-2023-v1.0"
+  consentTextSnapshot?: string;
+  recordedBy?: string; // staff member name who recorded the consent
+  recordedByRole?: string;
+  explicitlyAccepted?: boolean;
+}
+
+export interface DentflowAuditLogEntry {
+  id: string;
+  timestamp: string;
+  isoTimestamp?: string;
+  actor: string;
+  role: string;
+  patientName: string;
+  screenName: string;
+  action: string;
+  entityType?: "patient" | "dental_chart" | "prescription" | "consent" | "system";
+  entityId?: string;
+  details?: string;
+}
+
 export interface DentflowPatient {
   id: string;
   code: string; // e.g., DF-10482
   name: string;
   age: number;
+  dob?: string;
+  weightKg?: number;
   gender: "Female" | "Male" | "Other";
   phone: string;
   homeBranch: string;
@@ -80,12 +110,7 @@ export interface DentflowPatient {
     stageLabel: string;
     nextSitting: string;
   };
-  consents: {
-    id: string;
-    title: string;
-    status: "Signed" | "Due";
-    dateOrNote: string;
-  }[];
+  consents: PatientConsentRecord[];
   recentActivity: {
     date: string;
     text: string;
@@ -412,6 +437,7 @@ export interface TenantAccountRecord {
 }
 
 export interface DentflowAppState {
+  schemaVersion?: number;
   activeRole: DentflowRoleKey;
   activeBranch: BranchName;
   patients: DentflowPatient[];
@@ -442,15 +468,7 @@ export interface DentflowAppState {
   rolePermissions: RolePermissionRow[];
   specialistReferrals: SpecialistReferralItem[];
   tenantAccounts: TenantAccountRecord[];
-  dpdpAccessLogs: {
-    id: string;
-    timestamp: string;
-    actor: string;
-    role: string;
-    patientName: string;
-    screenName: string;
-    action: string;
-  }[];
+  dpdpAccessLogs: DentflowAuditLogEntry[];
   clinicSetup: ClinicSetupConfig;
   patientApp: {
     selectedPatientId: string;

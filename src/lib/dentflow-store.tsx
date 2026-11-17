@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
+import { migrateDentflowState } from "@/lib/dentflow-migrations";
 import { DentflowRoleKey, ROLE_USER_PROFILES } from "@/lib/dentflow-theme";
 import { BranchName, DentflowAppState } from "@/types/dentflow";
 
@@ -33,7 +34,7 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
       .then((data) => {
         if (!active) return;
         if (data?.state) {
-          setState({ ...INITIAL_DENTFLOW_STATE, ...data.state });
+          setState(migrateDentflowState(data.state));
         }
         setBackendConnected(Boolean(data?.backendConnected));
         setIsHydrated(true);
