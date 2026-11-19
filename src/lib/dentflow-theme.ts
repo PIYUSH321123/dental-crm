@@ -291,6 +291,13 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant", "Front desk"],
       },
       {
+        id: "dental-chart",
+        label: "Dental chart",
+        slug: "dental-chart",
+        requiredPermission: "view_patient_records",
+        allowedRoles: ["Owner", "Branch mgr", "Dentist", "Visiting", "Assistant", "Front desk"],
+      },
+      {
         id: "treatment-plans",
         label: "Treatment plans",
         slug: "treatment-plans",
