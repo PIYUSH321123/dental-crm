@@ -23,7 +23,7 @@ import {
   ImageAnnotationItem,
 } from "@/types/dentflow";
 
-function RadiographSvgGraphic({
+export function RadiographSvgGraphic({
   item,
   className = "w-full h-full",
 }: {

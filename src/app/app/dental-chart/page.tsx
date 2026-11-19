@@ -30,6 +30,7 @@ import {
 } from "@/components/dental/dentflow-primitives";
 import {
   ImagingGalleryAndViewer,
+  RadiographSvgGraphic,
   ToothImagingHoverStrip,
 } from "@/components/dental/imaging-viewer";
 import { PerioChart } from "@/components/dental/perio-chart";
@@ -436,7 +437,7 @@ function DentalChartContent() {
     const allConds = getAllToothConditions(tooth);
     const matchesLegend = legendHighlight ? allConds.includes(legendHighlight) : false;
     const isDimmed = Boolean(legendHighlight && !matchesLegend);
-    const hasLinkedImg = activeChart.imaging.some((img) => img.linkedTeeth.includes(fdi));
+    const linkedImgList = activeChart.imaging.filter((img) => img.linkedTeeth.includes(fdi));
 
     return (
       <ToothSvg
@@ -448,7 +449,9 @@ function DentalChartContent() {
         highlighted={matchesLegend}
         dimmed={isDimmed}
         diffBadge={diffByFdi[fdi]}
-        hasLinkedImaging={hasLinkedImg}
+        hasLinkedImaging={linkedImgList.length > 0}
+        linkedImages={linkedImgList}
+        onOpenImage={(img) => setOpenImageId(img.id)}
         compact={compact}
         onSelectTooth={handleSelectTooth}
         onClickSurface={handleClickSurface}
@@ -793,9 +796,9 @@ function DentalChartContent() {
       {/* Main Layout: Left 8-col Odontogram + Right 4-col Selected Tooth Panel */}
       {activeChartTab === "odontogram" && (
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        <div className="xl:col-span-8 space-y-4">
+        <div className="xl:col-span-8 space-y-4 min-w-0">
           {/* Odontogram Card */}
-          <div className="df-card p-4 sm:p-5 space-y-4">
+          <div className="df-card p-4 sm:p-5 space-y-4 overflow-hidden">
             {/* Top Controls: Dentition View + History Compare + Zoom */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[var(--df-canvas-subtle)] border border-[var(--df-border)]">
@@ -973,55 +976,53 @@ function DentalChartContent() {
               </div>
             )}
 
-            {/* Linked Radiograph Thumbnails on Tooth Hover */}
-            <ToothImagingHoverStrip
-              hoveredFdi={hoveredToothFdi || selectedToothNum}
-              imaging={activeChart.imaging}
-              numberingSystem={numberingSystem}
-              onOpenImage={(img) => setOpenImageId(img.id)}
-            />
-
-            {/* Arch Canvas (No horizontal scrollbars; tablet pinch-zoom enabled) */}
+            {/* Arch Canvas (No horizontal scrollbars on desktop; smooth horizontal scroll on narrow mobile; tablet pinch-zoom enabled) */}
             <div
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
-              className="w-full py-2 overflow-visible"
+              className="w-full py-2 overflow-x-auto overflow-y-hidden"
             >
               <div
                 style={{
                   transform: `scale(${zoomScale})`,
                   transformOrigin: "top center",
                 }}
-                className="space-y-4 transition-transform"
+                className="space-y-4 transition-transform min-w-[560px] md:min-w-0 w-full"
               >
                 {/* Upper Arch */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full">
                   <p className="text-center text-xs text-[var(--df-text-muted)] font-semibold">
                     Upper Arch · Patient&apos;s Right (Q1) ← Midline → Patient&apos;s Left (Q2)
                   </p>
 
                   {dentitionView !== "child" && (
-                    <div className="flex items-center justify-center gap-1 flex-wrap lg:flex-nowrap">
-                      <div className="flex items-center gap-1">
-                        {UPPER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      </div>
-                      <div className="w-[2px] h-24 bg-[var(--df-teal)]/50 mx-1.5 shrink-0 rounded-full" aria-label="Upper midline" />
-                      <div className="flex items-center gap-1">
-                        {UPPER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      </div>
+                    <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap">
+                      {UPPER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      <div className="w-[2px] h-20 sm:h-24 bg-[var(--df-teal)]/50 mx-1 sm:mx-1.5 shrink-0 rounded-full" aria-label="Upper midline" />
+                      {UPPER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
                     </div>
                   )}
 
                   {/* Primary Upper Row (Child view OR aligned under permanent 15..11 | 21..25 in Mixed view) */}
                   {(dentitionView === "child" || dentitionView === "mixed") && (
-                    <div className="flex items-center justify-center gap-1 pt-1">
-                      <div className="flex items-center gap-1">
-                        {UPPER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      </div>
-                      <div className="w-[2px] h-20 bg-purple-400/60 mx-1.5 shrink-0 rounded-full" />
-                      <div className="flex items-center gap-1">
-                        {UPPER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      </div>
+                    <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap pt-1">
+                      {dentitionView === "mixed" && (
+                        <>
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                        </>
+                      )}
+                      {UPPER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-1 sm:mx-1.5 shrink-0 rounded-full" />
+                      {UPPER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      {dentitionView === "mixed" && (
+                        <>
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1030,29 +1031,35 @@ function DentalChartContent() {
                 <div className="border-t-2 border-dashed border-[var(--df-border-strong)] my-2" />
 
                 {/* Lower Arch */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full">
                   {/* Primary Lower Row (Child view OR aligned over permanent 45..41 | 31..35 in Mixed view) */}
                   {(dentitionView === "child" || dentitionView === "mixed") && (
-                    <div className="flex items-center justify-center gap-1 pb-1">
-                      <div className="flex items-center gap-1">
-                        {LOWER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      </div>
-                      <div className="w-[2px] h-20 bg-purple-400/60 mx-1.5 shrink-0 rounded-full" />
-                      <div className="flex items-center gap-1">
-                        {LOWER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      </div>
+                    <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap pb-1">
+                      {dentitionView === "mixed" && (
+                        <>
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                        </>
+                      )}
+                      {LOWER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-1 sm:mx-1.5 shrink-0 rounded-full" />
+                      {LOWER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
+                      {dentitionView === "mixed" && (
+                        <>
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                        </>
+                      )}
                     </div>
                   )}
 
                   {dentitionView !== "child" && (
-                    <div className="flex items-center justify-center gap-1 flex-wrap lg:flex-nowrap">
-                      <div className="flex items-center gap-1">
-                        {LOWER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      </div>
-                      <div className="w-[2px] h-24 bg-[var(--df-teal)]/50 mx-1.5 shrink-0 rounded-full" aria-label="Lower midline" />
-                      <div className="flex items-center gap-1">
-                        {LOWER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      </div>
+                    <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap">
+                      {LOWER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
+                      <div className="w-[2px] h-20 sm:h-24 bg-[var(--df-teal)]/50 mx-1 sm:mx-1.5 shrink-0 rounded-full" aria-label="Lower midline" />
+                      {LOWER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
                     </div>
                   )}
 
@@ -1115,7 +1122,7 @@ function DentalChartContent() {
         </div>
 
         {/* Right 4-col Selected-Tooth Detail Panel */}
-        <div className="xl:col-span-4 df-card p-5 space-y-4">
+        <div className="xl:col-span-4 df-card p-5 space-y-4 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-baseline gap-2">
@@ -1302,6 +1309,35 @@ function DentalChartContent() {
               )}
             </div>
           </div>
+
+          {/* Linked Radiographs on this tooth */}
+          {activeChart.imaging.filter((img) => img.linkedTeeth.includes(selectedTooth.fdi)).length > 0 && (
+            <div className="space-y-1.5 pt-2 border-t border-[var(--df-border)]">
+              <span className="text-[11px] font-semibold text-[var(--df-text-muted)]">
+                Linked Radiographs ({activeChart.imaging.filter((img) => img.linkedTeeth.includes(selectedTooth.fdi)).length})
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {activeChart.imaging
+                  .filter((img) => img.linkedTeeth.includes(selectedTooth.fdi))
+                  .map((img) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => setOpenImageId(img.id)}
+                      className="flex items-center gap-2 p-1.5 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface-muted)] hover:border-[var(--df-teal)] text-left cursor-pointer transition-colors shadow-xs"
+                    >
+                      <div className="w-10 h-7 rounded overflow-hidden shrink-0 border border-[var(--df-border)] bg-black">
+                        <RadiographSvgGraphic item={img} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-[var(--df-text)] truncate max-w-[130px]">{img.title}</p>
+                        <p className="text-[10px] text-[var(--df-text-muted)]">{img.date}</p>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
 
           {/* Editable Clinical Findings Notes */}
           <div className="space-y-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   CONDITION_BY_CODE,
   getAllToothConditions,
@@ -10,7 +10,8 @@ import {
   isUpperArch,
   ToothCategory,
 } from "@/lib/dental-chart-logic";
-import { ToothChartRecord, ToothConditionCode, ToothSurface } from "@/types/dentflow";
+import { DentalImagingRecord, ToothChartRecord, ToothConditionCode, ToothSurface } from "@/types/dentflow";
+import { RadiographSvgGraphic } from "./imaging-viewer";
 
 /** Render once per page to provide accessible color+pattern SVG fills (never color alone). */
 export function ToothSvgDefs() {
@@ -139,6 +140,8 @@ export interface ToothSvgProps {
   dimmed?: boolean;
   diffBadge?: string;
   hasLinkedImaging?: boolean;
+  linkedImages?: DentalImagingRecord[];
+  onOpenImage?: (img: DentalImagingRecord) => void;
   compact?: boolean;
   onSelectTooth?: (fdi: number, e: React.MouseEvent) => void;
   onClickSurface?: (fdi: number, surface: ToothSurface, e: React.MouseEvent) => void;
@@ -156,6 +159,8 @@ export function ToothSvg({
   dimmed = false,
   diffBadge,
   hasLinkedImaging = false,
+  linkedImages,
+  onOpenImage,
   compact = false,
   onSelectTooth,
   onClickSurface,
@@ -163,6 +168,7 @@ export function ToothSvg({
   onPointerEnterTooth,
   onHoverTooth,
 }: ToothSvgProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const upper = isUpperArch(tooth.fdi);
   const category = getToothCategory(tooth.fdi);
   const layout = getSurfaceLayout(tooth.fdi);
@@ -217,7 +223,7 @@ export function ToothSvg({
   const crownGraphic = (
     <svg
       viewBox="0 0 48 34"
-      className={compact ? "w-9 h-6" : "w-11 h-8"}
+      className={compact ? "w-6 h-4" : "w-7 h-5 sm:w-8 sm:h-5.5 md:w-9 md:h-6 max-w-full"}
       aria-hidden="true"
     >
       {/* Roots */}
@@ -280,7 +286,7 @@ export function ToothSvg({
   const surfaceDiagram = (
     <svg
       viewBox="0 0 44 44"
-      className={compact ? "w-9 h-9" : "w-11 h-11"}
+      className={compact ? "w-6 h-6" : "w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 max-w-full"}
       role="group"
       aria-label={`Tooth ${displayNumber} surfaces`}
     >
@@ -365,21 +371,21 @@ export function ToothSvg({
   // Condition short-code chips (supports multiple conditions per tooth)
   const statusChips =
     allConds.length > 0 ? (
-      <div className="flex flex-wrap items-center justify-center gap-0.5 max-w-full px-0.5">
+      <div className="flex flex-wrap items-center justify-center gap-0.5 max-w-full px-0.5 min-h-[14px]">
         {allConds.slice(0, 2).map((code) => {
           const m = CONDITION_BY_CODE[code];
           return (
             <span
               key={code}
               style={{ backgroundColor: m.badgeBg, color: m.badgeText, borderColor: m.stroke }}
-              className="px-1 py-0 text-[9px] leading-tight font-bold rounded border"
+              className="px-0.5 py-0 text-[8px] sm:text-[8.5px] leading-tight font-bold rounded border shrink-0"
             >
               {m.shortCode}
             </span>
           );
         })}
         {allConds.length > 2 && (
-          <span className="text-[8.5px] font-bold text-[var(--df-text-muted)]">+{allConds.length - 2}</span>
+          <span className="text-[7.5px] font-bold text-[var(--df-text-muted)]">+{allConds.length - 2}</span>
         )}
       </div>
     ) : (
@@ -401,12 +407,16 @@ export function ToothSvg({
       }}
       onPointerDown={(e) => onPointerDownTooth?.(tooth.fdi, e)}
       onPointerEnter={() => {
+        setIsHovered(true);
         onPointerEnterTooth?.(tooth.fdi);
         onHoverTooth?.(tooth.fdi);
       }}
-      onPointerLeave={() => onHoverTooth?.(null)}
-      className={`relative flex flex-col items-center justify-between rounded-xl border p-1 transition-all select-none cursor-pointer ${
-        compact ? "w-12" : "w-12 sm:w-14 xl:w-[66px]"
+      onPointerLeave={() => {
+        setIsHovered(false);
+        onHoverTooth?.(null);
+      }}
+      className={`relative flex flex-col items-center justify-between rounded-lg sm:rounded-xl border p-0.5 sm:p-1 transition-colors duration-150 select-none cursor-pointer shrink-0 ${
+        compact ? "w-9 sm:w-10" : "flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px]"
       } ${
         isUnerupted ? "opacity-50 border-dashed" : ""
       } ${
@@ -421,6 +431,43 @@ export function ToothSvg({
           : "border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal)]"
       }`}
     >
+      {/* Floating Imaging Preview Tooltip on Hover (Zero layout shift) */}
+      {isHovered && linkedImages && linkedImages.length > 0 && (
+        <div
+          role="tooltip"
+          className={`absolute z-30 ${
+            upper ? "top-full mt-1.5" : "bottom-full mb-1.5"
+          } ${
+            [18, 17, 48, 47, 55, 85].includes(tooth.fdi)
+              ? "left-0"
+              : [28, 27, 38, 37, 65, 75].includes(tooth.fdi)
+              ? "right-0"
+              : "left-1/2 -translate-x-1/2"
+          } pointer-events-auto bg-[var(--df-surface)] border border-[var(--df-teal)] rounded-xl shadow-xl p-2 flex items-center gap-2.5 min-w-[210px] animate-in fade-in duration-150`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-12 h-9 rounded overflow-hidden shrink-0 border border-[var(--df-border)] bg-black">
+            <RadiographSvgGraphic item={linkedImages[0]} />
+          </div>
+          <div className="text-left leading-tight">
+            <p className="font-bold text-[11px] text-[var(--df-text)] truncate max-w-[130px]">
+              {linkedImages[0].title}
+            </p>
+            <p className="text-[10px] text-[var(--df-text-muted)]">{linkedImages[0].date}</p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenImage?.(linkedImages[0]);
+              }}
+              className="text-[10px] font-bold text-[var(--df-teal)] hover:underline mt-0.5 inline-block cursor-pointer"
+            >
+              View radiograph ({linkedImages.length}) →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Linked imaging indicator dot */}
       {hasLinkedImaging && (
         <span
