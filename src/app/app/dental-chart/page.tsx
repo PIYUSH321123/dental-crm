@@ -980,7 +980,7 @@ function DentalChartContent() {
             <div
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
-              className="w-full py-2 overflow-x-auto overflow-y-hidden"
+              className="w-full py-2 overflow-x-auto"
             >
               <div
                 style={{
@@ -998,7 +998,7 @@ function DentalChartContent() {
                   {dentitionView !== "child" && (
                     <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap">
                       {UPPER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      <div className="w-[2px] h-20 sm:h-24 bg-[var(--df-teal)]/50 mx-1 sm:mx-1.5 shrink-0 rounded-full" aria-label="Upper midline" />
+                      <div className="w-[2px] h-18 sm:h-22 bg-[var(--df-teal)]/50 mx-0.5 sm:mx-1 shrink-0 rounded-full" aria-label="Upper midline" />
                       {UPPER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
                     </div>
                   )}
@@ -1008,19 +1008,19 @@ function DentalChartContent() {
                     <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap pt-1">
                       {dentitionView === "mixed" && (
                         <>
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
                         </>
                       )}
                       {UPPER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-1 sm:mx-1.5 shrink-0 rounded-full" />
+                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-0.5 sm:mx-1 shrink-0 rounded-full" />
                       {UPPER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
                       {dentitionView === "mixed" && (
                         <>
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
                         </>
                       )}
                     </div>
@@ -1037,19 +1037,19 @@ function DentalChartContent() {
                     <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap pb-1">
                       {dentitionView === "mixed" && (
                         <>
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
                         </>
                       )}
                       {LOWER_RIGHT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
-                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-1 sm:mx-1.5 shrink-0 rounded-full" />
+                      <div className="w-[2px] h-16 sm:h-20 bg-purple-400/60 mx-0.5 sm:mx-1 shrink-0 rounded-full" />
                       {LOWER_LEFT_PRIMARY.map((fdi) => renderTooth(fdi, dentitionView === "mixed"))}
                       {dentitionView === "mixed" && (
                         <>
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
-                          <div className="flex-1 min-w-[34px] max-w-[52px] sm:max-w-[58px] invisible shrink-0" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
+                          <div className="flex-1 min-w-0 max-w-[56px] sm:max-w-[62px] invisible" aria-hidden="true" />
                         </>
                       )}
                     </div>
@@ -1058,7 +1058,7 @@ function DentalChartContent() {
                   {dentitionView !== "child" && (
                     <div className="flex items-center justify-center w-full gap-0.5 sm:gap-1 flex-nowrap">
                       {LOWER_RIGHT_PERMANENT.map((fdi) => renderTooth(fdi))}
-                      <div className="w-[2px] h-20 sm:h-24 bg-[var(--df-teal)]/50 mx-1 sm:mx-1.5 shrink-0 rounded-full" aria-label="Lower midline" />
+                      <div className="w-[2px] h-18 sm:h-22 bg-[var(--df-teal)]/50 mx-0.5 sm:mx-1 shrink-0 rounded-full" aria-label="Lower midline" />
                       {LOWER_LEFT_PERMANENT.map((fdi) => renderTooth(fdi))}
                     </div>
                   )}
