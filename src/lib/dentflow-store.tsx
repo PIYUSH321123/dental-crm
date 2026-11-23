@@ -39,21 +39,42 @@ export function DentflowProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/dentflow/state")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!active) return;
-        if (data?.state) {
-          setState(migrateDentflowState(data.state));
+
+    // Listen for cross-tab logout broadcast
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      channel = new BroadcastChannel("dentflow_auth_channel");
+      channel.onmessage = (event) => {
+        if (event.data?.type === "LOGOUT") {
+          window.location.replace("/login");
         }
-        setBackendConnected(Boolean(data?.backendConnected));
+      };
+    }
+
+    Promise.all([
+      fetch("/api/dentflow/state").then((res) => (res.ok ? res.json() : null)),
+      fetch("/api/dentflow/session").then((res) => (res.ok ? res.json() : null)),
+    ])
+      .then(([stateData, sessionData]) => {
+        if (!active) return;
+        if (stateData?.state) {
+          const migrated = migrateDentflowState(stateData.state);
+          // If authenticated session has a specific role, sync it to activeRole
+          if (sessionData?.session?.staffRoleKey) {
+            migrated.activeRole = sessionData.session.staffRoleKey;
+          }
+          setState(migrated);
+        }
+        setBackendConnected(Boolean(stateData?.backendConnected));
         setIsHydrated(true);
       })
       .catch(() => {
         if (active) setIsHydrated(true);
       });
+
     return () => {
       active = false;
+      channel?.close();
     };
   }, []);
 

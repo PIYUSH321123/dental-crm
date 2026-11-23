@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,12 +10,15 @@ import {
   Bell,
   Building2,
   Calendar,
+  Check,
   ChevronDown,
   ClipboardList,
   Clock,
+  ExternalLink,
   FilePlay,
   FileText,
   FlaskConical,
+  Globe,
   Home,
   LayoutDashboard,
   LogIn,
@@ -24,6 +27,7 @@ import {
   Menu,
   Moon,
   Package,
+  Palette,
   PanelLeftClose,
   PanelLeftOpen,
   PhoneCall,
@@ -32,6 +36,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   Sun,
   TrendingUp,
@@ -41,6 +46,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { performDentflowLogout, staffRoleKeyToAuthRole } from "@/lib/dentflow-session";
 import {
   canRoleAccessNavItem,
   DENTFLOW_ROLES,
@@ -79,6 +85,8 @@ const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "visiting-specialists": Stethoscope,
   reports: BarChart3,
   settings: Settings,
+  "website-landing": Globe,
+  leads: Sparkles,
 };
 
 export function DentflowStatusPill({
@@ -168,6 +176,85 @@ export function DentflowKpiCard({
   );
 }
 
+const BRANCH_OPTIONS: BranchName[] = [
+  "Station Road branch",
+  "Civil Lines branch",
+  "MG Road branch",
+  "All 3 branches",
+];
+
+export function DentflowBranchSelector() {
+  const { state, setActiveBranch } = useDentflow();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative inline-block text-left">
+      <button
+        type="button"
+        aria-label="Select active clinic branch"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-3 pr-2.5 py-1.5 text-xs font-semibold text-[var(--df-text)] hover:border-[var(--df-border-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--df-teal)]/20 cursor-pointer transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <Building2 className="h-3.5 w-3.5 text-[var(--df-teal)] shrink-0" />
+        <span className="truncate max-w-[150px] sm:max-w-none">{state.activeBranch}</span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-[var(--df-text-muted)] shrink-0 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute left-0 mt-1.5 w-56 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] p-1.5 shadow-xl z-50"
+        >
+          <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+            Select clinic branch
+          </div>
+          {BRANCH_OPTIONS.map((branch) => {
+            const isSelected = state.activeBranch === branch;
+            return (
+              <button
+                key={branch}
+                role="option"
+                aria-selected={isSelected}
+                type="button"
+                onClick={() => {
+                  setActiveBranch(branch);
+                  setOpen(false);
+                  toast.success(`Switched active branch to ${branch}`);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                  isSelected
+                    ? "bg-[var(--df-teal-soft)] text-[var(--df-teal)] font-bold"
+                    : "text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] focus-visible:bg-[var(--df-surface-hover)]"
+                }`}
+              >
+                <span className="truncate">{branch}</span>
+                {isSelected && <Check className="h-4 w-4 text-[var(--df-teal)] shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function DentflowPageHeader({
   title,
   subtitle,
@@ -187,6 +274,7 @@ export function DentflowPageHeader({
     setSearchQuery,
     setActiveBranch,
     setActiveRole,
+    updateState,
   } = useDentflow();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -196,12 +284,8 @@ export function DentflowPageHeader({
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
-    try {
-      await fetch("/api/dentflow/session", { method: "DELETE" });
-    } catch {}
-    toast.success("Logged out successfully");
-    router.push("/login");
-    router.refresh();
+    toast.success("Logging out...");
+    await performDentflowLogout();
   };
 
   const toggleDarkMode = () => {
@@ -209,8 +293,73 @@ export function DentflowPageHeader({
     setIsDarkMode(isDark);
   };
 
-  const displayedBranch = defaultBranch || state.activeBranch;
-  const userProfile = defaultUserOverride || ROLE_USER_PROFILES[state.activeRole];
+  const handleSwitchRole = async (newRole: DentflowRoleKey) => {
+    setActiveRole(newRole);
+    const authRole = staffRoleKeyToAuthRole(newRole);
+    try {
+      await fetch("/api/dentflow/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "SWITCH_ROLE",
+          role: authRole,
+          staffRoleKey: newRole,
+        }),
+      });
+    } catch {
+      // local state already updated
+    }
+    toast.success(`Switched active staff role to ${newRole}`);
+  };
+
+  const userProfile = useMemo(() => {
+    if (defaultUserOverride) return defaultUserOverride;
+
+    const customOwner = state.clinicSetup.ownerName;
+    const rosterStaff = state.clinicSetup.staffRoster?.find(
+      (s) => s.role === state.activeRole
+    );
+    const base = ROLE_USER_PROFILES[state.activeRole] || {
+      name: "Dr. Sneha Kulkarni",
+      subtitle: "Dentist — owner",
+      initials: "SK",
+    };
+
+    if (state.activeRole === "Owner") {
+      const name = customOwner || rosterStaff?.name || base.name;
+      const initials = name
+        .replace(/^(Dr\.|Mr\.|Mrs\.|Ms\.)\s*/i, "")
+        .split(" ")
+        .map((p) => p[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || "SK";
+      return {
+        name,
+        subtitle: "Dentist — owner",
+        initials,
+      };
+    }
+
+    if (rosterStaff?.name) {
+      const initials = rosterStaff.name
+        .replace(/^(Dr\.|Mr\.|Mrs\.|Ms\.)\s*/i, "")
+        .split(" ")
+        .map((p) => p[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || base.initials;
+      return {
+        ...base,
+        name: rosterStaff.name,
+        initials,
+      };
+    }
+
+    return base;
+  }, [defaultUserOverride, state.activeRole, state.clinicSetup.staffRoster, state.clinicSetup.ownerName]);
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -256,21 +405,7 @@ export function DentflowPageHeader({
 
       <div className="flex flex-wrap items-center gap-2.5">
         {/* Branch selector */}
-        <div className="relative">
-          <Building2 className="h-3.5 w-3.5 text-[var(--df-teal)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <select
-            aria-label="Select branch"
-            value={displayedBranch}
-            onChange={(e) => setActiveBranch(e.target.value as BranchName)}
-            className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-8 pr-7 py-1.5 text-xs font-semibold text-[var(--df-text)] hover:border-[var(--df-border-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--df-teal)]/20 cursor-pointer"
-          >
-            <option value="Station Road branch">Station Road branch</option>
-            <option value="Civil Lines branch">Civil Lines branch</option>
-            <option value="MG Road branch">MG Road branch</option>
-            <option value="All 3 branches">All 3 branches</option>
-          </select>
-          <ChevronDown className="h-3.5 w-3.5 text-[var(--df-text-muted)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+        <DentflowBranchSelector />
 
         {/* Search patient, phone, invoice */}
         <div className="relative hidden md:block w-64">
@@ -368,25 +503,45 @@ export function DentflowPageHeader({
           )}
         </div>
 
-        {/* Role Switcher (demo mode only — hidden in production unless NEXT_PUBLIC_DEMO_MODE=true) */}
-        {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && (
-          <div className="relative hidden lg:block">
-            <select
-              aria-label="Active role"
-              value={state.activeRole}
-              onChange={(e) => setActiveRole(e.target.value as DentflowRoleKey)}
-              title="Switch active staff role (controlled by Settings > Users & roles)"
-              className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-2.5 pr-6 py-1.5 text-[11px] font-semibold text-[var(--df-teal)] hover:border-[var(--df-teal-border)] focus:outline-none cursor-pointer"
-            >
-              {DENTFLOW_ROLES.map((r) => (
-                <option key={r} value={r}>
-                  Role: {r}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="h-3 w-3 text-[var(--df-teal)] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        )}
+        {/* Quick Links: Live Clinic Website & Marketing Landing */}
+        <div className="hidden xl:flex items-center gap-1.5">
+          <Link
+            href="/c/smile-studio"
+            target="_blank"
+            title="Open Public Clinic Website"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal-border)] text-[var(--df-text)] hover:text-[var(--df-teal)] transition-colors shadow-xs"
+          >
+            <Globe className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+            <span>Clinic Website</span>
+          </Link>
+          <Link
+            href="/"
+            target="_blank"
+            title="Open CRM Marketing Landing Page"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-border-strong)] text-[var(--df-text-muted)] hover:text-[var(--df-text)] transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            <span>Marketing Page</span>
+          </Link>
+        </div>
+
+        {/* Role Switcher */}
+        <div className="relative hidden md:block">
+          <select
+            aria-label="Active role"
+            value={state.activeRole}
+            onChange={(e) => handleSwitchRole(e.target.value as DentflowRoleKey)}
+            title="Switch active staff role"
+            className="appearance-none bg-[var(--df-surface)] border border-[var(--df-border)] rounded-xl pl-2.5 pr-6 py-1.5 text-[11px] font-semibold text-[var(--df-teal)] hover:border-[var(--df-teal-border)] focus:outline-none cursor-pointer"
+          >
+            {DENTFLOW_ROLES.map((r) => (
+              <option key={r} value={r}>
+                Role: {r}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-[var(--df-teal)] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
 
         {/* User Profile & Account Dropdown (matching reference image) */}
         <div className="relative">
@@ -416,16 +571,83 @@ export function DentflowPageHeader({
               <div className="absolute right-0 mt-2 w-64 df-card p-3.5 z-50 shadow-2xl rounded-2xl border border-[var(--df-border)] bg-[var(--df-surface)] animate-in fade-in zoom-in-95 duration-100">
                 {/* User info & badge */}
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-[var(--df-text)]">
-                    {userProfile.name || "Dr. Sneha Kulkarni"}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[var(--df-text)]">
+                      {userProfile.name}
+                    </p>
+                    {state.activeRole === "Owner" && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const newName = prompt(
+                            "Enter new Clinic Owner / Principal Dentist name:",
+                            userProfile.name,
+                          );
+                          if (!newName || !newName.trim()) return;
+                          const trimmed = newName.trim();
+                          updateState((prev) => ({
+                            ...prev,
+                            clinicSetup: {
+                              ...prev.clinicSetup,
+                              ownerName: trimmed,
+                              staffRoster: (prev.clinicSetup.staffRoster || []).map((s) =>
+                                s.role === "Owner" ? { ...s, name: trimmed } : s,
+                              ),
+                            },
+                          }));
+                          try {
+                            await fetch("/api/dentflow/session", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ action: "UPDATE_OWNER", name: trimmed }),
+                            });
+                          } catch {}
+                          toast.success(`Owner name changed to "${trimmed}"`);
+                        }}
+                        className="text-[11px] text-[var(--df-teal)] hover:underline font-semibold cursor-pointer"
+                      >
+                        Change name
+                      </button>
+                    )}
+                  </div>
                   <p className="text-xs text-[var(--df-text-muted)]">
-                    admin@demo-dental.com
+                    {state.activeRole === "Owner"
+                      ? state.clinicSetup.ownerEmail || "sneha@smilestudio.in"
+                      : `${state.activeRole.toLowerCase().replace(/\s+/g, "")}@smilestudio.in`}
                   </p>
                   <div>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EF4444] text-white tracking-wide shadow-xs">
-                      Admin
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)] tracking-wide shadow-xs">
+                      {state.activeRole}
                     </span>
+                  </div>
+                </div>
+
+                <div className="my-2.5 border-t border-[var(--df-border)]" />
+
+                {/* Role Switcher in popup */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-[var(--df-text-muted)] uppercase tracking-wider px-1">
+                    Switch Staff Role
+                  </p>
+                  <div className="grid grid-cols-2 gap-1 pt-0.5">
+                    {DENTFLOW_ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => {
+                          handleSwitchRole(r);
+                          setUserMenuOpen(false);
+                        }}
+                        className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                          state.activeRole === r
+                            ? "bg-[var(--df-teal)] text-white font-bold"
+                            : "bg-[var(--df-surface-muted)] text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] border border-[var(--df-border)]"
+                        }`}
+                      >
+                        <span className="truncate">{r}</span>
+                        {state.activeRole === r && <Check className="h-3 w-3 shrink-0" />}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -434,12 +656,50 @@ export function DentflowPageHeader({
                 {/* Profile & Settings Navigation */}
                 <div className="space-y-0.5">
                   <Link
+                    href="/c/smile-studio"
+                    target="_blank"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <Globe className="h-4 w-4 text-[var(--df-teal)]" />
+                    <span>View Clinic Website (/c/smile-studio)</span>
+                  </Link>
+
+                  <Link
+                    href="/app/settings?tab=website"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <Palette className="h-4 w-4 text-[var(--df-teal)]" />
+                    <span>Website &amp; Landing Page Editor</span>
+                  </Link>
+
+                  <Link
+                    href="/app/settings?tab=leads"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <Sparkles className="h-4 w-4 text-[var(--df-teal)]" />
+                    <span>Website Leads &amp; Demo Requests</span>
+                  </Link>
+
+                  <Link
+                    href="/"
+                    target="_blank"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4 text-[var(--df-text-muted)]" />
+                    <span>DentFlow CRM Marketing Page</span>
+                  </Link>
+
+                  <Link
                     href="/app/settings"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
                   >
                     <User className="h-4 w-4 text-[var(--df-text-muted)]" />
-                    <span>Profile</span>
+                    <span>Edit Owner &amp; Clinic Profile</span>
                   </Link>
 
                   <Link
@@ -448,7 +708,7 @@ export function DentflowPageHeader({
                     className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
                   >
                     <Settings className="h-4 w-4 text-[var(--df-text-muted)]" />
-                    <span>Settings</span>
+                    <span>Settings &amp; Permissions</span>
                   </Link>
                 </div>
 
@@ -469,10 +729,7 @@ export function DentflowPageHeader({
                     type="button"
                     onClick={async () => {
                       setUserMenuOpen(false);
-                      try {
-                        await fetch("/api/dentflow/session", { method: "DELETE" });
-                      } catch {}
-                      window.location.href = "/login";
+                      await performDentflowLogout();
                     }}
                     className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-[var(--df-text-muted)] hover:text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors cursor-pointer"
                   >
@@ -610,7 +867,7 @@ export function DentflowSidebar({
       {/* Brand Header */}
       <div className="flex items-center justify-between px-3 pt-3.5 pb-2.5 border-b border-[var(--df-sidebar-border)]">
         <Link
-          href={state.activeRole === "Owner" ? "/app/group-dashboard" : "/app/today"}
+          href="/Dashboard/today"
           onClick={onCloseMobile}
           title="DentFlow Home"
           className="flex items-center gap-2.5 min-w-0"
@@ -684,8 +941,15 @@ export function DentflowSidebar({
               {!isCollapsed && (
                 <ul className="space-y-0.5">
                   {visibleItems.map((item) => {
-                    const href = `/app/${item.slug}`;
-                    const isItemExactActive = pathname === href || pathname?.startsWith(`${href}/`);
+                    const href = item.slug === "today" ? "/Dashboard/today" : `/app/${item.slug}`;
+                    const isItemExactActive =
+                      item.slug === "today"
+                        ? pathname === "/Dashboard/today" ||
+                          pathname === "/dashboard/today" ||
+                          pathname === "/app/today" ||
+                          pathname === "/Dashboard" ||
+                          pathname === "/dashboard"
+                        : pathname === href || pathname?.startsWith(`${href}/`);
                     const isFamilyActive =
                       isItemExactActive ||
                       (item.slug === "patients" && pathname?.startsWith("/app/dental-chart")) ||
@@ -747,6 +1011,45 @@ export function DentflowSidebar({
           );
         })}
       </nav>
+
+      {/* Sidebar Footer Link to Public Marketing Landing Page */}
+      {!railCollapsed ? (
+        <div className="p-2 border-t border-[var(--df-sidebar-border)] space-y-0.5">
+          <Link
+            href="/"
+            target="_blank"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--df-sidebar-muted)] hover:text-white hover:bg-[var(--df-sidebar-hover)] transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Globe className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+              <span>Marketing Site</span>
+            </span>
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+          <Link
+            href="/c/smile-studio"
+            target="_blank"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--df-sidebar-muted)] hover:text-white hover:bg-[var(--df-sidebar-hover)] transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-[var(--df-teal)]" />
+              <span>Live Website (/c/...)</span>
+            </span>
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        </div>
+      ) : (
+        <div className="p-2 border-t border-[var(--df-sidebar-border)] flex flex-col items-center gap-1.5">
+          <Link
+            href="/"
+            target="_blank"
+            title="Marketing Site"
+            className="p-1.5 text-[var(--df-sidebar-muted)] hover:text-white rounded-lg hover:bg-[var(--df-sidebar-hover)]"
+          >
+            <Globe className="h-4 w-4 text-[var(--df-teal)]" />
+          </Link>
+        </div>
+      )}
     </aside>
   );
 
@@ -772,6 +1075,20 @@ export function DentflowSidebar({
 
 export function DentflowDashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { state } = useDentflow();
+
+  const trialInfo = state.clinicSetup?.trialInfo;
+  const isTrial = trialInfo?.status === "trial";
+  const isExpired = trialInfo?.status === "expired";
+
+  const trialDaysLeft = useMemo(() => {
+    if (!trialInfo?.trialEnd) return 14;
+    const diff = new Date(trialInfo.trialEnd).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }, [trialInfo?.trialEnd]);
+
+  const showTrialBanner = isTrial && trialDaysLeft > 0;
+  const showExpiredBanner = isExpired || (isTrial && trialDaysLeft <= 0);
 
   return (
     <div className="min-h-screen flex df-canvas">
@@ -792,8 +1109,46 @@ export function DentflowDashboardShell({ children }: { children: React.ReactNode
             <span>Menu</span>
           </button>
           <span className="df-serif text-base font-semibold">DentFlow</span>
-          <span className="text-[10px] text-[var(--df-sidebar-muted)]">Smile Studio</span>
+          <span className="text-[10px] text-[var(--df-sidebar-muted)]">
+            {state.clinicSetup?.clinicGroupName || "Smile Studio"}
+          </span>
         </div>
+
+        {/* 14-Day Free Trial Notice Banner */}
+        {showTrialBanner && (
+          <div className="bg-[var(--df-teal-soft)] border-b border-[var(--df-teal-border)] px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-[var(--df-teal)] font-medium">
+              <Sparkles className="h-4 w-4 shrink-0 text-[var(--df-teal)]" />
+              <span>
+                <strong>14-day free trial active:</strong> {trialDaysLeft} days remaining on your {trialInfo?.plan || "Growth"} plan.
+              </span>
+            </div>
+            <Link
+              href="/app/settings"
+              className="df-btn-primary px-3 py-1 text-[11px] font-bold shrink-0"
+            >
+              Upgrade now →
+            </Link>
+          </div>
+        )}
+
+        {/* Trial Expired Alert Banner */}
+        {showExpiredBanner && (
+          <div className="bg-red-50 dark:bg-red-950/40 border-b border-red-200 dark:border-red-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-red-700 dark:text-red-300 font-medium">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-red-600" />
+              <span>
+                <strong>Trial period expired:</strong> Your 14-day trial has ended. Please upgrade your plan to continue full scheduling, billing, and AI WhatsApp automations.
+              </span>
+            </div>
+            <Link
+              href="/app/settings"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 rounded-lg text-[11px] shrink-0 transition-colors"
+            >
+              Choose subscription plan
+            </Link>
+          </div>
+        )}
 
         <main className="flex-1 p-4 sm:p-6 max-w-[1440px] w-full mx-auto">{children}</main>
       </div>

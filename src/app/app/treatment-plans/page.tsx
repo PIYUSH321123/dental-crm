@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ClipboardList, FilePlay, Plus, Printer, RefreshCw, Send } from "lucide-react";
+import { Check, ClipboardList, FilePlay, Plus, Printer, RefreshCw, Search, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DentflowChromeTabs,
@@ -26,11 +26,176 @@ export default function TreatmentPlansPage() {
   const router = useRouter();
   const { state, updateState } = useDentflow();
 
-  const plan = state.treatmentPlans[0];
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(
+    state.treatmentPlans[0]?.id || "",
+  );
+  const plan =
+    state.treatmentPlans.find((tp) => tp.id === selectedPlanId) ||
+    state.treatmentPlans[0];
+
   const [addProcOpen, setAddProcOpen] = useState(false);
   const [newProcName, setNewProcName] = useState("Post & core build-up");
   const [newProcTooth, setNewProcTooth] = useState("36");
   const [newProcFee, setNewProcFee] = useState("3500");
+
+  // New Treatment Plan Drawer State
+  const [newPlanOpen, setNewPlanOpen] = useState(false);
+  const [npPatientId, setNpPatientId] = useState<string>(state.patients[0]?.id || "");
+  const [npInlinePatient, setNpInlinePatient] = useState(false);
+  const [npNewPatientName, setNpNewPatientName] = useState("");
+  const [npNewPatientPhone, setNpNewPatientPhone] = useState("");
+  const [npNewPatientAge, setNpNewPatientAge] = useState("32");
+  const [npDoctor, setNpDoctor] = useState("Dr. Sneha Kulkarni");
+  const [npBranch, setNpBranch] = useState("Station Road branch");
+  const [npDate, setNpDate] = useState("4 Oct 2026");
+  const [npDiagnosis, setNpDiagnosis] = useState("Irreversible pulpitis tooth 36, missing 46");
+  const [npStatus, setNpStatus] = useState<TreatmentPlanRecord["pipelineStep"]>("Proposed");
+  const [npProcedures, setNpProcedures] = useState([
+    { id: "proc-1", tooth: "36", procedure: "Root canal treatment (molar)", stageNum: 1, fee: 8000, discount: 500, doctor: "Dr. Sneha" },
+    { id: "proc-2", tooth: "36", procedure: "CAD/CAM Zirconia crown", stageNum: 2, fee: 14500, discount: 1000, doctor: "Dr. Arjun" },
+  ]);
+  const [npOptionA, setNpOptionA] = useState({ title: "Option A · Zirconia Crown (5-yr warranty)", price: 21000, subtitle: "Full biocompatible CAD/CAM zirconia restoration" });
+  const [npOptionB, setNpOptionB] = useState({ title: "Option B · PFM Porcelain-Fused-to-Metal", price: 16500, subtitle: "Metal ceramic crown restoration" });
+  const [npOptionC, setNpOptionC] = useState({ title: "Option C · Direct Composite Restoration", price: 11000, subtitle: "Core build-up only" });
+  const [npRecommendedOption, setNpRecommendedOption] = useState<"A" | "B" | "C">("A");
+  const [npDiscount, setNpDiscount] = useState("1500");
+  const [npInsuranceEstimate, setNpInsuranceEstimate] = useState("0");
+  const [npEmiActive, setNpEmiActive] = useState(false);
+  const [npEmiInstallments, setNpEmiInstallments] = useState(3);
+  const [npClinicalNotes, setNpClinicalNotes] = useState("Discussed treatment steps, prognosis, and warranties with the patient. Digital radiograph reviewed.");
+  const [npConsentSigned, setNpConsentSigned] = useState(true);
+
+  const handleCreateTreatmentPlan = (e: React.FormEvent) => {
+    e.preventDefault();
+    let patientId = npPatientId;
+    let patientName = state.patients.find((p) => p.id === patientId)?.name || "Patient";
+
+    let updatedPatients = state.patients;
+    if (npInlinePatient) {
+      if (!npNewPatientName.trim()) {
+        toast.error("Please enter the patient's full name");
+        return;
+      }
+      const newPatId = `pat-${Date.now()}`;
+      patientId = newPatId;
+      patientName = npNewPatientName.trim();
+      const newPat = {
+        ...state.patients[0],
+        id: newPatId,
+        code: `P-${1000 + state.patients.length}`,
+        name: patientName,
+        phone: npNewPatientPhone ? `+91 ${npNewPatientPhone.replace(/\D/g, "").slice(-10)}` : "+91 98220 11000",
+        age: parseInt(npNewPatientAge, 10) || 30,
+        patientSince: "Today",
+        visitsCount: 1,
+        flags: ["New" as const],
+      };
+      updatedPatients = [newPat, ...state.patients];
+    }
+
+    const planTotal = npProcedures.reduce((acc, p) => acc + (p.fee || 0), 0);
+    const discNum = Number(npDiscount) || 0;
+    const balance = Math.max(0, planTotal - discNum);
+    const newPlanCode = `TP-${2230 + state.treatmentPlans.length + 1}`;
+
+    const newRecord: TreatmentPlanRecord = {
+      id: `tp-${Date.now()}`,
+      planCode: newPlanCode,
+      patientId,
+      patientName,
+      proposedBy: npDoctor,
+      proposedDate: npDate,
+      pipelineStep: npStatus,
+      pipelineDates: {
+        Proposed: npDate,
+        Explained: npStatus !== "Proposed" ? npDate : "—",
+        Accepted: npStatus === "Accepted" || npStatus === "In progress" || npStatus === "Completed" ? npDate : "—",
+        "In progress": npStatus === "In progress" || npStatus === "Completed" ? npDate : "—",
+        Completed: npStatus === "Completed" ? npDate : "—",
+        Review: "—",
+      },
+      options: [
+        { code: "A", label: "Option A", title: npOptionA.title, price: npOptionA.price, subtitle: npOptionA.subtitle, recommended: npRecommendedOption === "A", patientChose: npRecommendedOption === "A" },
+        { code: "B", label: "Option B", title: npOptionB.title, price: npOptionB.price, subtitle: npOptionB.subtitle, recommended: npRecommendedOption === "B", patientChose: npRecommendedOption === "B" },
+        { code: "C", label: "Option C", title: npOptionC.title, price: npOptionC.price, subtitle: npOptionC.subtitle, recommended: npRecommendedOption === "C", patientChose: npRecommendedOption === "C" },
+      ],
+      stages: npProcedures.map((proc, idx) => ({
+        id: `st-${Date.now()}-${idx}`,
+        stageNum: proc.stageNum || idx + 1,
+        procedure: proc.procedure,
+        tooth: proc.tooth,
+        doctor: proc.doctor,
+        visitLabel: idx === 0 ? "Sitting 1" : `Sitting ${idx + 1}`,
+        fee: proc.fee,
+        status: "Not booked",
+      })),
+      costSummary: {
+        planTotal,
+        discount: discNum,
+        insuranceEstimate: npInsuranceEstimate ? `₹${Number(npInsuranceEstimate).toLocaleString("en-IN")}` : "None",
+        paidSoFar: 0,
+        balance,
+        labCostInternal: Math.round(planTotal * 0.22),
+      },
+      emiPlan: {
+        active: npEmiActive,
+        installments: npEmiInstallments,
+        amountPerMonth: Math.round(balance / Math.max(1, npEmiInstallments)),
+        debitDay: 5,
+        lendingPartner: "Bajaj Finserv Health",
+      },
+      engagement: {
+        sentInfo: `Created by ${npDoctor} on ${npDate}`,
+        watchedInfo: "Pending patient review",
+        acceptedInfo: npStatus === "Accepted" ? "Accepted by patient" : "Awaiting consent",
+      },
+    };
+
+    const auditEntry = {
+      id: `dl-${Date.now()}`,
+      timestamp: new Date().toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+      isoTimestamp: new Date().toISOString(),
+      actor: npDoctor,
+      role: state.activeRole,
+      patientName,
+      screenName: "Treatment plans",
+      action: "CREATE_TREATMENT_PLAN",
+      entityType: "patient" as const,
+      entityId: patientId,
+      details: `Created treatment plan ${newPlanCode} (${newRecord.stages.length} procedures, ₹${planTotal.toLocaleString("en-IN")})`,
+    };
+
+    updateState((prev) => ({
+      ...prev,
+      patients: updatedPatients.map((p) =>
+        p.id === patientId
+          ? {
+              ...p,
+              openPlanSummary: {
+                planCode: newPlanCode,
+                title: newRecord.stages[0]?.procedure || "Dental treatment plan",
+                total: planTotal,
+                stageLabel: `Stage 1 of ${newRecord.stages.length}`,
+                nextSitting: "Consultation booked",
+              },
+              recentActivity: [
+                {
+                  date: "Today",
+                  text: `Treatment plan ${newPlanCode} proposed (${npStatus})`,
+                },
+                ...(p.recentActivity || []),
+              ],
+            }
+          : p
+      ),
+      treatmentPlans: [newRecord, ...prev.treatmentPlans],
+      dpdpAccessLogs: [auditEntry, ...prev.dpdpAccessLogs].slice(0, 500),
+    }));
+
+    setSelectedPlanId(newRecord.id);
+    setNewPlanOpen(false);
+    toast.success(`Treatment plan ${newPlanCode} created for ${patientName}!`);
+  };
 
   // Stage booking drawer state
   const [bookingStage, setBookingStage] = useState<{
@@ -168,8 +333,8 @@ export default function TreatmentPlansPage() {
         subtitle={`Proposed by ${plan.proposedBy} on ${plan.proposedDate}`}
       />
 
-      {/* Chrome-style Tab Bar for Clinical Treatment Plans Section */}
-      <div className="mb-4">
+      {/* Top Chrome Tab Bar & Plan Switcher with + New Treatment Plan button */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <DentflowChromeTabs
           activeId="plans"
           tabs={[
@@ -177,6 +342,31 @@ export default function TreatmentPlansPage() {
             { id: "explainer", label: "Explainer", href: "/app/explainers", icon: FilePlay },
           ]}
         />
+
+        <div className="flex items-center gap-2.5">
+          {state.treatmentPlans.length > 1 && (
+            <select
+              aria-label="Select treatment plan"
+              value={plan.id}
+              onChange={(e) => setSelectedPlanId(e.target.value)}
+              className="rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--df-text)]"
+            >
+              {state.treatmentPlans.map((tp) => (
+                <option key={tp.id} value={tp.id}>
+                  {tp.planCode} · {tp.patientName} ({tp.pipelineStep})
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            type="button"
+            onClick={() => setNewPlanOpen(true)}
+            className="df-btn-primary px-3.5 py-1.5 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span>+ New Treatment Plan</span>
+          </button>
+        </div>
       </div>
 
       {/* 6-step Pipeline Card */}
@@ -637,6 +827,446 @@ export default function TreatmentPlansPage() {
           </form>
         </DentflowDrawer>
       )}
+
+      {/* New Treatment Plan Drawer */}
+      <DentflowDrawer
+        open={newPlanOpen}
+        onClose={() => setNewPlanOpen(false)}
+        title="Create New Treatment Plan"
+        subtitle="Patient options, procedures, multi-sitting pipeline & financial summary"
+      >
+        <form onSubmit={handleCreateTreatmentPlan} className="space-y-4 text-xs pb-6">
+          {/* 1. Patient Selection or Inline Create */}
+          <div className="space-y-2 p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)]">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-[var(--df-text)]">Patient Information</label>
+              <button
+                type="button"
+                onClick={() => setNpInlinePatient((v) => !v)}
+                className="text-[11px] font-semibold text-[var(--df-teal)] hover:underline cursor-pointer"
+              >
+                {npInlinePatient ? "← Select existing patient" : "+ Inline create new patient"}
+              </button>
+            </div>
+
+            {npInlinePatient ? (
+              <div className="space-y-2.5 pt-1">
+                <div>
+                  <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">Full Name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. Ramesh Joshi"
+                    value={npNewPatientName}
+                    onChange={(e) => setNpNewPatientName(e.target.value)}
+                    className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">WhatsApp Phone</label>
+                    <input
+                      required
+                      type="tel"
+                      placeholder="98220 12345"
+                      value={npNewPatientPhone}
+                      onChange={(e) => setNpNewPatientPhone(e.target.value)}
+                      className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">Age</label>
+                    <input
+                      type="number"
+                      value={npNewPatientAge}
+                      onChange={(e) => setNpNewPatientAge(e.target.value)}
+                      className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[11px] text-[var(--df-text-muted)] mb-1">Select Patient</label>
+                <select
+                  value={npPatientId}
+                  onChange={(e) => setNpPatientId(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 font-medium"
+                >
+                  {state.patients.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.code}) · {p.phone} · {p.homeBranch}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* 2. Doctor, Branch & Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label className="block font-semibold mb-1">Attending Doctor</label>
+              <select
+                value={npDoctor}
+                onChange={(e) => setNpDoctor(e.target.value)}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+              >
+                <option>Dr. Sneha Kulkarni</option>
+                <option>Dr. Arjun Mehta</option>
+                <option>Dr. Farhan Ali</option>
+                <option>Dr. Karan Shah</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Branch</label>
+              <select
+                value={npBranch}
+                onChange={(e) => setNpBranch(e.target.value)}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+              >
+                <option>Station Road branch</option>
+                <option>Civil Lines branch</option>
+                <option>MG Road branch</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Proposed Date</label>
+              <input
+                type="text"
+                value={npDate}
+                onChange={(e) => setNpDate(e.target.value)}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 font-mono"
+              />
+            </div>
+          </div>
+
+          {/* 3. Diagnosis & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="sm:col-span-2">
+              <label className="block font-semibold mb-1">Diagnosis / Chief Complaint</label>
+              <input
+                type="text"
+                placeholder="e.g. Irreversible pulpitis tooth 36, missing 46"
+                value={npDiagnosis}
+                onChange={(e) => setNpDiagnosis(e.target.value)}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Initial Status</label>
+              <select
+                value={npStatus}
+                onChange={(e) => setNpStatus(e.target.value as TreatmentPlanRecord["pipelineStep"])}
+                className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 font-bold"
+              >
+                <option value="Proposed">Proposed</option>
+                <option value="Accepted">Accepted</option>
+                <option value="In progress">In progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 4. Procedure Rows */}
+          <div className="space-y-2 pt-2 border-t border-[var(--df-border)]">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-[var(--df-text)]">
+                Procedures &amp; Clinical Sittings ({npProcedures.length})
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setNpProcedures([
+                    ...npProcedures,
+                    {
+                      id: `proc-${Date.now()}`,
+                      tooth: "General",
+                      procedure: "Scaling & polishing",
+                      stageNum: npProcedures.length + 1,
+                      fee: 1500,
+                      discount: 0,
+                      doctor: "Dr. Arjun",
+                    },
+                  ])
+                }
+                className="df-btn-secondary px-2.5 py-1 text-[11px] inline-flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="h-3 w-3" /> Add procedure
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {npProcedures.map((proc, idx) => (
+                <div
+                  key={proc.id}
+                  className="p-2.5 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] grid grid-cols-12 gap-2 items-center text-xs"
+                >
+                  <div className="col-span-2">
+                    <label className="block text-[10px] text-[var(--df-text-muted)]">Tooth #</label>
+                    <input
+                      type="text"
+                      value={proc.tooth}
+                      onChange={(e) => {
+                        const updated = [...npProcedures];
+                        updated[idx] = { ...updated[idx], tooth: e.target.value };
+                        setNpProcedures(updated);
+                      }}
+                      className="w-full rounded border border-[var(--df-border)] px-1.5 py-1 font-mono text-center"
+                    />
+                  </div>
+
+                  <div className="col-span-4">
+                    <label className="block text-[10px] text-[var(--df-text-muted)]">Procedure</label>
+                    <input
+                      type="text"
+                      value={proc.procedure}
+                      onChange={(e) => {
+                        const updated = [...npProcedures];
+                        updated[idx] = { ...updated[idx], procedure: e.target.value };
+                        setNpProcedures(updated);
+                      }}
+                      className="w-full rounded border border-[var(--df-border)] px-2 py-1 font-medium"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-[10px] text-[var(--df-text-muted)]">Stage</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={proc.stageNum}
+                      onChange={(e) => {
+                        const updated = [...npProcedures];
+                        updated[idx] = { ...updated[idx], stageNum: Number(e.target.value) };
+                        setNpProcedures(updated);
+                      }}
+                      className="w-full rounded border border-[var(--df-border)] px-1.5 py-1 text-center"
+                    />
+                  </div>
+
+                  <div className="col-span-3">
+                    <label className="block text-[10px] text-[var(--df-text-muted)]">Fee (₹)</label>
+                    <input
+                      type="number"
+                      value={proc.fee}
+                      onChange={(e) => {
+                        const updated = [...npProcedures];
+                        updated[idx] = { ...updated[idx], fee: Number(e.target.value) };
+                        setNpProcedures(updated);
+                      }}
+                      className="w-full rounded border border-[var(--df-border)] px-2 py-1 font-semibold text-right"
+                    />
+                  </div>
+
+                  <div className="col-span-1 flex justify-end pt-3">
+                    <button
+                      type="button"
+                      disabled={npProcedures.length <= 1}
+                      onClick={() => setNpProcedures(npProcedures.filter((_, i) => i !== idx))}
+                      className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded cursor-pointer disabled:opacity-30"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 5. Multi-Option Comparison Setup (A / B / C) */}
+          <div className="space-y-2 pt-2 border-t border-[var(--df-border)]">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-[var(--df-text)]">
+                Multi-Option Comparison (Options A / B / C)
+              </label>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <span className="text-[var(--df-text-muted)]">Recommended:</span>
+                {(["A", "B", "C"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setNpRecommendedOption(opt)}
+                    className={`px-2 py-0.5 rounded font-bold cursor-pointer transition-colors ${
+                      npRecommendedOption === opt
+                        ? "bg-[var(--df-teal)] text-white"
+                        : "bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] border border-[var(--df-border)]"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-2.5 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-[var(--df-teal)]">Option A {npRecommendedOption === "A" && "★ Recommended"}</span>
+                  <div className="flex items-center gap-1">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={npOptionA.price}
+                      onChange={(e) => setNpOptionA({ ...npOptionA, price: Number(e.target.value) })}
+                      className="w-20 rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-1.5 py-0.5 text-right font-bold"
+                    />
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={npOptionA.title}
+                  onChange={(e) => setNpOptionA({ ...npOptionA, title: e.target.value })}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-[11px] mb-1"
+                />
+                <input
+                  type="text"
+                  value={npOptionA.subtitle}
+                  onChange={(e) => setNpOptionA({ ...npOptionA, subtitle: e.target.value })}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-[10px] text-[var(--df-text-muted)]"
+                />
+              </div>
+
+              <div className="p-2.5 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-[var(--df-text)]">Option B {npRecommendedOption === "B" && "★ Recommended"}</span>
+                  <div className="flex items-center gap-1">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={npOptionB.price}
+                      onChange={(e) => setNpOptionB({ ...npOptionB, price: Number(e.target.value) })}
+                      className="w-20 rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-1.5 py-0.5 text-right font-bold"
+                    />
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={npOptionB.title}
+                  onChange={(e) => setNpOptionB({ ...npOptionB, title: e.target.value })}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-[11px] mb-1"
+                />
+                <input
+                  type="text"
+                  value={npOptionB.subtitle}
+                  onChange={(e) => setNpOptionB({ ...npOptionB, subtitle: e.target.value })}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-[10px] text-[var(--df-text-muted)]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Financial Summary & EMI */}
+          <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-2.5">
+            <h4 className="font-bold text-[var(--df-text)]">Financial Summary</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div>
+                <label className="block text-[10.5px] text-[var(--df-text-muted)]">Total Plan Fee</label>
+                <div className="font-bold text-sm text-[var(--df-text)]">
+                  ₹{npProcedures.reduce((acc, p) => acc + (p.fee || 0), 0).toLocaleString("en-IN")}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10.5px] text-[var(--df-text-muted)]">Discount (₹)</label>
+                <input
+                  type="number"
+                  value={npDiscount}
+                  onChange={(e) => setNpDiscount(e.target.value)}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-xs font-semibold text-right"
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] text-[var(--df-text-muted)]">Insurance (₹)</label>
+                <input
+                  type="number"
+                  value={npInsuranceEstimate}
+                  onChange={(e) => setNpInsuranceEstimate(e.target.value)}
+                  className="w-full rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-xs text-right"
+                />
+              </div>
+              <div>
+                <label className="block text-[10.5px] text-[var(--df-text-muted)]">Patient Payable</label>
+                <div className="font-bold text-sm text-[var(--df-teal)]">
+                  ₹{Math.max(
+                    0,
+                    npProcedures.reduce((acc, p) => acc + (p.fee || 0), 0) -
+                      (Number(npDiscount) || 0) -
+                      (Number(npInsuranceEstimate) || 0),
+                  ).toLocaleString("en-IN")}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1 border-t border-[var(--df-border)]">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={npEmiActive}
+                  onChange={(e) => setNpEmiActive(e.target.checked)}
+                  className="rounded text-[var(--df-teal)]"
+                />
+                <span className="font-semibold text-xs">Enable 0% Interest EMI AutoPay</span>
+              </label>
+              {npEmiActive && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span>Tenure:</span>
+                  <select
+                    value={npEmiInstallments}
+                    onChange={(e) => setNpEmiInstallments(Number(e.target.value))}
+                    className="rounded border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-0.5 text-xs font-bold"
+                  >
+                    <option value={3}>3 months</option>
+                    <option value={6}>6 months</option>
+                    <option value={9}>9 months</option>
+                    <option value={12}>12 months</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 7. Clinical Notes & Doctor Consent */}
+          <div>
+            <label className="block font-semibold mb-1">Clinical Notes &amp; Findings</label>
+            <textarea
+              rows={2}
+              value={npClinicalNotes}
+              onChange={(e) => setNpClinicalNotes(e.target.value)}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+            />
+          </div>
+
+          <label className="flex items-start gap-2 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              required
+              checked={npConsentSigned}
+              onChange={(e) => setNpConsentSigned(e.target.checked)}
+              className="mt-0.5 rounded text-[var(--df-teal)]"
+            />
+            <span className="text-[11px] text-[var(--df-text-secondary)]">
+              Clinical estimate confirmed with attending dentist signature and patient DPDP consent log.
+            </span>
+          </label>
+
+          {/* Form Actions */}
+          <div className="pt-2 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={() => setNewPlanOpen(false)}
+              className="df-btn-secondary px-4 py-2 text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="df-btn-primary px-5 py-2 text-xs font-bold cursor-pointer"
+            >
+              Create Treatment Plan
+            </button>
+          </div>
+        </form>
+      </DentflowDrawer>
     </div>
   );
 }

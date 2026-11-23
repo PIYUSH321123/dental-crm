@@ -89,7 +89,7 @@ const nextConfig: NextConfig = {
       // Legacy company-scoped dashboard root & renamed slugs
       {
         source: "/c/:company/dashboard",
-        destination: "/app/today",
+        destination: "/Dashboard/today",
         permanent: false,
       },
       {

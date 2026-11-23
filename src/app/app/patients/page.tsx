@@ -134,6 +134,14 @@ function PatientsPageInner() {
   // Filter logic
   const filteredPatients = useMemo(() => {
     return state.patients.filter((p) => {
+      // Global branch filter
+      if (state.activeBranch !== "All 3 branches") {
+        const shortBranch = state.activeBranch.replace(" branch", "");
+        if (p.homeBranch && p.homeBranch !== shortBranch && p.homeBranch !== state.activeBranch) {
+          return false;
+        }
+      }
+
       // Search
       const q = searchTerm.trim().toLowerCase();
       if (q) {
@@ -163,7 +171,7 @@ function PatientsPageInner() {
 
       return true;
     });
-  }, [state.patients, searchTerm, statusFilter, genderFilter, pendingDuesOnly]);
+  }, [state.patients, state.activeBranch, searchTerm, statusFilter, genderFilter, pendingDuesOnly]);
 
   // Export CSV
   const handleExportCSV = () => {

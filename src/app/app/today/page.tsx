@@ -119,8 +119,22 @@ export default function TodayFrontDeskPage() {
     setWalkInOpen(false);
   };
 
-  const greetingName =
-    state.activeRole === "Front desk" ? "Anita" : "Dr. Sneha";
+  const greetingName = useMemo(() => {
+    if (state.activeRole === "Front desk") {
+      const fd = state.clinicSetup.staffRoster?.find((s) => s.role === "Front desk");
+      return fd?.name?.split(" ")[0] || "Anita";
+    }
+    const currentOwner =
+      state.clinicSetup.ownerName ||
+      state.clinicSetup.staffRoster?.find((s) => s.role === "Owner")?.name;
+    if (state.activeRole === "Owner" && currentOwner) {
+      const parts = currentOwner.replace(/^Dr\.\s*/i, "").trim().split(" ");
+      const firstName = parts[0] || "Doctor";
+      return `Dr. ${firstName}`;
+    }
+    const staff = state.clinicSetup.staffRoster?.find((s) => s.role === state.activeRole);
+    return staff?.name || "Doctor";
+  }, [state.activeRole, state.clinicSetup.ownerName, state.clinicSetup.staffRoster]);
 
   return (
     <div>
@@ -276,10 +290,36 @@ export default function TodayFrontDeskPage() {
         {/* Right Column: Needs Attention + AI Receptionist Summary */}
         <div className="xl:col-span-4 space-y-4">
           <section className="df-card p-4">
-            <h2 className="df-serif text-base font-semibold text-[var(--df-text)] mb-3">
-              Needs attention
+            <h2 className="df-serif text-base font-semibold text-[var(--df-text)] mb-3 flex items-center justify-between">
+              <span>Needs attention</span>
+              {(state.demoRequests || []).filter((d) => d.status === "new").length > 0 && (
+                <Link
+                  href="/app/settings?tab=leads"
+                  className="text-[11px] font-semibold text-[var(--df-teal)] hover:underline"
+                >
+                  {(state.demoRequests || []).filter((d) => d.status === "new").length} new leads →
+                </Link>
+              )}
             </h2>
             <div className="space-y-2.5">
+              {/* Website Consultation & Demo Requests */}
+              {(state.demoRequests || []).filter((d) => d.status === "new").slice(0, 2).map((lead) => (
+                <button
+                  key={lead.id}
+                  type="button"
+                  onClick={() => router.push("/app/settings?tab=leads")}
+                  className="w-full text-left p-2.5 rounded-lg border border-[var(--df-border)] border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 hover:brightness-98 transition-all cursor-pointer"
+                >
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+                    <span>New Website Consultation — {lead.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700">New lead</span>
+                  </p>
+                  <p className="text-[11px] text-[var(--df-text-secondary)] mt-0.5 leading-snug">
+                    {lead.message ? `"${lead.message}"` : `Requested appointment for ${lead.preferredDateTime || "soon"}`} · {lead.phone}
+                  </p>
+                </button>
+              ))}
+
               {state.needsAttention.map((item) => {
                 const borderColor =
                   item.tone === "red"

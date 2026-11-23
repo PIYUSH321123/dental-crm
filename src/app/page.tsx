@@ -135,7 +135,12 @@ export default function LandingPage() {
     name: "",
     clinic: "",
     phone: "",
+    email: "",
+    city: "",
+    preferredDateTime: "",
     branches: "1–3 branches",
+    message: "",
+    honeypot: "",
   });
 
   useEffect(() => {
@@ -155,10 +160,17 @@ export default function LandingPage() {
 
   const dashboardHref = activeSession
     ? getDefaultRedirectForSession(activeSession)
-    : "/app/today";
+    : "/Dashboard/today";
 
-  const handleDemoSubmit = (e: React.FormEvent) => {
+  const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/dentflow/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "BOOK_DEMO", payload: demoForm }),
+      });
+    } catch {}
     setDemoSubmitted(true);
     toast.success("Demo request received — our dental onboarding specialist will call within 2 hours.");
   };
@@ -187,6 +199,9 @@ export default function LandingPage() {
             <a href="#testimonials" className="hover:text-[var(--df-teal)] transition-colors">
               Testimonials
             </a>
+            <Link href="/c/smile-studio" className="hover:text-[var(--df-teal)] transition-colors">
+              Clinic website demo (/c/...)
+            </Link>
             <Link href="/patient/login" className="hover:text-[var(--df-teal)] transition-colors">
               Patient app
             </Link>
@@ -321,6 +336,12 @@ export default function LandingPage() {
               >
                 Book a demo
               </button>
+              <Link
+                href="/c/smile-studio"
+                className="df-btn-secondary px-4 py-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
+              >
+                <span>Live clinic page (/c/...)</span>
+              </Link>
             </div>
 
             <div className="flex flex-wrap items-center gap-5 pt-2 text-[11px] text-[var(--df-text-muted)] font-medium">
@@ -690,6 +711,29 @@ export default function LandingPage() {
                     />
                   </div>
                   <div>
+                    <label className="block font-semibold mb-1">Work email</label>
+                    <input
+                      type="email"
+                      placeholder="dr@clinic.in"
+                      value={demoForm.email}
+                      onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
+                      className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block font-semibold mb-1">City</label>
+                    <input
+                      type="text"
+                      placeholder="Pune / Mumbai"
+                      value={demoForm.city}
+                      onChange={(e) => setDemoForm({ ...demoForm, city: e.target.value })}
+                      className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                    />
+                  </div>
+                  <div>
                     <label className="block font-semibold mb-1">Branches</label>
                     <select
                       value={demoForm.branches}
@@ -702,6 +746,40 @@ export default function LandingPage() {
                     </select>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block font-semibold mb-1">Preferred date & time</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Tomorrow 3:00 PM"
+                    value={demoForm.preferredDateTime}
+                    onChange={(e) => setDemoForm({ ...demoForm, preferredDateTime: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-1">Message / clinic needs (optional)</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Tell us about chairs, specialities, or current software..."
+                    value={demoForm.message}
+                    onChange={(e) => setDemoForm({ ...demoForm, message: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+                  />
+                </div>
+
+                {/* Honeypot field for anti-spam protection */}
+                <input
+                  type="text"
+                  name="website"
+                  value={demoForm.honeypot}
+                  onChange={(e) => setDemoForm({ ...demoForm, honeypot: e.target.value })}
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+
                 <button type="submit" className="w-full df-btn-primary py-2.5 text-xs cursor-pointer">
                   Request demo callback
                 </button>

@@ -10,9 +10,11 @@ import {
   DentflowSessionPayload,
   getDefaultRedirectForSession,
   signDentflowSession,
+  staffRoleKeyToAuthRole,
   verifyDentflowSession,
 } from "@/lib/dentflow-session";
 import { ClinicSetupConfig, DentflowAppState } from "@/types/dentflow";
+import { DentflowRoleKey } from "@/lib/dentflow-theme";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const STATE_FILE = path.join(DATA_DIR, "dentflow-state.json");
@@ -50,6 +52,14 @@ const DEFAULT_NAMES: Record<DentflowAuthRole, string> = {
   patient: "Priya Deshmukh",
 };
 
+function getSafeInternalRedirect(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\")) {
+    return url;
+  }
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(DENTFLOW_SESSION_COOKIE)?.value;
   const session = await verifyDentflowSession(token);
@@ -59,6 +69,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const action = String(body?.action || "LOGIN");
+  const requestedRedirect = getSafeInternalRedirect(
+    body?.redirect || body?.returnTo || body?.next || req.nextUrl.searchParams.get("redirect") || req.nextUrl.searchParams.get("returnTo") || req.nextUrl.searchParams.get("next")
+  );
   let state = readState();
 
   if (action === "SIGNUP_OWNER") {
@@ -66,12 +79,21 @@ export async function POST(req: NextRequest) {
     const email = String(body?.email || "owner@dentalclinic.in").trim();
     const clinicGroupName = String(body?.clinicGroupName || "Nova Smile Dental").trim();
 
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
     const updatedSetup: ClinicSetupConfig = {
       ...state.clinicSetup,
       completed: false,
       clinicGroupName,
       city: String(body?.city || "Pune, Maharashtra"),
       phone: String(body?.phone || "+91 98220 44100"),
+      trialInfo: {
+        trialStart: now.toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        plan: String(body?.plan || "Growth"),
+        status: "trial",
+      },
     };
 
     state = {
@@ -91,7 +113,7 @@ export async function POST(req: NextRequest) {
       setupCompleted: false,
     };
     const token = await signDentflowSession(session);
-    const redirectTo = getDefaultRedirectForSession(session);
+    const redirectTo = requestedRedirect || getDefaultRedirectForSession(session);
     const res = NextResponse.json({ ok: true, session, redirectTo });
     res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
       httpOnly: false,
@@ -133,7 +155,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({
       ok: true,
       session,
-      redirectTo: "/app/group-dashboard",
+      redirectTo: requestedRedirect || "/app/today",
     });
     res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
       httpOnly: false,
@@ -158,8 +180,88 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({
       ok: true,
       session,
-      redirectTo: "/patient",
+      redirectTo: requestedRedirect || "/patient",
     });
+    res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
+      httpOnly: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return res;
+  }
+
+  if (action === "UPDATE_OWNER") {
+    const newName = String(body?.name || "").trim();
+    const newEmail = String(body?.email || "").trim();
+    if (newName) {
+      state = {
+        ...state,
+        clinicSetup: {
+          ...state.clinicSetup,
+          ownerName: newName,
+          ownerEmail: newEmail || state.clinicSetup.ownerEmail,
+          staffRoster: (state.clinicSetup.staffRoster || []).map((s) =>
+            s.role === "Owner" ? { ...s, name: newName } : s
+          ),
+        },
+      };
+      writeState(state);
+
+      const existingToken = req.cookies.get(DENTFLOW_SESSION_COOKIE)?.value;
+      const existing = await verifyDentflowSession(existingToken);
+      if (existing && existing.role === "owner") {
+        const session: DentflowSessionPayload = {
+          ...existing,
+          name: newName,
+          email: newEmail || existing.email,
+        };
+        const token = await signDentflowSession(session);
+        const res = NextResponse.json({ ok: true, session });
+        res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
+          httpOnly: false,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7,
+        });
+        return res;
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "SWITCH_ROLE") {
+    const role = (body?.role || "owner") as DentflowAuthRole;
+    const staffRoleKey = (body?.staffRoleKey || authRoleToStaffRoleKey(role)) as DentflowRoleKey;
+    state = {
+      ...state,
+      activeRole: staffRoleKey,
+    };
+    writeState(state);
+
+    const existingToken = req.cookies.get(DENTFLOW_SESSION_COOKIE)?.value;
+    const existing = await verifyDentflowSession(existingToken);
+
+    const ownerName = state.clinicSetup.ownerName || "Dr. Sneha Kulkarni";
+    const roleName =
+      staffRoleKey === "Owner"
+        ? ownerName
+        : state.clinicSetup.staffRoster?.find((s) => s.role === staffRoleKey)?.name ||
+          DEFAULT_NAMES[role] ||
+          "DentFlow User";
+
+    const session: DentflowSessionPayload = {
+      userId: existing?.userId || `usr-${role}`,
+      name: roleName,
+      email: staffRoleKey === "Owner" ? state.clinicSetup.ownerEmail || existing?.email : `${role}@smilestudio.in`,
+      role,
+      staffRoleKey,
+      clinicGroupName: state.clinicSetup.clinicGroupName,
+      setupCompleted: true,
+    };
+
+    const token = await signDentflowSession(session);
+    const res = NextResponse.json({ ok: true, session });
     res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
       httpOnly: false,
       sameSite: "lax",
@@ -191,10 +293,25 @@ export async function POST(req: NextRequest) {
     writeState(state);
   }
 
+  const currentOwnerName = state.clinicSetup.ownerName || "Dr. Sneha Kulkarni";
+  let resolvedUserName: string;
+  if (role === "owner") {
+    resolvedUserName =
+      body?.name && body.name !== "Dr. Sneha Kulkarni"
+        ? String(body.name)
+        : currentOwnerName;
+  } else {
+    resolvedUserName = String(body?.name || DEFAULT_NAMES[role] || "DentFlow User");
+  }
+
   const session: DentflowSessionPayload = {
     userId: `usr-${role}`,
-    name: String(body?.name || DEFAULT_NAMES[role] || "DentFlow User"),
-    email: body?.email ? String(body.email) : undefined,
+    name: resolvedUserName,
+    email: body?.email
+      ? String(body.email)
+      : role === "owner"
+      ? state.clinicSetup.ownerEmail || "sneha@smilestudio.in"
+      : undefined,
     role,
     staffRoleKey,
     clinicGroupName: state.clinicSetup.clinicGroupName,
@@ -202,7 +319,7 @@ export async function POST(req: NextRequest) {
   };
 
   const token = await signDentflowSession(session);
-  const redirectTo = getDefaultRedirectForSession(session);
+  const redirectTo = requestedRedirect || getDefaultRedirectForSession(session);
   const res = NextResponse.json({ ok: true, session, redirectTo });
   res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
     httpOnly: false,
@@ -215,7 +332,13 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.delete(DENTFLOW_SESSION_COOKIE);
+  res.cookies.set(DENTFLOW_SESSION_COOKIE, "", {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  });
   return res;
 }
 

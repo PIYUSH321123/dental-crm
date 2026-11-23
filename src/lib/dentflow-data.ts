@@ -1915,6 +1915,8 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
   clinicSetup: {
     completed: true,
     clinicGroupName: "Smile Studio Dental",
+    ownerName: "Dr. Sneha Kulkarni",
+    ownerEmail: "sneha@smilestudio.in",
     gstin: "27AABCS4821D1Z5",
     city: "Pune, Maharashtra",
     phone: "+91 20 2612 4400",
@@ -1951,7 +1953,164 @@ export const INITIAL_DENTFLOW_STATE: DentflowAppState = {
     ],
     whatsappConnected: true,
     whatsappNumber: "+91 98220 44100",
+    trialInfo: {
+      trialStart: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      trialEnd: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(),
+      plan: "Growth",
+      status: "trial",
+    },
   },
+
+  clinicLandings: {
+    "smile-studio": {
+      clinicName: "Smile Studio Dental",
+      slug: "smile-studio",
+      tagline: "Microscopic, painless & digital dentistry across 3 branches in Pune",
+      heroTitle: "State-of-the-art dental care with a gentle, caring touch.",
+      heroSubtitle:
+        "Specialist root canals, computer-guided implants, and invisible aligners with 3D digital scans and transparent pricing.",
+      brandColor: "#0D9488",
+      phone: "+91 20 2612 4400",
+      email: "care@smilestudio.in",
+      address: "Station Road · Civil Lines · MG Road, Pune",
+      workingHours: "Mon – Sat: 09:30 am – 08:30 pm · Sun: 10:00 am – 02:00 pm",
+      logoText: "Smile Studio",
+      services: [
+        {
+          name: "Microscopic Root Canal",
+          description: "Single-sitting rotary endodontics with dental operating microscope for maximum tooth preservation.",
+        },
+        {
+          name: "Dental Implants",
+          description: "CBCT-guided flapless implant placement with lifetime warranty Zirconia crowns.",
+        },
+        {
+          name: "Clear Aligners",
+          description: "Custom digital aligner therapy for teens and adults with 3D intraoral simulation.",
+        },
+        {
+          name: "Cosmetic Smile Design",
+          description: "Porcelain veneers, cosmetic bonding, and laser teeth whitening tailored to your facial aesthetics.",
+        },
+        {
+          name: "Pediatric Dentistry",
+          description: "Preventive pit & fissure sealants, gentle fillings, and fluoride therapy in an anxiety-free environment.",
+        },
+        {
+          name: "Periodontal Therapy",
+          description: "Laser-assisted deep scaling, root planing, and gingival care for gum health.",
+        },
+      ],
+      doctors: [
+        {
+          name: "Dr. Sneha Kulkarni",
+          specialty: "Founder & Chief Endodontist",
+          degrees: "BDS, MDS (Conservative Dentistry & Endodontics) · 14 yrs exp",
+        },
+        {
+          name: "Dr. Arjun Mehta",
+          specialty: "Aesthetic Dentist & Prosthodontist",
+          degrees: "BDS, MDS · 8 yrs exp",
+        },
+        {
+          name: "Dr. Farhan Ali",
+          specialty: "Consultant Implantologist & Oral Surgeon",
+          degrees: "BDS, MDS (Oral & Maxillofacial Surgery) · 12 yrs exp",
+        },
+      ],
+      testimonials: [
+        {
+          quote:
+            "Completely painless root canal! Dr. Sneha explained every step and the WhatsApp treatment video helped me understand the procedure.",
+          author: "Priya Deshmukh",
+          role: "Civil Lines patient",
+        },
+        {
+          quote:
+            "Their 3D scanning and aligner tracking made my orthodontic journey smooth and effortless.",
+          author: "Rohan Deshpande",
+          role: "MG Road patient",
+        },
+        {
+          quote:
+            "Implant surgery was done within 30 minutes with zero swelling. Truly world-class infrastructure.",
+          author: "Anil Kadam",
+          role: "Station Road patient",
+        },
+      ],
+      pricing: [
+        {
+          name: "Dental Checkup & Consultation",
+          subtitle: "First visit",
+          price: "₹500",
+          items: [
+            "Comprehensive 5-surface tooth & perio examination",
+            "Digital IOPA / OPG X-ray imaging",
+            "Personalised treatment plan with multi-options",
+            "WhatsApp explainer video & cost breakdown",
+          ],
+        },
+        {
+          name: "Preventive Dental Cleaning",
+          subtitle: "Routine care",
+          price: "₹1,500",
+          highlighted: true,
+          items: [
+            "Full mouth ultrasonic scaling",
+            "Air polishing & stain removal",
+            "Fluoride enamel remineralisation varnish",
+            "Oral hygiene and brushing guidance",
+          ],
+        },
+        {
+          name: "Single-Sitting RCT + Crown",
+          subtitle: "Restoration",
+          price: "₹12,500",
+          items: [
+            "Microscopic rotary canal cleaning & obturation",
+            "Composite core buildup",
+            "CAD/CAM high-translucency Zirconia crown",
+            "5-year material warranty certificate",
+          ],
+        },
+      ],
+      footerLinks: [
+        { label: "Book Appointment", href: "#book-consultation" },
+        { label: "Our Treatments", href: "#treatments" },
+        { label: "Doctors", href: "#doctors" },
+        { label: "Patient Login", href: "/patient/login" },
+      ],
+    },
+  },
+
+  demoRequests: [
+    {
+      id: "demo-1",
+      name: "Dr. Rajesh Verma",
+      clinicName: "Verma Dental Care",
+      phone: "+91 98221 55600",
+      email: "rajesh@vermadental.in",
+      city: "Nagpur, Maharashtra",
+      preferredDateTime: "Tomorrow 04:00 PM",
+      branchesCount: "2 branches",
+      message: "Looking for multi-chair WhatsApp reminders and automated billing.",
+      status: "new",
+      createdAt: "2026-09-28T10:30:00.000Z",
+    },
+    {
+      id: "demo-2",
+      name: "Dr. Anita Desai",
+      clinicName: "Pearl White Dental Clinic",
+      phone: "+91 97654 33211",
+      email: "anita@pearlwhite.in",
+      city: "Mumbai, Maharashtra",
+      preferredDateTime: "Thursday 11:30 AM",
+      branchesCount: "1 clinic",
+      message: "Interested in AI X-ray scan and digital charting.",
+      status: "scheduled",
+      createdAt: "2026-09-27T14:15:00.000Z",
+    },
+  ],
 
   patientApp: {
     selectedPatientId: "pat-priya",

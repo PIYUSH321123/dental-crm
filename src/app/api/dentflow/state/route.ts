@@ -72,6 +72,34 @@ export async function POST(req: NextRequest) {
 
   let state = ensureState();
 
+  if (action === "BOOK_DEMO") {
+    // Spam protection check (honeypot field)
+    if (payload.honeypot) {
+      return NextResponse.json({ ok: true });
+    }
+    const newDemo = {
+      id: `demo-${Date.now()}`,
+      name: String(payload.name || "Doctor").trim(),
+      clinicName: String(payload.clinicName || payload.clinic || "Clinic").trim(),
+      phone: String(payload.phone || "").trim(),
+      email: payload.email ? String(payload.email).trim() : undefined,
+      city: payload.city ? String(payload.city).trim() : undefined,
+      preferredDateTime: payload.preferredDateTime ? String(payload.preferredDateTime).trim() : undefined,
+      branchesCount: payload.branchesCount || payload.branches || "1 clinic",
+      message: payload.message ? String(payload.message).trim() : undefined,
+      status: "new" as const,
+      clinicSlug: payload.clinicSlug ? String(payload.clinicSlug).trim() : undefined,
+      createdAt: new Date().toISOString(),
+      notes: "",
+    };
+    state = {
+      ...state,
+      demoRequests: [newDemo, ...(state.demoRequests || [])],
+    };
+    saveState(state);
+    return NextResponse.json({ ok: true, state, demoRequest: newDemo });
+  }
+
   if (action === "RESET_DEMO") {
     state = INITIAL_DENTFLOW_STATE;
     saveState(state);

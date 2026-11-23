@@ -72,8 +72,8 @@ function SetupWizardInner() {
         }),
       });
       const data = await res.json();
-      toast.success("Clinic setup complete! Opening All branches group dashboard.");
-      router.push(data?.redirectTo || "/app/group-dashboard");
+      toast.success("Clinic setup complete! Opening your clinical dashboard.");
+      router.push(data?.redirectTo || "/Dashboard/today");
       router.refresh();
     } finally {
       setFinishing(false);

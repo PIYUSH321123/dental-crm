@@ -53,19 +53,40 @@ export function authRoleToStaffRoleKey(role: DentflowAuthRole): DentflowRoleKey 
   }
 }
 
+export function staffRoleKeyToAuthRole(role: DentflowRoleKey): DentflowAuthRole {
+  switch (role) {
+    case "Owner":
+      return "owner";
+    case "Branch mgr":
+      return "branch_manager";
+    case "Dentist":
+      return "dentist";
+    case "Visiting":
+      return "visiting";
+    case "Front desk":
+      return "front_desk";
+    case "Assistant":
+      return "assistant";
+    case "Accounts":
+      return "accounts";
+    default:
+      return "owner";
+  }
+}
+
 export function getDefaultRedirectForSession(session: DentflowSessionPayload): string {
   switch (session.role) {
     case "platform_admin":
       return "/admin";
     case "owner":
-      return session.setupCompleted ? "/app/group-dashboard" : "/setup";
+      return session.setupCompleted ? "/Dashboard/today" : "/setup";
     case "branch_manager":
     case "dentist":
     case "visiting":
     case "front_desk":
     case "assistant":
     case "accounts":
-      return "/app/today";
+      return "/Dashboard/today";
     case "specialist":
       return "/specialist";
     case "lab":
@@ -104,6 +125,30 @@ export async function verifyDentflowSession(
     };
   } catch {
     return null;
+  }
+}
+
+export async function performDentflowLogout(): Promise<void> {
+  try {
+    await fetch("/api/dentflow/session", { method: "DELETE" });
+  } catch {}
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+
+    try {
+      if ("BroadcastChannel" in window) {
+        const channel = new BroadcastChannel("dentflow_auth_channel");
+        channel.postMessage({ type: "LOGOUT", timestamp: Date.now() });
+        channel.close();
+      }
+    } catch {}
+
+    // Replace current history entry so pressing Back does not return to the protected dashboard
+    window.location.replace("/login");
   }
 }
 

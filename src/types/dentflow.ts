@@ -131,9 +131,80 @@ export interface PatientDentalChart {
   imaging: DentalImagingRecord[];
 }
 
+export interface ClinicTrialInfo {
+  trialStart?: string;
+  trialEnd?: string;
+  plan: string;
+  status: "trial" | "active" | "expired";
+}
+
+export interface ClinicLandingDoctor {
+  name: string;
+  specialty: string;
+  degrees: string;
+}
+
+export interface ClinicLandingService {
+  name: string;
+  description: string;
+  iconName?: string;
+}
+
+export interface ClinicLandingTestimonial {
+  quote: string;
+  author: string;
+  role: string;
+}
+
+export interface ClinicLandingPricingPlan {
+  name: string;
+  subtitle: string;
+  price: string;
+  period?: string;
+  highlighted?: boolean;
+  items: string[];
+}
+
+export interface ClinicLandingConfig {
+  clinicName: string;
+  slug: string;
+  tagline: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  brandColor?: string;
+  phone: string;
+  email: string;
+  address: string;
+  workingHours: string;
+  services: ClinicLandingService[];
+  doctors: ClinicLandingDoctor[];
+  testimonials: ClinicLandingTestimonial[];
+  pricing: ClinicLandingPricingPlan[];
+  footerLinks?: { label: string; href: string }[];
+  logoText?: string;
+}
+
+export interface DemoRequestItem {
+  id: string;
+  name: string;
+  clinicName: string;
+  phone: string;
+  email?: string;
+  city?: string;
+  preferredDateTime?: string;
+  branchesCount?: string;
+  message?: string;
+  status: "new" | "contacted" | "scheduled" | "done" | "lost";
+  clinicSlug?: string;
+  createdAt: string;
+  notes?: string;
+}
+
 export interface ClinicSetupConfig {
   completed: boolean;
   clinicGroupName: string;
+  ownerName?: string;
+  ownerEmail?: string;
   gstin: string;
   city: string;
   phone: string;
@@ -146,6 +217,7 @@ export interface ClinicSetupConfig {
   procedureFees: { id: string; name: string; fee: number; gstPct: number }[];
   whatsappConnected: boolean;
   whatsappNumber: string;
+  trialInfo?: ClinicTrialInfo;
 }
 
 export interface PatientConsentRecord {
@@ -621,6 +693,8 @@ export interface DentflowAppState {
   prescriptionConfig?: ClinicPrescriptionConfig;
   dentalCharts?: Record<string, PatientDentalChart>;
   clinicSetup: ClinicSetupConfig;
+  clinicLandings?: Record<string, ClinicLandingConfig>;
+  demoRequests?: DemoRequestItem[];
   patientApp: {
     selectedPatientId: string;
     activeScreen: PatientAppView;

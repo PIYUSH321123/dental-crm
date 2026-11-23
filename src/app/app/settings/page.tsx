@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Building2,
   Calendar,
@@ -13,6 +15,7 @@ import {
   Eye,
   FileCheck,
   FileText,
+  Globe,
   Key,
   Laptop,
   Mail,
@@ -43,9 +46,12 @@ import {
   DentflowRoleKey,
   PermissionCode,
 } from "@/lib/dentflow-theme";
+import { WebsiteLandingSection } from "@/components/dental/website-landing-section";
 
 const SETTINGS_NAV = [
   "Clinic profile",
+  "Website & landing page",
+  "Leads & demo requests",
   "Branches",
   "Chairs & rooms",
   "Working hours & holidays",
@@ -69,7 +75,27 @@ const NEXT_PERM: Record<PermissionCode, PermissionCode> = {
 
 export default function SettingsPage() {
   const { state, updateState } = useDentflow();
-  const [activeMenu, setActiveMenu] = useState<SettingsMenuType>("Clinic profile");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") || searchParams.get("menu");
+  const defaultTab: SettingsMenuType =
+    initialTab === "website" || initialTab === "landing"
+      ? "Website & landing page"
+      : initialTab === "leads" || initialTab === "demo"
+      ? "Leads & demo requests"
+      : initialTab === "users" || initialTab === "roles"
+      ? "Users & roles"
+      : "Clinic profile";
+
+  const [activeMenu, setActiveMenu] = useState<SettingsMenuType>(defaultTab);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") || searchParams.get("menu");
+    if (tab === "website" || tab === "landing") {
+      setActiveMenu("Website & landing page");
+    } else if (tab === "leads" || tab === "demo") {
+      setActiveMenu("Leads & demo requests");
+    }
+  }, [searchParams]);
 
   // Permission cycle handler
   const cyclePermission = (permKey: string, role: DentflowRoleKey) => {
@@ -151,7 +177,19 @@ export default function SettingsPage() {
         {/* Right 9-col Content Area */}
         <div className="xl:col-span-9 space-y-5">
           {activeMenu === "Clinic profile" && (
-            <ClinicProfileSection clinicSetup={state.clinicSetup} updateState={updateState} />
+            <ClinicProfileSection
+              clinicSetup={state.clinicSetup}
+              updateState={updateState}
+              onSelectWebsiteTab={() => setActiveMenu("Website & landing page")}
+            />
+          )}
+
+          {activeMenu === "Website & landing page" && (
+            <WebsiteLandingSection state={state} updateState={updateState} />
+          )}
+
+          {activeMenu === "Leads & demo requests" && (
+            <LeadsDemoSection state={state} updateState={updateState} />
           )}
 
           {activeMenu === "Branches" && (
@@ -173,7 +211,8 @@ export default function SettingsPage() {
           {activeMenu === "Users & roles" && (
             <UsersRolesSection
               rolePermissions={state.rolePermissions}
-              staffRoster={state.clinicSetup.staffRoster}
+              clinicSetup={state.clinicSetup}
+              updateState={updateState}
               cyclePermission={cyclePermission}
               renderPermBadge={renderPermBadge}
             />
@@ -202,12 +241,16 @@ export default function SettingsPage() {
 function ClinicProfileSection({
   clinicSetup,
   updateState,
+  onSelectWebsiteTab,
 }: {
   clinicSetup: ReturnType<typeof useDentflow>["state"]["clinicSetup"];
   updateState: ReturnType<typeof useDentflow>["updateState"];
+  onSelectWebsiteTab?: () => void;
 }) {
   const [formData, setFormData] = useState({
     clinicGroupName: clinicSetup.clinicGroupName || "Smile Studio Dental",
+    ownerName: clinicSetup.ownerName || "Dr. Sneha Kulkarni",
+    ownerEmail: clinicSetup.ownerEmail || "sneha@smilestudio.in",
     legalEntity: "Smile Studio Healthcare Pvt Ltd",
     ceaRegNo: "CEA-MH-2021-8842",
     dentalCouncilReg: "MSDC-14920",
@@ -224,6 +267,23 @@ function ClinicProfileSection({
     timeFormat: (clinicSetup.timeFormat || "12h") as "12h" | "24h",
   });
 
+  useEffect(() => {
+    if (clinicSetup) {
+      setFormData((prev) => ({
+        ...prev,
+        clinicGroupName: clinicSetup.clinicGroupName || prev.clinicGroupName,
+        ownerName: clinicSetup.ownerName || prev.ownerName,
+        ownerEmail: clinicSetup.ownerEmail || prev.ownerEmail,
+        gstin: clinicSetup.gstin || prev.gstin,
+        city: clinicSetup.city || prev.city,
+        phone: clinicSetup.phone || prev.phone,
+        whatsappNumber: clinicSetup.whatsappNumber || prev.whatsappNumber,
+        numberingSystem: (clinicSetup.numberingSystem || prev.numberingSystem) as "FDI" | "Universal" | "Palmer",
+        timeFormat: (clinicSetup.timeFormat || prev.timeFormat) as "12h" | "24h",
+      }));
+    }
+  }, [clinicSetup]);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     updateState((prev) => ({
@@ -231,6 +291,11 @@ function ClinicProfileSection({
       clinicSetup: {
         ...prev.clinicSetup,
         clinicGroupName: formData.clinicGroupName,
+        ownerName: formData.ownerName,
+        ownerEmail: formData.ownerEmail,
+        staffRoster: (prev.clinicSetup.staffRoster || []).map((s) =>
+          s.role === "Owner" ? { ...s, name: formData.ownerName } : s
+        ),
         gstin: formData.gstin,
         city: formData.city,
         phone: formData.phone,
@@ -239,15 +304,61 @@ function ClinicProfileSection({
         timeFormat: formData.timeFormat,
       },
     }));
+
+    fetch("/api/dentflow/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "UPDATE_OWNER",
+        name: formData.ownerName,
+        email: formData.ownerEmail,
+      }),
+    }).catch(() => {});
+
     toast.success(
-      `Clinic profile saved (Numbering: ${formData.numberingSystem} · Time: ${
-        formData.timeFormat === "12h" ? "12-hour AM/PM" : "24-hour"
-      })`,
+      `Clinic profile & owner saved (${formData.ownerName} · ${formData.clinicGroupName})`,
     );
   };
 
   return (
     <form onSubmit={handleSave} className="space-y-5">
+      {/* Public Website & Dynamic Landing Page Link Banner */}
+      <div className="df-card p-4 bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-[var(--df-teal)] flex items-center justify-center text-white shrink-0">
+            <Globe className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-[var(--df-text)]">
+              Public Clinic Website &amp; Dynamic Landing Page
+            </p>
+            <p className="text-[11px] text-[var(--df-text-muted)]">
+              Live at <span className="text-[var(--df-teal)] font-mono font-semibold">/c/smile-studio</span> · Custom hero, doctors, services, pricing &amp; consultation bookings
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/c/smile-studio"
+            target="_blank"
+            className="df-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span>View live website</span>
+          </Link>
+          {onSelectWebsiteTab && (
+            <button
+              type="button"
+              onClick={onSelectWebsiteTab}
+              className="df-btn-primary px-3.5 py-1.5 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <Edit3 className="h-3.5 w-3.5" />
+              <span>Edit website &amp; live preview →</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="df-card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--df-border)] pb-3">
           <div>
@@ -263,6 +374,32 @@ function ClinicProfileSection({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-medium text-[var(--df-text-secondary)] mb-1">
+              Clinic Owner / Principal Dentist Name
+            </label>
+            <input
+              type="text"
+              value={formData.ownerName}
+              onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+              placeholder="e.g. Dr. Sneha Kulkarni"
+              className="w-full px-3 py-2 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] text-[var(--df-text)] focus:border-[var(--df-teal)] outline-none font-semibold"
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium text-[var(--df-text-secondary)] mb-1">
+              Owner Login / Notification Email
+            </label>
+            <input
+              type="email"
+              value={formData.ownerEmail}
+              onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })}
+              placeholder="e.g. sneha@smilestudio.in"
+              className="w-full px-3 py-2 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] text-[var(--df-text)] focus:border-[var(--df-teal)] outline-none"
+            />
+          </div>
+
           <div>
             <label className="block font-medium text-[var(--df-text-secondary)] mb-1">
               Clinic Brand Name
@@ -1193,39 +1330,90 @@ function ProcedureCatalogueSection({
 // ----------------------------------------------------------------------
 function UsersRolesSection({
   rolePermissions,
-  staffRoster,
+  clinicSetup,
+  updateState,
   cyclePermission,
   renderPermBadge,
 }: {
   rolePermissions: ReturnType<typeof useDentflow>["state"]["rolePermissions"];
-  staffRoster: ReturnType<typeof useDentflow>["state"]["clinicSetup"]["staffRoster"];
+  clinicSetup: ReturnType<typeof useDentflow>["state"]["clinicSetup"];
+  updateState: ReturnType<typeof useDentflow>["updateState"];
   cyclePermission: (permKey: string, role: DentflowRoleKey) => void;
   renderPermBadge: (code: PermissionCode) => React.ReactNode;
 }) {
-  const [staff, setStaff] = useState([
-    { id: "st-1", name: "Dr. Sneha Kulkarni", role: "Owner", email: "sneha@smilestudiodental.in", branch: "Station Road (Flagship)", status: "Active" },
-    { id: "st-2", name: "Prakash Jha", role: "Branch mgr", email: "prakash@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
-    { id: "st-3", name: "Dr. Arjun Mehta", role: "Dentist", email: "arjun.m@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
-    { id: "st-4", name: "Dr. Farhan Ali", role: "Visiting", email: "farhan.surgeon@smilestudiodental.in", branch: "All 3 branches", status: "Active" },
-    { id: "st-5", name: "Dr. Karan S.", role: "Visiting", email: "karan.ortho@smilestudiodental.in", branch: "All 3 branches", status: "Active" },
-    { id: "st-6", name: "Ravi Gaikwad", role: "Assistant", email: "ravi.g@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
-    { id: "st-7", name: "Anita Pawar", role: "Front desk", email: "anita.p@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
-    { id: "st-8", name: "Meenakshi Joshi", role: "Accounts", email: "accounts@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
-  ]);
+  const currentOwner = clinicSetup.ownerName || "Dr. Sneha Kulkarni";
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const staffList = (clinicSetup.staffRoster && clinicSetup.staffRoster.length > 0)
+    ? clinicSetup.staffRoster.map((s) => ({
+        id: s.id,
+        name: s.role === "Owner" ? (clinicSetup.ownerName || s.name) : s.name,
+        role: s.role,
+        email: s.role === "Owner" ? (clinicSetup.ownerEmail || "sneha@smilestudiodental.in") : `${s.name.toLowerCase().replace(/[^a-z]/g, "")}@smilestudiodental.in`,
+        branch: s.role === "Owner" ? "Station Road (Flagship)" : "Station Road branch",
+        status: "Active",
+      }))
+    : [
+        { id: "st-1", name: currentOwner, role: "Owner" as DentflowRoleKey, email: clinicSetup.ownerEmail || "sneha@smilestudiodental.in", branch: "Station Road (Flagship)", status: "Active" },
+        { id: "st-2", name: "Prakash Jha", role: "Branch mgr" as DentflowRoleKey, email: "prakash@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
+        { id: "st-3", name: "Dr. Arjun Mehta", role: "Dentist" as DentflowRoleKey, email: "arjun.m@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
+        { id: "st-4", name: "Dr. Farhan Ali", role: "Visiting" as DentflowRoleKey, email: "farhan.surgeon@smilestudiodental.in", branch: "All 3 branches", status: "Active" },
+        { id: "st-5", name: "Ravi Gaikwad", role: "Assistant" as DentflowRoleKey, email: "ravi.g@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
+        { id: "st-6", name: "Anita Pawar", role: "Front desk" as DentflowRoleKey, email: "anita.p@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
+        { id: "st-7", name: "Meenakshi Joshi", role: "Accounts" as DentflowRoleKey, email: "accounts@smilestudiodental.in", branch: "Station Road branch", status: "Active" },
+      ];
+
+  const handleSaveStaffEdit = (staffId: string, role: DentflowRoleKey) => {
+    if (!editName.trim()) return;
+    const trimmed = editName.trim();
+
+    updateState((prev) => {
+      const isOwner = role === "Owner";
+      const updatedRoster = (prev.clinicSetup.staffRoster || []).map((s) =>
+        s.id === staffId ? { ...s, name: trimmed } : s
+      );
+      return {
+        ...prev,
+        clinicSetup: {
+          ...prev.clinicSetup,
+          ownerName: isOwner ? trimmed : prev.clinicSetup.ownerName,
+          staffRoster: updatedRoster,
+        },
+      };
+    });
+
+    if (role === "Owner") {
+      fetch("/api/dentflow/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_OWNER",
+          name: trimmed,
+        }),
+      }).catch(() => {});
+    }
+
+    toast.success(`Updated ${role} name to "${trimmed}"`);
+    setEditingStaffId(null);
+  };
 
   const handleInviteStaff = () => {
     const name = prompt("Enter new staff member name:");
     if (!name) return;
     const role = (prompt("Enter role (Dentist / Visiting / Assistant / Front desk / Accounts):") || "Dentist") as DentflowRoleKey;
-    const newStaff = {
+    const newStaffItem = {
       id: `st-${Date.now()}`,
       name,
       role,
-      email: `${name.toLowerCase().replace(/[^a-z]/g, "")}@smilestudiodental.in`,
-      branch: "Station Road branch",
-      status: "Active",
     };
-    setStaff((prev) => [...prev, newStaff]);
+    updateState((prev) => ({
+      ...prev,
+      clinicSetup: {
+        ...prev.clinicSetup,
+        staffRoster: [...(prev.clinicSetup.staffRoster || []), newStaffItem],
+      },
+    }));
     toast.success(`Invitation email sent to ${name} (${role})`);
   };
 
@@ -1237,7 +1425,7 @@ function UsersRolesSection({
           <div>
             <h2 className="text-sm font-bold text-[var(--df-text)] flex items-center gap-2">
               <Users className="h-4 w-4 text-[var(--df-teal)]" />
-              Staff Accounts &amp; Specialist Roster ({staff.length} Members)
+              Staff Accounts &amp; Specialist Roster ({staffList.length} Members)
             </h2>
             <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">
               Active clinicians, visiting specialists, and practice staff credentials
@@ -1260,13 +1448,48 @@ function UsersRolesSection({
                 <th className="py-2 text-left">Role Designation</th>
                 <th className="py-2 text-left">Branch Assignment</th>
                 <th className="py-2 text-left">Email Address</th>
-                <th className="py-2 text-right">Status</th>
+                <th className="py-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--df-border)]">
-              {staff.map((s) => (
+              {staffList.map((s) => (
                 <tr key={s.id} className="hover:bg-[var(--df-surface-hover)]/40">
-                  <td className="py-2.5 font-bold text-[var(--df-text)]">{s.name}</td>
+                  <td className="py-2.5 font-bold text-[var(--df-text)]">
+                    {editingStaffId === s.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="px-2 py-1 rounded border border-[var(--df-border)] bg-[var(--df-surface)] text-xs font-semibold"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSaveStaffEdit(s.id, s.role)}
+                          className="px-2 py-1 rounded bg-[var(--df-teal)] text-white text-[11px] font-bold cursor-pointer"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingStaffId(null)}
+                          className="px-1.5 py-1 text-[11px] text-[var(--df-text-muted)] hover:text-[var(--df-text)] cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>{s.name}</span>
+                        {s.role === "Owner" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--df-teal-soft)] text-[var(--df-teal)] font-bold">
+                            Primary Owner
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </td>
                   <td className="py-2.5">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--df-teal-soft)] text-[var(--df-teal)] border border-[var(--df-teal-border)]">
                       {s.role}
@@ -1275,7 +1498,16 @@ function UsersRolesSection({
                   <td className="py-2.5 text-[var(--df-text-secondary)]">{s.branch}</td>
                   <td className="py-2.5 text-[var(--df-text-muted)] font-mono">{s.email}</td>
                   <td className="py-2.5 text-right">
-                    <DentflowStatusPill label={s.status} tone="green" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingStaffId(s.id);
+                        setEditName(s.name);
+                      }}
+                      className="px-2 py-1 rounded border border-[var(--df-border)] hover:bg-[var(--df-surface-hover)] text-[11px] font-semibold text-[var(--df-teal)] cursor-pointer"
+                    >
+                      Edit Name
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -2173,6 +2405,169 @@ function SubscriptionBillingSection() {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// 12. Leads & Demo Requests Section
+// ----------------------------------------------------------------------
+function LeadsDemoSection({
+  state,
+  updateState,
+}: {
+  state: ReturnType<typeof useDentflow>["state"];
+  updateState: ReturnType<typeof useDentflow>["updateState"];
+}) {
+  const [filter, setFilter] = useState<string>("all");
+  const leads = state.demoRequests || [];
+
+  const filtered = leads.filter((l) => (filter === "all" ? true : l.status === filter));
+
+  const handleUpdateStatus = (id: string, newStatus: any) => {
+    updateState((prev) => ({
+      ...prev,
+      demoRequests: (prev.demoRequests || []).map((lead) =>
+        lead.id === id ? { ...lead, status: newStatus } : lead
+      ),
+    }));
+    toast.success(`Updated lead status to ${newStatus}`);
+  };
+
+  const handleUpdateNotes = (id: string, notesText: string) => {
+    updateState((prev) => ({
+      ...prev,
+      demoRequests: (prev.demoRequests || []).map((lead) =>
+        lead.id === id ? { ...lead, notes: notesText } : lead
+      ),
+    }));
+  };
+
+  return (
+    <div className="df-card p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--df-border)] pb-3">
+        <div>
+          <h2 className="text-sm font-bold text-[var(--df-text)] flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[var(--df-teal)]" />
+            Website Consultation Inquiries &amp; Demo Requests ({leads.length})
+          </h2>
+          <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">
+            Incoming patient consultations and doctor demo requests submitted via /c/smile-studio and DentFlow marketing
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {["all", "new", "contacted", "scheduled", "done", "lost"].map((st) => (
+            <button
+              key={st}
+              type="button"
+              onClick={() => setFilter(st)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold capitalize transition-colors cursor-pointer ${
+                filter === st
+                  ? "bg-[var(--df-teal)] text-white"
+                  : "bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] hover:text-[var(--df-text)] border border-[var(--df-border)]"
+              }`}
+            >
+              {st} {st !== "all" && `(${leads.filter((l) => l.status === st).length})`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="border-b border-[var(--df-border)] text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+              <th className="py-2.5 text-left">Contact / Patient</th>
+              <th className="py-2.5 text-left">Contact Info</th>
+              <th className="py-2.5 text-left">Preferred Time</th>
+              <th className="py-2.5 text-left">Origin / Source</th>
+              <th className="py-2.5 text-left">Status</th>
+              <th className="py-2.5 text-left">Internal Notes</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--df-border)]">
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-xs text-[var(--df-text-muted)]">
+                  No requests matching status filter &ldquo;{filter}&rdquo;.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((lead) => (
+                <tr key={lead.id} className="hover:bg-[var(--df-surface-hover)]/60">
+                  <td className="py-3">
+                    <p className="font-bold text-[var(--df-text)]">{lead.name}</p>
+                    <p className="text-[11px] text-[var(--df-text-muted)]">{lead.clinicName}</p>
+                    {lead.message && (
+                      <p className="text-[10.5px] text-[var(--df-text-secondary)] italic mt-1 line-clamp-2 max-w-xs">
+                        &ldquo;{lead.message}&rdquo;
+                      </p>
+                    )}
+                  </td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-1.5 font-semibold text-[var(--df-text)]">
+                      <Phone className="h-3 w-3 text-[var(--df-teal)]" />
+                      <span>{lead.phone}</span>
+                      <a
+                        href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-emerald-600 hover:underline font-bold"
+                      >
+                        WhatsApp →
+                      </a>
+                    </div>
+                    {lead.email && (
+                      <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">{lead.email}</p>
+                    )}
+                  </td>
+                  <td className="py-3 font-medium text-[var(--df-text)]">
+                    {lead.preferredDateTime || "Immediate callback"}
+                  </td>
+                  <td className="py-3">
+                    <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] border border-[var(--df-border)]">
+                      {lead.clinicSlug ? `/c/${lead.clinicSlug}` : "DentFlow Home"}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <select
+                      aria-label="Change request status"
+                      value={lead.status}
+                      onChange={(e) => handleUpdateStatus(lead.id, e.target.value)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                        lead.status === "new"
+                          ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800"
+                          : lead.status === "contacted"
+                          ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                          : lead.status === "scheduled"
+                          ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                          : lead.status === "done"
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                          : "bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] border-[var(--df-border)]"
+                      }`}
+                    >
+                      <option value="new">New</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="done">Done / Booked</option>
+                      <option value="lost">Lost</option>
+                    </select>
+                  </td>
+                  <td className="py-3">
+                    <input
+                      type="text"
+                      placeholder="Add note..."
+                      defaultValue={lead.notes || ""}
+                      onBlur={(e) => handleUpdateNotes(lead.id, e.target.value)}
+                      className="px-2.5 py-1 rounded border border-[var(--df-border)] bg-[var(--df-surface)] text-[11px] text-[var(--df-text)] w-36 sm:w-44 focus:border-[var(--df-teal)] outline-none"
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ import {
   PatientDentalChart,
 } from "@/types/dentflow";
 
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export const CONSENT_TEXT_VERSIONS = {
   dpdp: {
@@ -90,9 +90,18 @@ export function migrateDentflowState(raw: unknown): DentflowAppState {
     clinicSetup: {
       ...INITIAL_DENTFLOW_STATE.clinicSetup,
       ...(parsed.clinicSetup || {}),
+      ownerName: parsed.clinicSetup?.ownerName || INITIAL_DENTFLOW_STATE.clinicSetup.ownerName,
+      ownerEmail: parsed.clinicSetup?.ownerEmail || INITIAL_DENTFLOW_STATE.clinicSetup.ownerEmail,
       numberingSystem: parsed.clinicSetup?.numberingSystem || "FDI",
       timeFormat: parsed.clinicSetup?.timeFormat || "12h",
+      trialInfo: parsed.clinicSetup?.trialInfo || INITIAL_DENTFLOW_STATE.clinicSetup.trialInfo,
     },
+    clinicLandings: parsed.clinicLandings && Object.keys(parsed.clinicLandings).length > 0
+      ? parsed.clinicLandings
+      : INITIAL_DENTFLOW_STATE.clinicLandings,
+    demoRequests: Array.isArray(parsed.demoRequests) && parsed.demoRequests.length > 0
+      ? parsed.demoRequests
+      : INITIAL_DENTFLOW_STATE.demoRequests,
     rolePermissions: parsed.rolePermissions?.length
       ? parsed.rolePermissions
       : INITIAL_ROLE_PERMISSIONS,

@@ -667,6 +667,65 @@ function CalendarPageInner() {
         [activeDateKey]: [...currentList, newBlock],
       };
     });
+
+    // Write to persistent global state, increment patient visit count, and create audit log
+    const now = new Date();
+    const auditEntry = {
+      id: `dl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: now.toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isoTimestamp: now.toISOString(),
+      actor: state.activeRole,
+      role: state.activeRole,
+      patientName: selectedPatient.name,
+      screenName: "Calendar",
+      action: "BOOK_APPOINTMENT",
+      entityType: "patient" as const,
+      entityId: selectedPatient.id,
+      details: `Booked appointment for ${newBlock.procedure} with ${selectedDoctor} on ${formattedSelectedDate} at ${newBlock.timeLabel}`,
+    };
+
+    const newClinicAppt: ClinicAppointment = {
+      id: newBlock.id,
+      patientId: selectedPatient.id,
+      patientName: selectedPatient.name,
+      doctor: selectedDoctor,
+      chair: selectedChair,
+      branch: state.activeBranch === "All 3 branches" ? "Station Road branch" : state.activeBranch,
+      procedure: newBlock.procedure,
+      time: newBlock.timeLabel,
+      endTime: newBlock.timeLabel,
+      durationMin: 30,
+      flags: (selectedPatient.flags || []) as ("Anxious" | "Allergy" | "VIP" | "New")[],
+      status: "Confirmed" as const,
+      anxietyBufferMin: anxietyBuffer,
+    };
+
+    updateState((prev) => ({
+      ...prev,
+      appointments: [newClinicAppt, ...(prev.appointments || [])],
+      patients: prev.patients.map((p) =>
+        p.id === selectedPatient.id
+          ? {
+              ...p,
+              visitsCount: (p.visitsCount || 0) + 1,
+              recentActivity: [
+                {
+                  date: "Today",
+                  text: `Appointment booked: ${newBlock.procedure} on ${formattedSelectedDate} (${newBlock.timeLabel})`,
+                },
+                ...(p.recentActivity || []),
+              ],
+            }
+          : p
+      ),
+      dpdpAccessLogs: [auditEntry, ...prev.dpdpAccessLogs].slice(0, 500),
+    }));
+
     setNewApptOpen(false);
     toast.success(
       `Appointment booked for ${selectedPatient.name} on ${formattedSelectedDate} at ${formatClinicTime(startH, timeFormat)}!`,

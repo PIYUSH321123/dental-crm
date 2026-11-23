@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
@@ -86,10 +86,46 @@ const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 function LoginFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const targetRedirect =
+    searchParams.get("redirect") ||
+    searchParams.get("returnTo") ||
+    searchParams.get("next");
+  const [ownerInfo, setOwnerInfo] = useState({
+    name: "Dr. Sneha Kulkarni",
+    email: "sneha@smilestudio.in",
+  });
   const [email, setEmail] = useState("sneha@smilestudio.in");
   const [password, setPassword] = useState("••••••••••••");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/dentflow/state")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.state?.clinicSetup?.ownerName) {
+          const name = data.state.clinicSetup.ownerName;
+          const ownerEmail = data.state.clinicSetup.ownerEmail || "sneha@smilestudio.in";
+          setOwnerInfo({ name, email: ownerEmail });
+          setEmail(ownerEmail);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const roleOptions = useMemo(() => {
+    return [
+      {
+        role: "owner" as DentflowAuthRole,
+        label: `${ownerInfo.name} (Owner)`,
+        doctorName: ownerInfo.name,
+        email: ownerInfo.email,
+        sublabel: "Principal dentist · Opens Today clinical dashboard",
+        setupCompleted: true,
+      },
+      ...ROLE_OPTIONS.slice(1),
+    ];
+  }, [ownerInfo]);
 
   const signInAs = async (
     role: DentflowAuthRole,
@@ -108,6 +144,7 @@ function LoginFormInner() {
           setupCompleted,
           email: customEmail || email,
           name: doctorName,
+          redirect: targetRedirect,
         }),
       });
       const data = await res.json();
@@ -123,26 +160,44 @@ function LoginFormInner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const lower = email.toLowerCase().trim();
-    let chosen = ROLE_OPTIONS[selectedIdx] || ROLE_OPTIONS[0];
+    let chosenRole: DentflowAuthRole = "owner";
+    let chosenSetupCompleted = true;
+    let chosenDoctorName: string | undefined = undefined;
 
-    // Smart doctor matching if user typed email
     if (lower.includes("arjun")) {
-      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Arjun")) || chosen;
+      chosenRole = "dentist";
+      chosenDoctorName = "Dr. Arjun Mehta";
     } else if (lower.includes("farhan")) {
-      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Farhan")) || chosen;
-    } else if (lower.includes("sneha")) {
-      chosen = ROLE_OPTIONS.find((r) => r.doctorName?.includes("Sneha")) || chosen;
+      chosenRole = "visiting";
+      chosenDoctorName = "Dr. Farhan Ali";
+    } else if (
+      lower.includes("sneha") ||
+      lower === ownerInfo.email.toLowerCase() ||
+      lower.includes("owner")
+    ) {
+      chosenRole = "owner";
+      chosenDoctorName = ownerInfo.name;
     } else if (lower.includes("prakash")) {
-      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Prakash")) || chosen;
+      chosenRole = "branch_manager";
+      chosenDoctorName = "Prakash Jha";
     } else if (lower.includes("anita")) {
-      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Anita")) || chosen;
+      chosenRole = "front_desk";
+      chosenDoctorName = "Anita Pawar";
     } else if (lower.includes("ravi")) {
-      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Ravi")) || chosen;
+      chosenRole = "assistant";
+      chosenDoctorName = "Ravi Gaikwad";
     } else if (lower.includes("accounts") || lower.includes("meenakshi")) {
-      chosen = ROLE_OPTIONS.find((r) => r.label.includes("Meenakshi")) || chosen;
+      chosenRole = "accounts";
+      chosenDoctorName = "Meenakshi Joshi";
+    } else if (lower.includes("admin")) {
+      chosenRole = "platform_admin";
+      chosenDoctorName = "Platform Admin";
+    } else {
+      // Default to owner with no forced name override so clinic's configured owner name is preserved
+      chosenRole = "owner";
     }
 
-    await signInAs(chosen.role, chosen.setupCompleted, email, chosen.doctorName);
+    await signInAs(chosenRole, chosenSetupCompleted, email, chosenDoctorName);
   };
 
   return (
@@ -181,7 +236,7 @@ function LoginFormInner() {
               Sign in to your workspace
             </h1>
             <p className="text-xs text-[var(--df-text-muted)] mt-1">
-              {searchParams.get("next")
+              {targetRedirect
                 ? "Please sign in to continue to your requested portal."
                 : IS_DEMO_MODE
                 ? "Enter your work email or choose a role profile to test role-based access."
@@ -235,11 +290,11 @@ function LoginFormInner() {
                   onChange={(e) => {
                     const idx = Number(e.target.value);
                     setSelectedIdx(idx);
-                    setEmail(ROLE_OPTIONS[idx].email);
+                    setEmail(roleOptions[idx].email);
                   }}
                   className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 font-medium"
                 >
-                  {ROLE_OPTIONS.map((opt, idx) => (
+                  {roleOptions.map((opt, idx) => (
                     <option key={`${opt.role}-${opt.label}`} value={idx}>
                       {opt.label}
                     </option>
@@ -278,7 +333,7 @@ function LoginFormInner() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ROLE_OPTIONS.map((opt) => (
+              {roleOptions.map((opt) => (
                 <button
                   key={`${opt.role}-${opt.label}`}
                   type="button"

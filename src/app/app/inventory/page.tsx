@@ -1,19 +1,52 @@
 "use client";
 
 import React, { useState } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowDrawer,
   DentflowPageHeader,
   DentflowStatusPill,
   DentflowUniquePill,
 } from "@/components/dental/dentflow-primitives";
 import { useDentflow } from "@/lib/dentflow-store";
+import { InventoryItemRecord } from "@/types/dentflow";
 
 export default function InventoryPage() {
   const { state, updateState } = useDentflow();
   const [activeTab, setActiveTab] = useState<
     "Stock" | "Procedure costing" | "Purchase orders" | "Transfers between branches"
   >("Stock");
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [itemForm, setItemForm] = useState({
+    item: "",
+    category: "Restorative",
+    inStock: 10,
+    reorderAt: 5,
+    nearestExpiry: "Dec 2027",
+  });
+
+  const handleAddItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemForm.item.trim()) return;
+    const newItem: InventoryItemRecord = {
+      id: `inv-${Date.now()}`,
+      item: itemForm.item.trim(),
+      category: itemForm.category,
+      inStock: Number(itemForm.inStock) || 0,
+      reorderAt: Number(itemForm.reorderAt) || 0,
+      nearestExpiry: itemForm.nearestExpiry,
+      status: Number(itemForm.inStock) <= Number(itemForm.reorderAt) ? "Low" : "OK",
+      unitCost: 1200,
+    };
+    updateState((prev) => ({
+      ...prev,
+      inventoryItems: [newItem, ...prev.inventoryItems],
+    }));
+    toast.success(`Added ${newItem.item} to inventory`);
+    setItemForm({ item: "", category: "Restorative", inStock: 10, reorderAt: 5, nearestExpiry: "Dec 2027" });
+    setAddItemOpen(false);
+  };
 
   const handleCreatePO = () => {
     updateState((prev) => ({
@@ -64,11 +97,18 @@ export default function InventoryPage() {
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-[var(--df-text)]">
-                  Stock · Station Road
+                  Stock · {state.activeBranch === "All 3 branches" ? "All branches" : state.activeBranch}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <DentflowStatusPill label="4 below reorder" tone="red" />
                   <DentflowStatusPill label="2 expiring in 30 days" tone="amber" />
+                  <button
+                    type="button"
+                    onClick={() => setAddItemOpen(true)}
+                    className="df-btn-primary px-3 py-1 text-xs cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add stock item
+                  </button>
                   <button
                     type="button"
                     onClick={handleCreatePO}
@@ -286,6 +326,84 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      <DentflowDrawer
+        open={addItemOpen}
+        onClose={() => setAddItemOpen(false)}
+        title="Add consumable / stock item"
+        subtitle="Track stock level, reorder alerts, and procedure costing"
+      >
+        <form onSubmit={handleAddItem} className="space-y-3.5 text-xs">
+          <div>
+            <label className="block font-semibold mb-1">Item name</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. Zirconia Primer 5ml"
+              value={itemForm.item}
+              onChange={(e) => setItemForm({ ...itemForm, item: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1">Category</label>
+            <select
+              value={itemForm.category}
+              onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            >
+              <option>Restorative</option>
+              <option>Endodontic</option>
+              <option>Anaesthetic</option>
+              <option>Surgical & Implants</option>
+              <option>Impression & Scans</option>
+              <option>Sterilisation & PPE</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-1">Quantity in stock</label>
+              <input
+                required
+                type="number"
+                min="0"
+                value={itemForm.inStock}
+                onChange={(e) => setItemForm({ ...itemForm, inStock: Number(e.target.value) })}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Reorder threshold</label>
+              <input
+                required
+                type="number"
+                min="1"
+                value={itemForm.reorderAt}
+                onChange={(e) => setItemForm({ ...itemForm, reorderAt: Number(e.target.value) })}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1">Nearest batch expiry</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. Nov 2027"
+              value={itemForm.nearestExpiry}
+              onChange={(e) => setItemForm({ ...itemForm, nearestExpiry: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            />
+          </div>
+
+          <button type="submit" className="w-full df-btn-primary py-2.5 text-xs font-bold cursor-pointer">
+            Save item to inventory
+          </button>
+        </form>
+      </DentflowDrawer>
     </div>
   );
 }

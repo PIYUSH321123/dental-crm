@@ -15,23 +15,51 @@ const CLINIC_AUTH_ROLES = new Set([
   "accounts",
 ]);
 
+export function getSafeInternalRedirect(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // Ensure the URL is an internal relative path and prevent open redirect exploits
+  if (url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\")) {
+    return url;
+  }
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(DENTFLOW_SESSION_COOKIE)?.value;
   const session = await verifyDentflowSession(token);
 
-  // 1. Auth pages: redirect already signed-in users to their home portal
+  // 1. Root landing page: http://localhost:3000/ is dedicated strictly to the landing page
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
+  // 2. Auth pages: redirect already signed-in users to their destination or home portal
   if (pathname === "/login" || pathname === "/signup") {
     if (session) {
+      const requestedRedirect = getSafeInternalRedirect(
+        request.nextUrl.searchParams.get("redirect") ||
+          request.nextUrl.searchParams.get("returnTo") ||
+          request.nextUrl.searchParams.get("next"),
+      );
+      if (
+        requestedRedirect &&
+        requestedRedirect !== "/login" &&
+        requestedRedirect !== "/signup"
+      ) {
+        return NextResponse.redirect(new URL(requestedRedirect, request.url));
+      }
       return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
     }
     return NextResponse.next();
   }
 
-  // 2. Platform Admin Portal (/admin & /admin/*)
+  // 3. Platform Admin Portal (/admin & /admin/*)
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     if (!session) {
-      return NextResponse.redirect(new URL("/login?next=/admin", request.url));
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(pathname + search)}`, request.url),
+      );
     }
     if (session.role !== "platform_admin") {
       return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
@@ -39,25 +67,34 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. One-Time Owner Setup Wizard (/setup)
+  // 4. One-Time Owner Setup Wizard (/setup)
   if (pathname === "/setup" || pathname.startsWith("/setup/")) {
     if (!session) {
-      return NextResponse.redirect(new URL("/login?next=/setup", request.url));
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(pathname + search)}`, request.url),
+      );
     }
     if (session.role !== "owner") {
       return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
     }
     if (session.setupCompleted) {
-      return NextResponse.redirect(new URL("/app/group-dashboard", request.url));
+      return NextResponse.redirect(new URL("/Dashboard/today", request.url));
     }
     return NextResponse.next();
   }
 
-  // 4. Clinic & Owner Application (/app & /app/*)
-  if (pathname === "/app" || pathname.startsWith("/app/")) {
+  // 5. Clinic & Owner Dashboard Application (/Dashboard, /dashboard, /app)
+  if (
+    pathname === "/Dashboard" ||
+    pathname.startsWith("/Dashboard/") ||
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/app" ||
+    pathname.startsWith("/app/")
+  ) {
     if (!session) {
       return NextResponse.redirect(
-        new URL(`/login?next=${encodeURIComponent(pathname)}`, request.url),
+        new URL(`/login?redirect=${encodeURIComponent(pathname + search)}`, request.url),
       );
     }
     if (!CLINIC_AUTH_ROLES.has(session.role)) {
@@ -67,25 +104,27 @@ export async function proxy(request: NextRequest) {
     if (session.role === "owner" && !session.setupCompleted) {
       return NextResponse.redirect(new URL("/setup", request.url));
     }
-    if (pathname === "/app") {
-      return NextResponse.redirect(
-        new URL(
-          session.role === "owner" ? "/app/group-dashboard" : "/app/today",
-          request.url,
-        ),
-      );
+    if (
+      pathname === "/app/today" ||
+      pathname === "/app" ||
+      pathname === "/Dashboard" ||
+      pathname === "/dashboard"
+    ) {
+      return NextResponse.redirect(new URL("/Dashboard/today", request.url));
     }
     // Enforce role-based permission matrix on readable /app/* slugs
     if (session.staffRoleKey && !canRoleAccessAppSlug(session.staffRoleKey, pathname)) {
-      return NextResponse.redirect(new URL("/app/today?access=denied", request.url));
+      return NextResponse.redirect(new URL("/Dashboard/today?access=denied", request.url));
     }
     return NextResponse.next();
   }
 
-  // 5. Specialist Portal (/specialist)
+  // 6. Specialist Portal (/specialist)
   if (pathname === "/specialist" || pathname.startsWith("/specialist/")) {
     if (!session) {
-      return NextResponse.redirect(new URL("/login?next=/specialist", request.url));
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(pathname + search)}`, request.url),
+      );
     }
     if (session.role !== "specialist") {
       return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
@@ -93,10 +132,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 6. Dental Lab Portal (/lab)
+  // 7. Dental Lab Portal (/lab)
   if (pathname === "/lab" || pathname.startsWith("/lab/")) {
     if (!session) {
-      return NextResponse.redirect(new URL("/login?next=/lab", request.url));
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(pathname + search)}`, request.url),
+      );
     }
     if (session.role !== "lab") {
       return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
@@ -104,7 +145,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 7. Patient App (/patient)
+  // 8. Patient App (/patient)
   if (pathname === "/patient" || pathname.startsWith("/patient/")) {
     if (pathname === "/patient/login") {
       if (session && session.role === "patient") {
@@ -126,6 +167,12 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
+    "/Dashboard",
+    "/Dashboard/:path*",
+    "/dashboard",
+    "/dashboard/:path*",
+    "/app",
     "/app/:path*",
     "/admin/:path*",
     "/setup/:path*",

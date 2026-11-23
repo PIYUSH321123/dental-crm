@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/dental/dentflow-primitives";
 import { formatRelativeFullDate, getCurrentYear } from "@/lib/date-helpers";
 import { useDentflow } from "@/lib/dentflow-store";
+import { BillingInvoiceRecord } from "@/types/dentflow";
 
 interface InvoiceLineItem {
   id: string;
@@ -52,6 +53,14 @@ export default function BillingPage() {
   const [payTab, setPayTab] = useState<"UPI" | "Card" | "Cash" | "EMI">("UPI");
   const [splitPayment, setSplitPayment] = useState(false);
   const [cashSplit, setCashSplit] = useState("5000");
+
+  const displayedInvoices = useMemo(() => {
+    if (state.activeBranch === "All 3 branches") return state.invoices;
+    const short = state.activeBranch.replace(" branch", "");
+    return state.invoices.filter(
+      (inv) => !inv.branch || inv.branch === state.activeBranch || inv.branch === short
+    );
+  }, [state.invoices, state.activeBranch]);
 
   const subtotal = items.reduce((acc, it) => acc + Math.max(0, it.fee - it.discount), 0);
   const gstAmount = items.reduce(
@@ -229,7 +238,7 @@ export default function BillingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <tbody className="divide-y divide-[var(--df-border)]">
-                  {state.invoices.map((inv) => (
+                  {displayedInvoices.map((inv: BillingInvoiceRecord) => (
                     <tr key={inv.id} className="hover:bg-[var(--df-surface-hover)]/60">
                       <td className="py-2.5 pr-2 font-medium text-[var(--df-text-muted)] whitespace-nowrap">
                         {inv.invoiceNumber}
@@ -436,7 +445,9 @@ export default function BillingPage() {
 
           {/* Today at this branch */}
           <div className="df-card p-5 space-y-2.5 text-xs">
-            <h3 className="text-sm font-bold text-[var(--df-text)]">Today at this branch</h3>
+            <h3 className="text-sm font-bold text-[var(--df-text)]">
+              Today at {state.activeBranch === "All 3 branches" ? "All branches" : state.activeBranch}
+            </h3>
             <div className="flex justify-between">
               <span className="text-[var(--df-text-muted)]">Invoiced</span>
               <span className="font-semibold text-[var(--df-text)]">₹61,700</span>

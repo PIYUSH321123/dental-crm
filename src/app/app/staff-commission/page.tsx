@@ -4,17 +4,66 @@ import React, { useState } from "react";
 import { Plus, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
+  DentflowDrawer,
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
 import { useDentflow } from "@/lib/dentflow-store";
+import { StaffMemberCommission } from "@/types/dentflow";
 
 export default function StaffCommissionPage() {
   const { state, updateState } = useDentflow();
   const [selectedStaffId, setSelectedStaffId] = useState<string>("stf-arjun");
+  const [addStaffOpen, setAddStaffOpen] = useState(false);
+
+  const [staffForm, setStaffForm] = useState({
+    name: "",
+    role: "Associate Dentist",
+    branches: "Station Road",
+    payModel: "40% net share",
+    payable: 35000,
+  });
+
+  const handleCreateStaff = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!staffForm.name.trim()) return;
+
+    const newStaff: StaffMemberCommission = {
+      id: `stf-${Date.now()}`,
+      name: staffForm.name.trim(),
+      role: staffForm.role,
+      branches: staffForm.branches,
+      todayStatus: "Present",
+      collections: 75000,
+      payModel: staffForm.payModel,
+      payable: Number(staffForm.payable) || 30000,
+      workingDetails: {
+        subtitle: `${staffForm.role} · ${staffForm.branches}`,
+        modelLabel: staffForm.payModel,
+        sharePct: staffForm.payModel.includes("%") ? staffForm.payModel.split(" ")[0] : "100%",
+        minimumMonth: "₹25,000 guarantee",
+        exceptions: [],
+        collectionsPaid: 75000,
+        lessLabCosts: 10000,
+        netAmount: 65000,
+        shareAmount: Number(staffForm.payable) || 30000,
+        tdsNote: "10% under 194J",
+        approved: false,
+      },
+    };
+
+    updateState((prev) => ({
+      ...prev,
+      staffMembers: [...prev.staffMembers, newStaff],
+    }));
+    setSelectedStaffId(newStaff.id);
+    setAddStaffOpen(false);
+    setStaffForm({ name: "", role: "Associate Dentist", branches: "Station Road", payModel: "40% net share", payable: 35000 });
+    toast.success(`Onboarded ${newStaff.name} (${newStaff.role})`);
+  };
 
   const selectedStaff =
-    state.staffMembers.find((s) => s.id === selectedStaffId) || state.staffMembers[1];
+    state.staffMembers.find((s) => s.id === selectedStaffId) || state.staffMembers[0];
   const w = selectedStaff.workingDetails;
 
   const handleApprovePayout = () => {
@@ -53,7 +102,7 @@ export default function StaffCommissionPage() {
               </button>
               <button
                 type="button"
-                onClick={() => toast.info("Staff onboarding form ready")}
+                onClick={() => setAddStaffOpen(true)}
                 className="df-btn-primary inline-flex items-center gap-1 px-3 py-1.5 text-xs cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" /> Add staff
@@ -215,6 +264,88 @@ export default function StaffCommissionPage() {
           </button>
         </div>
       </div>
+
+      <DentflowDrawer
+        open={addStaffOpen}
+        onClose={() => setAddStaffOpen(false)}
+        title="Add clinical or operational staff member"
+        subtitle="Configure role, branch assignment, and payout split"
+      >
+        <form onSubmit={handleCreateStaff} className="space-y-3.5 text-xs">
+          <div>
+            <label className="block font-semibold mb-1">Full name</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. Dr. Pooja Rao"
+              value={staffForm.name}
+              onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1">Staff role</label>
+            <select
+              value={staffForm.role}
+              onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            >
+              <option>Associate Dentist</option>
+              <option>Visiting Specialist</option>
+              <option>Branch Manager</option>
+              <option>Front Desk</option>
+              <option>Dental Assistant</option>
+              <option>Accounts & Billing</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1">Branch assignment</label>
+            <select
+              value={staffForm.branches}
+              onChange={(e) => setStaffForm({ ...staffForm, branches: e.target.value })}
+              className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+            >
+              <option>Station Road</option>
+              <option>Civil Lines</option>
+              <option>MG Road</option>
+              <option>All 3 branches</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-1">Pay structure</label>
+              <select
+                value={staffForm.payModel}
+                onChange={(e) => setStaffForm({ ...staffForm, payModel: e.target.value })}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              >
+                <option>40% net share</option>
+                <option>50% net share</option>
+                <option>Fixed monthly salary</option>
+                <option>Per consult fee</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Monthly base / estimate (₹)</label>
+              <input
+                required
+                type="number"
+                min="0"
+                value={staffForm.payable}
+                onChange={(e) => setStaffForm({ ...staffForm, payable: Number(e.target.value) })}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="w-full df-btn-primary py-2.5 text-xs font-bold cursor-pointer">
+            Save &amp; add to staff roster
+          </button>
+        </form>
+      </DentflowDrawer>
     </div>
   );
 }

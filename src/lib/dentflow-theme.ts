@@ -425,6 +425,18 @@ export const DENTFLOW_SIDEBAR_SECTIONS: SidebarNavSection[] = [
         allowedRoles: ["Owner", "Branch mgr", "Accounts"],
       },
       {
+        id: "website-landing",
+        label: "Clinic website",
+        slug: "settings?tab=website",
+        allowedRoles: ["Owner", "Branch mgr"],
+      },
+      {
+        id: "leads",
+        label: "Leads & inquiries",
+        slug: "settings?tab=leads",
+        allowedRoles: ["Owner", "Branch mgr", "Front desk"],
+      },
+      {
         id: "settings",
         label: "Settings",
         slug: "settings",
@@ -451,11 +463,28 @@ export function canRoleAccessNavItem(
 
 export function canRoleAccessAppSlug(
   role: DentflowRoleKey,
-  slug: string,
+  pathnameOrSlug: string,
   matrix: RolePermissionRow[] = INITIAL_ROLE_PERMISSIONS,
 ): boolean {
+  if (role === "Owner") return true;
+  
+  // Normalize path to slug (e.g., "/Dashboard/today" -> "today", "/app/dental-chart" -> "dental-chart")
+  let clean = pathnameOrSlug.replace(/^\/(app|Dashboard|dashboard)\/?/, "").split("/")[0] || "today";
+  if (clean === "today" || clean === "" || clean === "ai-chat") return true;
+
+  // Find corresponding nav item in DENTFLOW_SIDEBAR_SECTIONS
+  for (const group of DENTFLOW_SIDEBAR_SECTIONS) {
+    for (const item of group.items) {
+      if (item.slug === clean || item.id === clean) {
+        return canRoleAccessNavItem(role, item, matrix);
+      }
+    }
+  }
+
   return true;
 }
+
+export const SIDEBAR_GROUPS = DENTFLOW_SIDEBAR_SECTIONS;
 
 export const ROLE_USER_PROFILES: Record<
   DentflowRoleKey,

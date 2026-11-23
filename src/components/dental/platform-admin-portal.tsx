@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Check, Clock, Filter, MessageSquare, Phone, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   DentflowDrawer,
@@ -10,10 +10,12 @@ import {
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
 import { DentflowProvider, useDentflow } from "@/lib/dentflow-store";
-import { TenantAccountRecord } from "@/types/dentflow";
+import { performDentflowLogout } from "@/lib/dentflow-session";
+import { DemoRequestItem, TenantAccountRecord } from "@/types/dentflow";
 
 const ADMIN_TABS = [
   "Clinics",
+  "Leads & Demo requests",
   "Plans & billing",
   "Messaging",
   "AI usage",
@@ -29,6 +31,34 @@ function PlatformAdminInner() {
   const [clinicName, setClinicName] = useState("");
   const [plan, setPlan] = useState<TenantAccountRecord["plan"]>("Growth");
   const [branchesCount, setBranchesCount] = useState(2);
+  const [leadStatusFilter, setLeadStatusFilter] = useState<string>("All");
+
+  const demoRequests = state.demoRequests || [];
+  const newLeadsCount = demoRequests.filter((d) => d.status === "new").length;
+
+  const filteredLeads = demoRequests.filter((lead) => {
+    if (leadStatusFilter === "All") return true;
+    return lead.status === leadStatusFilter;
+  });
+
+  const handleUpdateLeadStatus = (leadId: string, nextStatus: DemoRequestItem["status"]) => {
+    updateState((prev) => ({
+      ...prev,
+      demoRequests: (prev.demoRequests || []).map((d) =>
+        d.id === leadId ? { ...d, status: nextStatus } : d,
+      ),
+    }));
+    toast.success(`Demo request status updated to ${nextStatus}`);
+  };
+
+  const handleUpdateLeadNote = (leadId: string, note: string) => {
+    updateState((prev) => ({
+      ...prev,
+      demoRequests: (prev.demoRequests || []).map((d) =>
+        d.id === leadId ? { ...d, notes: note } : d,
+      ),
+    }));
+  };
 
   const handleOnboard = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,9 +91,8 @@ function PlatformAdminInner() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/dentflow/session", { method: "DELETE" }).catch(() => {});
-    router.push("/login");
-    router.refresh();
+    toast.success("Logging out...");
+    await performDentflowLogout();
   };
 
   const healthTone = (h: TenantAccountRecord["health"]) => {
@@ -88,13 +117,18 @@ function PlatformAdminInner() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                className={`relative px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeTab === tab
                     ? "bg-white/15 text-white font-semibold"
                     : "text-white/75 hover:text-white"
                 }`}
               >
-                {tab}
+                <span>{tab}</span>
+                {tab === "Leads & Demo requests" && newLeadsCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#EF4444] text-white">
+                    {newLeadsCount}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -135,8 +169,133 @@ function PlatformAdminInner() {
           />
         </div>
 
-        {/* Main 12-Col Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        {/* Leads & Demo Requests View */}
+        {activeTab === "Leads & Demo requests" ? (
+          <div className="df-card p-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="text-sm font-bold text-[var(--df-text)]">
+                  Inbound Demo Requests & Leads
+                </h1>
+                <p className="text-xs text-[var(--df-text-muted)] mt-0.5">
+                  Prospects from the public DentFlow marketing site and individual clinic landing pages
+                </p>
+              </div>
+
+              {/* Status Filters */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {["All", "new", "contacted", "scheduled", "done", "lost"].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setLeadStatusFilter(st)}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer capitalize ${
+                      leadStatusFilter === st
+                        ? "bg-[var(--df-sidebar-bg)] text-white font-semibold"
+                        : "bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] hover:bg-[var(--df-surface-hover)] border border-[var(--df-border)]"
+                    }`}
+                  >
+                    {st === "All" ? "All statuses" : st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--df-border)] text-[10px] font-bold uppercase tracking-wider text-[var(--df-text-muted)]">
+                    <th className="py-2.5 text-left">Doctor / Clinic</th>
+                    <th className="py-2.5 text-left">Contact</th>
+                    <th className="py-2.5 text-left">City & Scale</th>
+                    <th className="py-2.5 text-left">Preferred Time</th>
+                    <th className="py-2.5 text-left">Source / Clinic</th>
+                    <th className="py-2.5 text-left">Status</th>
+                    <th className="py-2.5 text-left">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--df-border)]">
+                  {filteredLeads.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-xs text-[var(--df-text-muted)]">
+                        No demo requests found matching filter &quot;{leadStatusFilter}&quot;.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredLeads.map((lead) => (
+                      <tr key={lead.id} className="hover:bg-[var(--df-surface-hover)]/60">
+                        <td className="py-3">
+                          <p className="font-bold text-[var(--df-text)]">{lead.name}</p>
+                          <p className="text-[11px] text-[var(--df-text-muted)]">{lead.clinicName}</p>
+                          {lead.message && (
+                            <p className="text-[10.5px] text-[var(--df-text-secondary)] italic mt-1 line-clamp-2 max-w-xs">
+                              &ldquo;{lead.message}&rdquo;
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          <p className="font-semibold text-[var(--df-text)]">{lead.phone}</p>
+                          {lead.email && (
+                            <p className="text-[11px] text-[var(--df-text-muted)]">{lead.email}</p>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          <p className="text-[var(--df-text)]">{lead.city || "—"}</p>
+                          <p className="text-[11px] text-[var(--df-text-muted)]">{lead.branchesCount || "1 clinic"}</p>
+                        </td>
+                        <td className="py-3 font-medium text-[var(--df-text)]">
+                          {lead.preferredDateTime || "Immediate callback"}
+                        </td>
+                        <td className="py-3">
+                          <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-[var(--df-surface-muted)] text-[var(--df-text-secondary)] border border-[var(--df-border)]">
+                            {lead.clinicSlug ? `Clinic / ${lead.clinicSlug}` : "DentFlow Home"}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <select
+                            aria-label="Change lead status"
+                            value={lead.status}
+                            onChange={(e) =>
+                              handleUpdateLeadStatus(lead.id, e.target.value as DemoRequestItem["status"])
+                            }
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                              lead.status === "new"
+                                ? "bg-[var(--df-status-red-bg)] text-[var(--df-status-red-text)] border-[var(--df-status-red-border)]"
+                                : lead.status === "contacted"
+                                ? "bg-[var(--df-status-amber-bg)] text-[var(--df-status-amber-text)] border-[var(--df-status-amber-border)]"
+                                : lead.status === "scheduled"
+                                ? "bg-[var(--df-status-blue-bg)] text-[var(--df-status-blue-text)] border-[var(--df-status-blue-border)]"
+                                : lead.status === "done"
+                                ? "bg-[var(--df-status-green-bg)] text-[var(--df-status-green-text)] border-[var(--df-status-green-border)]"
+                                : "bg-[var(--df-surface-muted)] text-[var(--df-text-muted)] border-[var(--df-border)]"
+                            }`}
+                          >
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="done">Done / Onboarded</option>
+                            <option value="lost">Lost</option>
+                          </select>
+                        </td>
+                        <td className="py-3">
+                          <input
+                            type="text"
+                            placeholder="Add follow-up notes..."
+                            defaultValue={lead.notes || ""}
+                            onBlur={(e) => handleUpdateLeadNote(lead.id, e.target.value)}
+                            className="w-full min-w-[140px] rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1 text-[11px] text-[var(--df-text)] placeholder:text-[var(--df-text-muted)]"
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* Main 12-Col Grid for Clinics */
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* Left 8-Col Clinic Accounts Card */}
           <div className="xl:col-span-8 df-card p-5 space-y-3.5">
             <div className="flex items-center justify-between gap-2">
@@ -249,6 +408,7 @@ function PlatformAdminInner() {
             </div>
           </div>
         </div>
+        )}
       </main>
 
       <DentflowDrawer

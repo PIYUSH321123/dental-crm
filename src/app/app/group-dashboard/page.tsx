@@ -1,42 +1,67 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   DentflowKpiCard,
   DentflowPageHeader,
   DentflowStatusPill,
 } from "@/components/dental/dentflow-primitives";
+import { useDentflow } from "@/lib/dentflow-store";
+import { BranchName } from "@/types/dentflow";
 
-const BRANCH_ROWS = [
+interface BranchData {
+  name: string;
+  fullName: BranchName;
+  sub: string;
+  revenue: { text: string; best: boolean };
+  newPatients: { text: string; best: boolean };
+  chairUse: { text: string; tone: "green" | "amber" | "blue" | "red" | null };
+  caseAccept: { text: string; tone: "green" | "amber" | "blue" | "red" | null };
+  noShow: { text: string; tone: "green" | "amber" | "blue" | "red" | null };
+  rating: { text: string; tone: "green" | "amber" | "blue" | "red" | null };
+  unfinishedTreatment: string;
+  plansCount: number;
+}
+
+const BRANCH_ROWS: BranchData[] = [
   {
     name: "Station Road",
+    fullName: "Station Road branch",
     sub: "4 chairs · 2 doctors + visiting",
     revenue: { text: "₹11.2 L", best: true },
     newPatients: { text: "138", best: true },
-    chairUse: { text: "78%", tone: "green" as const },
-    caseAccept: { text: "68%", tone: "green" as const },
+    chairUse: { text: "78%", tone: "green" },
+    caseAccept: { text: "68%", tone: "green" },
     noShow: { text: "6%", tone: null },
-    rating: { text: "4.8", tone: "green" as const },
+    rating: { text: "4.8", tone: "green" },
+    unfinishedTreatment: "₹7.4 L",
+    plansCount: 62,
   },
   {
     name: "Civil Lines",
+    fullName: "Civil Lines branch",
     sub: "3 chairs · 1 doctor + visiting",
     revenue: { text: "₹8.1 L", best: false },
     newPatients: { text: "104", best: false },
     chairUse: { text: "69%", tone: null },
     caseAccept: { text: "61%", tone: null },
-    noShow: { text: "4%", tone: "green" as const },
+    noShow: { text: "4%", tone: "green" },
     rating: { text: "4.6", tone: null },
+    unfinishedTreatment: "₹6.2 L",
+    plansCount: 51,
   },
   {
     name: "MG Road",
+    fullName: "MG Road branch",
     sub: "2 chairs · 1 doctor · opened Jun",
     revenue: { text: "₹5.3 L", best: false },
     newPatients: { text: "70", best: false },
-    chairUse: { text: "58%", tone: "amber" as const },
-    caseAccept: { text: "52%", tone: "amber" as const },
-    noShow: { text: "11%", tone: "amber" as const },
+    chairUse: { text: "58%", tone: "amber" },
+    caseAccept: { text: "52%", tone: "amber" },
+    noShow: { text: "11%", tone: "amber" },
     rating: { text: "4.4", tone: null },
+    unfinishedTreatment: "₹4.3 L",
+    plansCount: 35,
   },
 ];
 
@@ -49,21 +74,25 @@ const WEEKLY_REVENUE = [
 
 const OWNER_ALERTS = [
   {
+    branch: "MG Road branch",
     title: "MG Road no-shows at 11%",
     sub: "Deposit for first visits is off at this branch",
     bg: "bg-[var(--df-alert-red-bg)] border-l-[var(--df-alert-red-accent)]",
   },
   {
+    branch: "Civil Lines branch",
     title: "Lignocaine expiring at 2 branches",
     sub: "Move 20 cartridges from Civil Lines to MG Road",
     bg: "bg-[var(--df-alert-amber-bg)] border-l-[var(--df-alert-amber-accent)]",
   },
   {
+    branch: "Station Road branch",
     title: "Dr. Farhan fully booked next Tue",
     sub: "7 implant consults waiting · add a half-day?",
     bg: "bg-[var(--df-alert-teal-bg)] border-l-[var(--df-alert-teal-accent)]",
   },
   {
+    branch: "MG Road branch",
     title: "Review rating dipped at MG Road",
     sub: "2 private low ratings this week: waiting time",
     bg: "bg-[var(--df-alert-blue-bg)] border-l-[var(--df-alert-blue-accent)]",
@@ -71,48 +100,96 @@ const OWNER_ALERTS = [
 ];
 
 export default function AllBranchesPage() {
+  const { state, setActiveBranch } = useDentflow();
+  const activeBranch = state.activeBranch;
+  const isAll = activeBranch === "All 3 branches";
+
+  const selectedBranchData = useMemo(() => {
+    return BRANCH_ROWS.find((b) => b.fullName === activeBranch);
+  }, [activeBranch]);
+
+  const kpis = useMemo(() => {
+    if (!isAll && selectedBranchData) {
+      return {
+        revenueLabel: `Revenue (${selectedBranchData.name})`,
+        revenueValue: selectedBranchData.revenue.text,
+        revenueSubtext: "+14% vs Aug",
+        newPatientsValue: selectedBranchData.newPatients.text,
+        newPatientsSubtext: "44% from referrals",
+        chairUseValue: selectedBranchData.chairUse.text,
+        chairUseSubtext: "target 80%",
+        caseAcceptValue: selectedBranchData.caseAccept.text,
+        caseAcceptSubtext: "within 14 days",
+        unfinishedValue: selectedBranchData.unfinishedTreatment,
+        unfinishedSubtext: `across ${selectedBranchData.plansCount} plans`,
+      };
+    }
+    return {
+      revenueLabel: "Revenue (group)",
+      revenueValue: "₹24.6 L",
+      revenueSubtext: "+12% vs Aug to date",
+      newPatientsValue: "312",
+      newPatientsSubtext: "41% from referrals",
+      chairUseValue: "71%",
+      chairUseSubtext: "target 80%",
+      caseAcceptValue: "63%",
+      caseAcceptSubtext: "plans accepted within 14 days",
+      unfinishedValue: "₹17.9 L",
+      unfinishedSubtext: "across 148 plans",
+    };
+  }, [isAll, selectedBranchData]);
+
+  const filteredAlerts = useMemo(() => {
+    if (isAll) return OWNER_ALERTS;
+    return OWNER_ALERTS.filter((a) => a.branch === activeBranch);
+  }, [isAll, activeBranch]);
+
   return (
     <div>
       <DentflowPageHeader
-        title="All branches"
-        subtitle="Smile Studio Dental group · September 2026 to date"
-        defaultBranch="All 3 branches"
+        title={isAll ? "All branches" : activeBranch}
+        subtitle={`${state.clinicSetup?.clinicGroupName || "Smile Studio Dental"} · September 2026 to date`}
       />
 
-      {/* 5 Group KPI Cards */}
+      {/* 5 Group / Branch KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-5">
         <DentflowKpiCard
-          label="Revenue (group)"
-          value="₹24.6 L"
-          subtext="+12% vs Aug to date"
+          label={kpis.revenueLabel}
+          value={kpis.revenueValue}
+          subtext={kpis.revenueSubtext}
           subtextTone="green"
         />
         <DentflowKpiCard
           label="New patients"
-          value="312"
-          subtext="41% from referrals"
+          value={kpis.newPatientsValue}
+          subtext={kpis.newPatientsSubtext}
         />
         <DentflowKpiCard
           label="Chair utilisation"
-          value="71%"
-          subtext="target 80%"
+          value={kpis.chairUseValue}
+          subtext={kpis.chairUseSubtext}
         />
         <DentflowKpiCard
           label="Case acceptance"
-          value="63%"
-          subtext="plans accepted within 14 days"
+          value={kpis.caseAcceptValue}
+          subtext={kpis.caseAcceptSubtext}
         />
         <DentflowKpiCard
           label="Unfinished treatment"
-          value="₹17.9 L"
-          subtext="across 148 plans"
+          value={kpis.unfinishedValue}
+          subtext={kpis.unfinishedSubtext}
         />
       </div>
 
       {/* Branch Comparison Table */}
       <div className="df-card p-5 space-y-3.5 mb-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-[var(--df-text)]">Branch comparison</h2>
+          <div>
+            <h2 className="text-sm font-bold text-[var(--df-text)]">Branch comparison</h2>
+            <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">
+              Click any branch to focus analytics · Active: <strong className="text-[var(--df-teal)]">{activeBranch}</strong>
+            </p>
+          </div>
           <span className="text-[11px] text-[var(--df-text-muted)]">
             Green = best of group · amber = needs attention
           </span>
@@ -132,68 +209,88 @@ export default function AllBranchesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--df-border)]">
-              {BRANCH_ROWS.map((b) => (
-                <tr key={b.name} className="hover:bg-[var(--df-surface-hover)]/60">
-                  <td className="py-3 pr-2">
-                    <p className="font-bold text-[var(--df-text)]">{b.name}</p>
-                    <p className="text-[11px] text-[var(--df-text-muted)]">{b.sub}</p>
-                  </td>
-                  <td className="py-3 px-2 font-bold">
-                    {b.revenue.best ? (
-                      <DentflowStatusPill label={b.revenue.text} tone="green" />
-                    ) : (
-                      b.revenue.text
-                    )}
-                  </td>
-                  <td className="py-3 px-2 font-semibold">
-                    {b.newPatients.best ? (
-                      <DentflowStatusPill label={b.newPatients.text} tone="green" />
-                    ) : (
-                      b.newPatients.text
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    {b.chairUse.tone ? (
-                      <DentflowStatusPill
-                        label={b.chairUse.text}
-                        tone={b.chairUse.tone}
-                      />
-                    ) : (
-                      <span className="font-semibold">{b.chairUse.text}</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    {b.caseAccept.tone ? (
-                      <DentflowStatusPill
-                        label={b.caseAccept.text}
-                        tone={b.caseAccept.tone}
-                      />
-                    ) : (
-                      <span className="font-semibold">{b.caseAccept.text}</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    {b.noShow.tone ? (
-                      <DentflowStatusPill
-                        label={b.noShow.text}
-                        tone={b.noShow.tone}
-                      />
-                    ) : (
-                      <span className="font-semibold">{b.noShow.text}</span>
-                    )}
-                  </td>
-                  <td className="py-3 pl-2 text-right">
-                    {b.rating.tone ? (
-                      <DentflowStatusPill
-                        label={b.rating.text}
-                        tone={b.rating.tone}
-                      />
-                    ) : (
-                      <span className="font-semibold">{b.rating.text}</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {BRANCH_ROWS.map((b) => {
+                const isSelected = activeBranch === b.fullName;
+                return (
+                  <tr
+                    key={b.name}
+                    onClick={() => setActiveBranch(b.fullName)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-[var(--df-teal-soft)]/60 font-medium"
+                        : "hover:bg-[var(--df-surface-hover)]/60"
+                    }`}
+                  >
+                    <td className="py-3 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        {isSelected && (
+                          <span className="h-2 w-2 rounded-full bg-[var(--df-teal)]" />
+                        )}
+                        <div>
+                          <p className={`font-bold ${isSelected ? "text-[var(--df-teal)]" : "text-[var(--df-text)]"}`}>
+                            {b.name}
+                          </p>
+                          <p className="text-[11px] text-[var(--df-text-muted)]">{b.sub}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 font-bold">
+                      {b.revenue.best ? (
+                        <DentflowStatusPill label={b.revenue.text} tone="green" />
+                      ) : (
+                        b.revenue.text
+                      )}
+                    </td>
+                    <td className="py-3 px-2 font-semibold">
+                      {b.newPatients.best ? (
+                        <DentflowStatusPill label={b.newPatients.text} tone="green" />
+                      ) : (
+                        b.newPatients.text
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {b.chairUse.tone ? (
+                        <DentflowStatusPill
+                          label={b.chairUse.text}
+                          tone={b.chairUse.tone}
+                        />
+                      ) : (
+                        <span className="font-semibold">{b.chairUse.text}</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {b.caseAccept.tone ? (
+                        <DentflowStatusPill
+                          label={b.caseAccept.text}
+                          tone={b.caseAccept.tone}
+                        />
+                      ) : (
+                        <span className="font-semibold">{b.caseAccept.text}</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {b.noShow.tone ? (
+                        <DentflowStatusPill
+                          label={b.noShow.text}
+                          tone={b.noShow.tone}
+                        />
+                      ) : (
+                        <span className="font-semibold">{b.noShow.text}</span>
+                      )}
+                    </td>
+                    <td className="py-3 pl-2 text-right">
+                      {b.rating.tone ? (
+                        <DentflowStatusPill
+                          label={b.rating.text}
+                          tone={b.rating.tone}
+                        />
+                      ) : (
+                        <span className="font-semibold">{b.rating.text}</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -204,19 +301,24 @@ export default function AllBranchesPage() {
         {/* Left 8-col Grouped Bar Chart */}
         <div className="xl:col-span-8 df-card p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-bold text-[var(--df-text)]">
-              Revenue by week · ₹ lakh
-            </h2>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--df-text)]">
+                Revenue by week · ₹ lakh
+              </h2>
+              <p className="text-[11px] text-[var(--df-text-muted)] mt-0.5">
+                {isAll ? "Group comparison across 3 branches" : `Filtered for ${activeBranch}`}
+              </p>
+            </div>
             <div className="flex items-center gap-4 text-[11px] text-[var(--df-text-secondary)]">
-              <span className="inline-flex items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1.5 ${!isAll && activeBranch !== "Station Road branch" ? "opacity-35" : ""}`}>
                 <span className="h-2.5 w-2.5 rounded-xs bg-[var(--df-teal)]" />
                 Station Road
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1.5 ${!isAll && activeBranch !== "Civil Lines branch" ? "opacity-35" : ""}`}>
                 <span className="h-2.5 w-2.5 rounded-xs bg-[var(--df-teal-border)]" />
                 Civil Lines
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1.5 ${!isAll && activeBranch !== "MG Road branch" ? "opacity-35" : ""}`}>
                 <span className="h-2.5 w-2.5 rounded-xs bg-[var(--df-unique-text)]" />
                 MG Road
               </span>
@@ -230,7 +332,7 @@ export default function AllBranchesPage() {
                 className="flex flex-col items-center h-full justify-end gap-2"
               >
                 <div className="flex items-end gap-1.5 h-40 w-full justify-center">
-                  <div className="flex flex-col items-center gap-1 w-6">
+                  <div className={`flex flex-col items-center gap-1 w-6 transition-opacity ${!isAll && activeBranch !== "Station Road branch" ? "opacity-30" : ""}`}>
                     <span className="text-[10px] font-semibold text-[var(--df-text-muted)]">
                       {w.station.toFixed(1)}
                     </span>
@@ -239,7 +341,7 @@ export default function AllBranchesPage() {
                       className="w-full rounded-t-md bg-[var(--df-teal)]"
                     />
                   </div>
-                  <div className="flex flex-col items-center gap-1 w-6">
+                  <div className={`flex flex-col items-center gap-1 w-6 transition-opacity ${!isAll && activeBranch !== "Civil Lines branch" ? "opacity-30" : ""}`}>
                     <span className="text-[10px] font-semibold text-[var(--df-text-muted)]">
                       {w.civil.toFixed(1)}
                     </span>
@@ -248,7 +350,7 @@ export default function AllBranchesPage() {
                       className="w-full rounded-t-md bg-[var(--df-teal-border)]"
                     />
                   </div>
-                  <div className="flex flex-col items-center gap-1 w-6">
+                  <div className={`flex flex-col items-center gap-1 w-6 transition-opacity ${!isAll && activeBranch !== "MG Road branch" ? "opacity-30" : ""}`}>
                     <span className="text-[10px] font-semibold text-[var(--df-text-muted)]">
                       {w.mg.toFixed(1)}
                     </span>
@@ -268,21 +370,33 @@ export default function AllBranchesPage() {
 
         {/* Right 4-col Owner alerts */}
         <div className="xl:col-span-4 df-card p-5 space-y-3">
-          <h2 className="text-sm font-bold text-[var(--df-text)]">Owner alerts</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-[var(--df-text)]">Owner alerts</h2>
+            <span className="text-[11px] text-[var(--df-text-muted)]">
+              {filteredAlerts.length} {isAll ? "total" : "for this branch"}
+            </span>
+          </div>
           <div className="space-y-2.5">
-            {OWNER_ALERTS.map((a) => (
-              <div
-                key={a.title}
-                className={`p-3 rounded-xl border border-[var(--df-border)] border-l-4 ${a.bg}`}
-              >
-                <p className="text-xs font-bold text-[var(--df-text)]">{a.title}</p>
-                <p className="text-[11px] text-[var(--df-text-secondary)] mt-0.5">{a.sub}</p>
-              </div>
-            ))}
+            {filteredAlerts.length === 0 ? (
+              <p className="text-xs text-[var(--df-text-muted)] py-4 text-center">
+                No active critical alerts for {activeBranch}.
+              </p>
+            ) : (
+              filteredAlerts.map((a) => (
+                <div
+                  key={a.title}
+                  className={`p-3 rounded-xl border border-[var(--df-border)] border-l-4 ${a.bg}`}
+                >
+                  <p className="text-xs font-bold text-[var(--df-text)]">{a.title}</p>
+                  <p className="text-[11px] text-[var(--df-text-secondary)] mt-0.5">{a.sub}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
 
