@@ -13,7 +13,7 @@ import {
   staffRoleKeyToAuthRole,
   verifyDentflowSession,
 } from "@/lib/dentflow-session";
-import { ClinicSetupConfig, DentflowAppState } from "@/types/dentflow";
+import { ClinicSetupConfig, DentflowAppState, TenantAccountRecord } from "@/types/dentflow";
 import { DentflowRoleKey } from "@/lib/dentflow-theme";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -78,6 +78,9 @@ export async function POST(req: NextRequest) {
     const ownerName = String(body?.name || "Dr. Kavita Sharma").trim();
     const email = String(body?.email || "owner@dentalclinic.in").trim();
     const clinicGroupName = String(body?.clinicGroupName || "Nova Smile Dental").trim();
+    const plan = (body?.plan || "Growth") as "Growth" | "Starter" | "Chain" | "Trial";
+    const city = String(body?.city || "Pune, Maharashtra").trim();
+    const phone = String(body?.phone || "+91 98220 44100").trim();
 
     const now = new Date();
     const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -86,20 +89,45 @@ export async function POST(req: NextRequest) {
       ...state.clinicSetup,
       completed: false,
       clinicGroupName,
-      city: String(body?.city || "Pune, Maharashtra"),
-      phone: String(body?.phone || "+91 98220 44100"),
+      ownerName,
+      ownerEmail: email,
+      city,
+      phone,
+      staffRoster: [
+        { id: `stf-${Date.now()}-1`, name: ownerName, role: "Owner" },
+        ...(state.clinicSetup.staffRoster || []).filter((s) => s.role !== "Owner"),
+      ],
       trialInfo: {
         trialStart: now.toISOString(),
         trialEnd: trialEnd.toISOString(),
-        plan: String(body?.plan || "Growth"),
+        plan,
         status: "trial",
       },
     };
+
+    const newTenant: TenantAccountRecord = {
+      id: `ten-${Date.now()}`,
+      clinicGroup: clinicGroupName,
+      ownerName,
+      ownerEmail: email,
+      branchesLabel: "Single clinic",
+      plan: "Trial",
+      branchesCount: 1,
+      mrrLabel: "— (14d trial)",
+      whatsappCredits: 500,
+      lastActive: "Just now",
+      health: "Trial",
+    };
+
+    const existingTenants = (state.tenantAccounts || []).filter(
+      (t) => t.clinicGroup.toLowerCase() !== clinicGroupName.toLowerCase()
+    );
 
     state = {
       ...state,
       activeRole: "Owner",
       clinicSetup: updatedSetup,
+      tenantAccounts: [newTenant, ...existingTenants],
     };
     writeState(state);
 
@@ -129,10 +157,17 @@ export async function POST(req: NextRequest) {
     const existing = await verifyDentflowSession(existingToken);
 
     const incomingSetup = (body?.clinicSetup || {}) as Partial<ClinicSetupConfig>;
+    const resolvedOwnerName =
+      incomingSetup.ownerName || state.clinicSetup.ownerName || existing?.name || "Dr. Sneha Kulkarni";
+    const resolvedOwnerEmail =
+      incomingSetup.ownerEmail || state.clinicSetup.ownerEmail || existing?.email || "sneha@smilestudio.in";
+
     const completedSetup: ClinicSetupConfig = {
       ...state.clinicSetup,
       ...incomingSetup,
       completed: true,
+      ownerName: resolvedOwnerName,
+      ownerEmail: resolvedOwnerEmail,
     };
 
     state = {
@@ -144,8 +179,8 @@ export async function POST(req: NextRequest) {
 
     const session: DentflowSessionPayload = {
       userId: existing?.userId || "usr-owner-1",
-      name: existing?.name || "Dr. Sneha Kulkarni",
-      email: existing?.email || "sneha@smilestudio.in",
+      name: resolvedOwnerName,
+      email: resolvedOwnerEmail,
       role: "owner",
       staffRoleKey: "Owner",
       clinicGroupName: completedSetup.clinicGroupName,
@@ -155,7 +190,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({
       ok: true,
       session,
-      redirectTo: requestedRedirect || "/app/today",
+      redirectTo: requestedRedirect || "/Dashboard/today",
     });
     res.cookies.set(DENTFLOW_SESSION_COOKIE, token, {
       httpOnly: false,

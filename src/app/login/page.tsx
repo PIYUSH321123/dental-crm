@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { DentflowAuthRole } from "@/lib/dentflow-session";
+import { DentflowAuthRole, DentflowSessionPayload } from "@/lib/dentflow-session";
 
 const ROLE_OPTIONS: {
   role: DentflowAuthRole;
@@ -98,8 +98,18 @@ function LoginFormInner() {
   const [password, setPassword] = useState("••••••••••••");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [existingSession, setExistingSession] = useState<DentflowSessionPayload | null>(null);
 
   useEffect(() => {
+    fetch("/api/dentflow/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.session) {
+          setExistingSession(data.session);
+        }
+      })
+      .catch(() => {});
+
     fetch("/api/dentflow/state")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -243,6 +253,23 @@ function LoginFormInner() {
                 : "Enter your clinic work email and password to sign in."}
             </p>
           </div>
+
+          {existingSession && (
+            <div className="p-3 rounded-xl bg-[var(--df-teal-soft)] border border-[var(--df-teal-border)] flex items-center justify-between text-xs">
+              <div>
+                <p className="text-[11px] text-[var(--df-text-muted)]">Currently signed in as</p>
+                <p className="font-semibold text-[var(--df-text)]">
+                  {existingSession.name || existingSession.role}
+                </p>
+              </div>
+              <Link
+                href={targetRedirect || "/Dashboard/today"}
+                className="df-btn-primary px-3 py-1.5 text-xs font-semibold inline-flex items-center gap-1"
+              >
+                <span>Continue →</span>
+              </Link>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
             <div>

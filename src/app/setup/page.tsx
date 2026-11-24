@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, Plus, RotateCcw, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { DentflowProvider, useDentflow } from "@/lib/dentflow-store";
 import { DENTFLOW_ROLES, DentflowRoleKey } from "@/lib/dentflow-theme";
@@ -26,6 +26,8 @@ function SetupWizardInner() {
 
   const [profile, setProfile] = useState({
     clinicGroupName: state.clinicSetup.clinicGroupName || "Smile Studio Dental",
+    ownerName: state.clinicSetup.ownerName || "Dr. Sneha Kulkarni",
+    ownerEmail: state.clinicSetup.ownerEmail || "sneha@smilestudio.in",
     gstin: state.clinicSetup.gstin || "27AABCS4821D1Z5",
     city: state.clinicSetup.city || "Pune, Maharashtra",
     phone: state.clinicSetup.phone || "+91 20 2612 4400",
@@ -42,6 +44,126 @@ function SetupWizardInner() {
   const [procedureFees, setProcedureFees] = useState(state.clinicSetup.procedureFees);
   const [whatsappNumber, setWhatsappNumber] = useState(state.clinicSetup.whatsappNumber);
   const [whatsappConnected, setWhatsappConnected] = useState(true);
+
+  // Synchronize with active session and persistent state on mount
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch("/api/dentflow/session").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/dentflow/state").then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([sessData, stateData]) => {
+        if (!active) return;
+        const sess = sessData?.session;
+        const setup = stateData?.state?.clinicSetup;
+
+        if (sess || setup) {
+          const groupName =
+            sess?.clinicGroupName || setup?.clinicGroupName || "Smile Studio Dental";
+          const oName = sess?.name || setup?.ownerName || "Dr. Sneha Kulkarni";
+          const oEmail = sess?.email || setup?.ownerEmail || "owner@clinic.in";
+          const cCity = setup?.city || "Pune, Maharashtra";
+          const cPhone = setup?.phone || "+91 98220 44100";
+          const cGstin = setup?.gstin || "27AABCS4821D1Z5";
+
+          setProfile((prev) => ({
+            ...prev,
+            clinicGroupName: groupName,
+            ownerName: oName,
+            ownerEmail: oEmail,
+            city: cCity,
+            phone: cPhone,
+            gstin: cGstin,
+          }));
+
+          if (setup?.branches?.length) {
+            setBranches(setup.branches);
+          } else if (groupName !== "Smile Studio Dental") {
+            setBranches([
+              {
+                id: `br-main-${Date.now()}`,
+                name: `${groupName} Main Branch`,
+                chairs: 3,
+                address: cCity,
+              },
+            ]);
+          }
+
+          if (setup?.staffRoster?.length) {
+            const roster = setup.staffRoster.map((s: any) =>
+              s.role === "Owner" ? { ...s, name: oName } : s
+            );
+            setStaffRoster(roster);
+          } else if (oName && oName !== "Dr. Sneha Kulkarni") {
+            setStaffRoster([{ id: `st-owner-${Date.now()}`, name: oName, role: "Owner" }]);
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleUpdateStaffName = (id: string, name: string) => {
+    setStaffRoster((prev) =>
+      prev.map((s) => {
+        if (s.id === id) {
+          if (s.role === "Owner") {
+            setProfile((p) => ({ ...p, ownerName: name }));
+          }
+          return { ...s, name };
+        }
+        return s;
+      })
+    );
+  };
+
+  const handleUpdateStaffRole = (id: string, role: DentflowRoleKey) => {
+    setStaffRoster((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, role } : s))
+    );
+  };
+
+  const handleDeleteStaff = (id: string) => {
+    const target = staffRoster.find((s) => s.id === id);
+    const ownerCount = staffRoster.filter((s) => s.role === "Owner").length;
+    if (target?.role === "Owner" && ownerCount <= 1) {
+      toast.error("Every clinic must have at least one Owner. You can rename the owner instead.");
+      return;
+    }
+    setStaffRoster((prev) => prev.filter((s) => s.id !== id));
+    toast.success(`Removed ${target?.name || "staff member"} from roster.`);
+  };
+
+  const handleClearDemoStaff = () => {
+    const currentOwner = staffRoster.find((s) => s.role === "Owner") || {
+      id: `st-owner-${Date.now()}`,
+      name: profile.ownerName || "Dr. Clinic Owner",
+      role: "Owner" as DentflowRoleKey,
+    };
+    setStaffRoster([currentOwner]);
+    toast.success("Roster cleared — starting fresh with Owner only.");
+  };
+
+  const handleAddStaffMember = () => {
+    if (!newStaffName.trim()) {
+      toast.error("Please enter a staff or doctor name");
+      return;
+    }
+    const newMember = {
+      id: `st-${Date.now()}`,
+      name: newStaffName.trim(),
+      role: newStaffRole,
+    };
+    setStaffRoster((prev) => [...prev, newMember]);
+    if (newStaffRole === "Owner" && !profile.ownerName) {
+      setProfile((p) => ({ ...p, ownerName: newStaffName.trim() }));
+    }
+    toast.success(`Added ${newStaffName.trim()} as ${newStaffRole}`);
+    setNewStaffName("");
+  };
 
   const handleFinish = async () => {
     setFinishing(true);
@@ -72,6 +194,20 @@ function SetupWizardInner() {
         }),
       });
       const data = await res.json();
+
+      await fetch("/api/dentflow/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "REPLACE_STATE",
+          state: {
+            ...state,
+            activeRole: "Owner",
+            clinicSetup,
+          },
+        }),
+      }).catch(() => {});
+
       toast.success("Clinic setup complete! Opening your clinical dashboard.");
       router.push(data?.redirectTo || "/Dashboard/today");
       router.refresh();
@@ -138,39 +274,70 @@ function SetupWizardInner() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold mb-1">Clinic group name</label>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Clinic group name</label>
                   <input
                     type="text"
+                    required
                     value={profile.clinicGroupName}
                     onChange={(e) => setProfile({ ...profile, clinicGroupName: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5"
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 text-[var(--df-text)] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">GSTIN (optional)</label>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Owner full name</label>
+                  <input
+                    type="text"
+                    required
+                    value={profile.ownerName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setProfile({ ...profile, ownerName: val });
+                      setStaffRoster((prev) =>
+                        prev.map((s) => (s.role === "Owner" ? { ...s, name: val } : s))
+                      );
+                    }}
+                    placeholder="Dr. Kavita Sharma"
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 text-[var(--df-text)] font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Owner work email</label>
+                  <input
+                    type="email"
+                    required
+                    value={profile.ownerEmail}
+                    onChange={(e) => setProfile({ ...profile, ownerEmail: e.target.value })}
+                    placeholder="owner@dentalclinic.in"
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Reception / WhatsApp phone</label>
+                  <input
+                    type="tel"
+                    required
+                    value={profile.phone}
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">City & state</label>
+                  <input
+                    type="text"
+                    required
+                    value={profile.city}
+                    onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">GSTIN (optional)</label>
                   <input
                     type="text"
                     value={profile.gstin}
                     onChange={(e) => setProfile({ ...profile, gstin: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 df-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-1">City & state</label>
-                  <input
-                    type="text"
-                    value={profile.city}
-                    onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-1">Reception phone</label>
-                  <input
-                    type="tel"
-                    value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5"
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2.5 df-mono text-[var(--df-text)]"
                   />
                 </div>
               </div>
@@ -179,33 +346,92 @@ function SetupWizardInner() {
 
           {stepIdx === 1 && (
             <div className="space-y-4 text-xs">
-              <div>
-                <h1 className="df-serif text-2xl font-semibold text-[var(--df-text)]">Branches</h1>
-                <p className="text-[var(--df-text-muted)] mt-0.5">
-                  Configure each physical clinic location in your group.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h1 className="df-serif text-2xl font-semibold text-[var(--df-text)]">Branches</h1>
+                  <p className="text-[var(--df-text-muted)] mt-0.5">
+                    Configure each physical clinic location in your group.
+                  </p>
+                </div>
+                {branches.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBranches([
+                        {
+                          id: `br-main-${Date.now()}`,
+                          name: `${profile.clinicGroupName} Main Branch`,
+                          chairs: 3,
+                          address: profile.city,
+                        },
+                      ])
+                    }
+                    className="df-btn-secondary px-2.5 py-1 text-xs text-[var(--df-text-muted)] hover:text-[var(--df-status-red-text)]"
+                  >
+                    Reset to single branch
+                  </button>
+                )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {branches.map((br) => (
                   <div
                     key={br.id}
-                    className="p-3 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] flex items-center justify-between"
+                    className="p-3.5 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] flex flex-wrap items-center justify-between gap-3"
                   >
-                    <div>
-                      <p className="font-bold text-[var(--df-text)]">{br.name}</p>
-                      <p className="text-[11px] text-[var(--df-text-muted)]">
-                        {br.address} · {br.chairs} chairs
-                      </p>
+                    <div className="flex-1 min-w-48 space-y-1">
+                      <input
+                        type="text"
+                        value={br.name}
+                        onChange={(e) =>
+                          setBranches(
+                            branches.map((b) => (b.id === br.id ? { ...b, name: e.target.value } : b))
+                          )
+                        }
+                        placeholder="Branch name"
+                        className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1 font-semibold text-[var(--df-text)]"
+                      />
+                      <input
+                        type="text"
+                        value={br.address}
+                        onChange={(e) =>
+                          setBranches(
+                            branches.map((b) =>
+                              b.id === br.id ? { ...b, address: e.target.value } : b
+                            )
+                          )
+                        }
+                        placeholder="Address"
+                        className="w-full rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1 text-[11px] text-[var(--df-text-muted)]"
+                      />
                     </div>
-                    {branches.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setBranches(branches.filter((b) => b.id !== br.id))}
-                        className="p-1.5 text-[var(--df-text-muted)] hover:text-[var(--df-status-red-text)] cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-[var(--df-text-muted)]">Chairs:</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={20}
+                          value={br.chairs}
+                          onChange={(e) =>
+                            setBranches(
+                              branches.map((b) =>
+                                b.id === br.id ? { ...b, chairs: Number(e.target.value) || 1 } : b
+                              )
+                            )
+                          }
+                          className="w-14 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2 py-1 text-center font-bold"
+                        />
+                      </div>
+                      {branches.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setBranches(branches.filter((b) => b.id !== br.id))}
+                          className="p-1.5 text-[var(--df-text-muted)] hover:text-[var(--df-status-red-text)] cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -320,60 +546,102 @@ function SetupWizardInner() {
 
           {stepIdx === 4 && (
             <div className="space-y-4 text-xs">
-              <div>
-                <h1 className="df-serif text-2xl font-semibold text-[var(--df-text)]">
-                  Staff and roles
-                </h1>
-                <p className="text-[var(--df-text-muted)] mt-0.5">
-                  Each role inherits its exact permissions from Settings → Users & roles.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h1 className="df-serif text-2xl font-semibold text-[var(--df-text)]">
+                    Staff and roles
+                  </h1>
+                  <p className="text-[var(--df-text-muted)] mt-0.5">
+                    Customize your doctors, specialists, hygienists, and clinic staff.
+                  </p>
+                </div>
+                {staffRoster.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleClearDemoStaff}
+                    className="df-btn-secondary px-3 py-1.5 inline-flex items-center gap-1.5 text-xs text-[var(--df-text)] cursor-pointer"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Clear demo staff (Keep Owner only)
+                  </button>
+                )}
               </div>
-              <div className="divide-y divide-[var(--df-border)] border border-[var(--df-border)] rounded-xl overflow-hidden">
+
+              <div className="divide-y divide-[var(--df-border)] border border-[var(--df-border)] rounded-xl overflow-hidden bg-[var(--df-surface)]">
                 {staffRoster.map((st) => (
                   <div
                     key={st.id}
-                    className="px-3.5 py-2.5 bg-[var(--df-surface)] flex items-center justify-between"
+                    className="px-3.5 py-2.5 bg-[var(--df-surface)] hover:bg-[var(--df-surface-muted)] transition-colors flex flex-wrap items-center justify-between gap-3"
                   >
-                    <span className="font-semibold text-[var(--df-text)]">{st.name}</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--df-status-blue-bg)] text-[var(--df-status-blue-text)]">
-                      {st.role}
-                    </span>
+                    <div className="flex-1 min-w-48 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={st.name}
+                        onChange={(e) => handleUpdateStaffName(st.id, e.target.value)}
+                        placeholder="Staff or doctor name"
+                        className="flex-1 rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 font-semibold text-[var(--df-text)] text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <select
+                        value={st.role}
+                        onChange={(e) => handleUpdateStaffRole(st.id, e.target.value as DentflowRoleKey)}
+                        className="rounded-lg border border-[var(--df-border)] bg-[var(--df-surface)] px-2.5 py-1.5 text-xs font-semibold text-[var(--df-text)] cursor-pointer"
+                      >
+                        {DENTFLOW_ROLES.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStaff(st.id)}
+                        className="p-1.5 rounded-lg text-[var(--df-text-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title={st.role === "Owner" ? "Clinic must have at least one owner" : "Remove staff"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <input
-                  type="text"
-                  placeholder="Doctor or staff name"
-                  value={newStaffName}
-                  onChange={(e) => setNewStaffName(e.target.value)}
-                  className="flex-1 min-w-44 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
-                />
-                <select
-                  value={newStaffRole}
-                  onChange={(e) => setNewStaffRole(e.target.value as DentflowRoleKey)}
-                  className="rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 font-semibold"
-                >
-                  {DENTFLOW_ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newStaffName.trim()) return;
-                    setStaffRoster([
-                      ...staffRoster,
-                      { id: `st-${Date.now()}`, name: newStaffName.trim(), role: newStaffRole },
-                    ]);
-                    setNewStaffName("");
-                  }}
-                  className="df-btn-secondary px-3.5 py-2 inline-flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Invite
-                </button>
+
+              <div className="p-3.5 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface-muted)] space-y-2">
+                <p className="font-semibold text-[var(--df-text)]">Add doctor, specialist, or staff member</p>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="text"
+                    placeholder="Doctor or staff name (e.g. Dr. Rajesh Gupta)"
+                    value={newStaffName}
+                    onChange={(e) => setNewStaffName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddStaffMember();
+                      }
+                    }}
+                    className="flex-1 min-w-44 rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs"
+                  />
+                  <select
+                    value={newStaffRole}
+                    onChange={(e) => setNewStaffRole(e.target.value as DentflowRoleKey)}
+                    className="rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-xs font-semibold cursor-pointer"
+                  >
+                    {DENTFLOW_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAddStaffMember}
+                    className="df-btn-primary px-4 py-2 inline-flex items-center gap-1.5 text-xs cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> + Invite / Add staff
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -523,7 +791,7 @@ function SetupWizardInner() {
                 onClick={handleFinish}
                 className="df-btn-primary px-6 py-2.5 text-xs cursor-pointer disabled:opacity-60"
               >
-                {finishing ? "Launching..." : "Finish setup & open All branches →"}
+                {finishing ? "Launching..." : "Finish setup & open Dashboard →"}
               </button>
             )}
           </div>

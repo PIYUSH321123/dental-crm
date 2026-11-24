@@ -34,23 +34,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Auth pages: redirect already signed-in users to their destination or home portal
+  // 2. Auth pages: allow access to login and signup without force-redirecting away
   if (pathname === "/login" || pathname === "/signup") {
-    if (session) {
-      const requestedRedirect = getSafeInternalRedirect(
-        request.nextUrl.searchParams.get("redirect") ||
-          request.nextUrl.searchParams.get("returnTo") ||
-          request.nextUrl.searchParams.get("next"),
-      );
-      if (
-        requestedRedirect &&
-        requestedRedirect !== "/login" &&
-        requestedRedirect !== "/signup"
-      ) {
-        return NextResponse.redirect(new URL(requestedRedirect, request.url));
-      }
-      return NextResponse.redirect(new URL(getDefaultRedirectForSession(session), request.url));
-    }
     return NextResponse.next();
   }
 

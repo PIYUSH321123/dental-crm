@@ -29,6 +29,8 @@ function PlatformAdminInner() {
   const [activeTab, setActiveTab] = useState<(typeof ADMIN_TABS)[number]>("Clinics");
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [clinicName, setClinicName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [plan, setPlan] = useState<TenantAccountRecord["plan"]>("Growth");
   const [branchesCount, setBranchesCount] = useState(2);
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>("All");
@@ -60,12 +62,19 @@ function PlatformAdminInner() {
     }));
   };
 
-  const handleOnboard = (e: React.FormEvent) => {
+  const handleOnboard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicName.trim()) return;
+    const finalOwnerName = ownerName.trim() || `Dr. ${clinicName.trim()} Owner`;
+    const finalOwnerEmail =
+      ownerEmail.trim() ||
+      `owner@${clinicName.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}.in`;
+
     const newAccount: TenantAccountRecord = {
       id: `ten-${Date.now()}`,
       clinicGroup: clinicName.trim(),
+      ownerName: finalOwnerName,
+      ownerEmail: finalOwnerEmail,
       branchesLabel: branchesCount === 1 ? "Single clinic" : `${branchesCount} branches`,
       plan,
       branchesCount,
@@ -81,12 +90,33 @@ function PlatformAdminInner() {
       lastActive: "Just now",
       health: plan === "Trial" ? "Trial" : "Healthy",
     };
+
     updateState((prev) => ({
       ...prev,
       tenantAccounts: [newAccount, ...prev.tenantAccounts],
     }));
-    toast.success(`Onboarded ${clinicName.trim()} on ${plan} plan`);
+
+    try {
+      await fetch("/api/dentflow/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "CREATE_CLINIC",
+          payload: {
+            clinicName: clinicName.trim(),
+            ownerName: finalOwnerName,
+            ownerEmail: finalOwnerEmail,
+            plan,
+            branchesCount,
+          },
+        }),
+      });
+    } catch {}
+
+    toast.success(`Onboarded ${clinicName.trim()} on ${plan} plan with owner ${finalOwnerName}`);
     setClinicName("");
+    setOwnerName("");
+    setOwnerEmail("");
     setOnboardOpen(false);
   };
 
@@ -428,6 +458,28 @@ function PlatformAdminInner() {
               onChange={(e) => setClinicName(e.target.value)}
               className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-1">Owner full name</label>
+              <input
+                type="text"
+                placeholder="Dr. Rajesh Khanna"
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Owner work email</label>
+              <input
+                type="email"
+                placeholder="rajesh@koregaon.in"
+                value={ownerEmail}
+                onChange={(e) => setOwnerEmail(e.target.value)}
+                className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

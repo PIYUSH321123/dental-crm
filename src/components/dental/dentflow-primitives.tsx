@@ -503,17 +503,8 @@ export function DentflowPageHeader({
           )}
         </div>
 
-        {/* Quick Links: Live Clinic Website & Marketing Landing */}
+        {/* Quick Links: Marketing Landing */}
         <div className="hidden xl:flex items-center gap-1.5">
-          <Link
-            href="/c/smile-studio"
-            target="_blank"
-            title="Open Public Clinic Website"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] hover:border-[var(--df-teal-border)] text-[var(--df-text)] hover:text-[var(--df-teal)] transition-colors shadow-xs"
-          >
-            <Globe className="h-3.5 w-3.5 text-[var(--df-teal)]" />
-            <span>Clinic Website</span>
-          </Link>
           <Link
             href="/"
             target="_blank"
@@ -655,16 +646,6 @@ export function DentflowPageHeader({
 
                 {/* Profile & Settings Navigation */}
                 <div className="space-y-0.5">
-                  <Link
-                    href="/c/smile-studio"
-                    target="_blank"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-[var(--df-text)] hover:bg-[var(--df-surface-hover)] transition-colors"
-                  >
-                    <Globe className="h-4 w-4 text-[var(--df-teal)]" />
-                    <span>View Clinic Website (/c/smile-studio)</span>
-                  </Link>
-
                   <Link
                     href="/app/settings?tab=website"
                     onClick={() => setUserMenuOpen(false)}
@@ -1023,17 +1004,6 @@ export function DentflowSidebar({
             <span className="flex items-center gap-2">
               <Globe className="h-3.5 w-3.5 text-[var(--df-teal)]" />
               <span>Marketing Site</span>
-            </span>
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-          <Link
-            href="/c/smile-studio"
-            target="_blank"
-            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--df-sidebar-muted)] hover:text-white hover:bg-[var(--df-sidebar-hover)] transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--df-teal)]" />
-              <span>Live Website (/c/...)</span>
             </span>
             <ExternalLink className="h-3 w-3" />
           </Link>

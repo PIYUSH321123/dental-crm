@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { INITIAL_DENTFLOW_STATE } from "@/lib/dentflow-data";
 import { migrateDentflowState } from "@/lib/dentflow-migrations";
-import { DentflowAppState } from "@/types/dentflow";
+import { DentflowAppState, TenantAccountRecord, ClinicSetupConfig } from "@/types/dentflow";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const STATE_FILE = path.join(DATA_DIR, "dentflow-state.json");
@@ -98,6 +98,73 @@ export async function POST(req: NextRequest) {
     };
     saveState(state);
     return NextResponse.json({ ok: true, state, demoRequest: newDemo });
+  }
+
+  if (action === "CREATE_CLINIC" || action === "ONBOARD_CLINIC") {
+    const clinicName = String(payload.clinicName || payload.clinicGroup || "New Dental Clinic").trim();
+    const ownerName = String(payload.ownerName || "Dr. Owner").trim();
+    const ownerEmail = String(payload.ownerEmail || `owner@${clinicName.toLowerCase().replace(/[^a-z0-9]/g, "")}.in`).trim();
+    const plan = (payload.plan || "Growth") as TenantAccountRecord["plan"];
+    const branchesCount = Number(payload.branchesCount) || 1;
+    const city = String(payload.city || "Pune, Maharashtra").trim();
+    const phone = String(payload.phone || "+91 98220 44100").trim();
+
+    const newTenant: TenantAccountRecord = {
+      id: `ten-${Date.now()}`,
+      clinicGroup: clinicName,
+      ownerName,
+      ownerEmail,
+      branchesLabel: branchesCount === 1 ? "Single clinic" : `${branchesCount} branches`,
+      plan,
+      branchesCount,
+      mrrLabel:
+        plan === "Starter"
+          ? "₹4,999"
+          : plan === "Growth"
+          ? "₹14,999"
+          : plan === "Chain"
+          ? "₹35,000"
+          : "— (Trial)",
+      whatsappCredits: plan === "Trial" ? 500 : 5000,
+      lastActive: "Just now",
+      health: plan === "Trial" ? "Trial" : "Healthy",
+    };
+
+    const existingTenants = (state.tenantAccounts || []).filter(
+      (t) => t.clinicGroup.toLowerCase() !== clinicName.toLowerCase()
+    );
+
+    if (payload.setActive) {
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      state = {
+        ...state,
+        clinicSetup: {
+          ...state.clinicSetup,
+          completed: true,
+          clinicGroupName: clinicName,
+          ownerName,
+          ownerEmail,
+          city,
+          phone,
+          trialInfo: {
+            trialStart: now.toISOString(),
+            trialEnd: trialEnd.toISOString(),
+            plan,
+            status: plan === "Trial" ? "trial" : "active",
+          },
+        },
+        tenantAccounts: [newTenant, ...existingTenants],
+      };
+    } else {
+      state = {
+        ...state,
+        tenantAccounts: [newTenant, ...existingTenants],
+      };
+    }
+
+    saveState(state);
+    return NextResponse.json({ ok: true, state, tenant: newTenant });
   }
 
   if (action === "RESET_DEMO") {

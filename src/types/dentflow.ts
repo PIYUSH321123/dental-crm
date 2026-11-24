@@ -648,6 +648,8 @@ export interface SpecialistReferralItem {
 export interface TenantAccountRecord {
   id: string;
   clinicGroup: string;
+  ownerName?: string;
+  ownerEmail?: string;
   branchesLabel: string;
   plan: "Growth" | "Starter" | "Chain" | "Trial";
   branchesCount: number;

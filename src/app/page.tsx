@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   ArrowRight,
@@ -127,9 +128,20 @@ const TESTIMONIALS = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [demoSubmitted, setDemoSubmitted] = useState(false);
+  const [signupModalOpen, setSignupModalOpen] = useState(false);
+  const [signupSubmitting, setSignupSubmitting] = useState(false);
+  const [signupForm, setSignupForm] = useState({
+    name: "Dr. Kavita Sharma",
+    clinicGroupName: "Nova Smile Dental",
+    email: "kavita@novasmiledental.in",
+    phone: "+91 98220 44100",
+    city: "Pune, Maharashtra",
+    password: "••••••••••••",
+  });
   const [activeSession, setActiveSession] = useState<DentflowSessionPayload | null>(null);
   const [demoForm, setDemoForm] = useState({
     name: "",
@@ -153,14 +165,24 @@ export default function LandingPage() {
         }
       })
       .catch(() => {});
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (
+        params.get("signup") === "true" ||
+        params.get("trial") === "true" ||
+        window.location.hash === "#signup"
+      ) {
+        setSignupModalOpen(true);
+      }
+    }
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  const dashboardHref = activeSession
-    ? getDefaultRedirectForSession(activeSession)
-    : "/Dashboard/today";
+  const dashboardHref = "/login";
 
   const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,6 +195,34 @@ export default function LandingPage() {
     } catch {}
     setDemoSubmitted(true);
     toast.success("Demo request received — our dental onboarding specialist will call within 2 hours.");
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignupSubmitting(true);
+    try {
+      const res = await fetch("/api/dentflow/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "SIGNUP_OWNER",
+          ...signupForm,
+        }),
+      });
+      const data = await res.json();
+      if (data?.redirectTo) {
+        toast.success("14-day free trial activated! Welcome to DentFlow");
+        setSignupModalOpen(false);
+        router.push(data.redirectTo);
+        router.refresh();
+      } else {
+        toast.error("Failed to activate trial. Please try again.");
+      }
+    } catch {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setSignupSubmitting(false);
+    }
   };
 
   return (
@@ -199,9 +249,6 @@ export default function LandingPage() {
             <a href="#testimonials" className="hover:text-[var(--df-teal)] transition-colors">
               Testimonials
             </a>
-            <Link href="/c/smile-studio" className="hover:text-[var(--df-teal)] transition-colors">
-              Clinic website demo (/c/...)
-            </Link>
             <Link href="/patient/login" className="hover:text-[var(--df-teal)] transition-colors">
               Patient app
             </Link>
@@ -230,9 +277,13 @@ export default function LandingPage() {
             >
               Book a demo
             </button>
-            <Link href="/signup" className="df-btn-primary px-4 py-2 text-xs">
+            <button
+              type="button"
+              onClick={() => setSignupModalOpen(true)}
+              className="df-btn-primary px-4 py-2 text-xs font-semibold cursor-pointer"
+            >
               Start free trial
-            </Link>
+            </button>
           </div>
 
           <button
@@ -280,13 +331,16 @@ export default function LandingPage() {
                   Log in
                 </Link>
               )}
-              <Link
-                href="/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="col-span-2 df-btn-primary py-2 text-center text-xs"
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setSignupModalOpen(true);
+                }}
+                className="col-span-2 df-btn-primary py-2 text-center text-xs font-semibold cursor-pointer"
               >
                 Start free trial
-              </Link>
+              </button>
             </div>
           </div>
         )}
@@ -314,18 +368,19 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href={dashboardHref}
-                className="df-btn-primary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2"
+                className="df-btn-primary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2 font-semibold"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 <span>Go to dashboard</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link
-                href="/signup"
-                className="df-btn-secondary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2"
+              <button
+                type="button"
+                onClick={() => setSignupModalOpen(true)}
+                className="df-btn-secondary px-5 py-3 text-xs sm:text-sm inline-flex items-center gap-2 font-semibold cursor-pointer"
               >
                 <span>Start free 14-day trial</span>
-              </Link>
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -336,12 +391,6 @@ export default function LandingPage() {
               >
                 Book a demo
               </button>
-              <Link
-                href="/c/smile-studio"
-                className="df-btn-secondary px-4 py-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
-              >
-                <span>Live clinic page (/c/...)</span>
-              </Link>
             </div>
 
             <div className="flex flex-wrap items-center gap-5 pt-2 text-[11px] text-[var(--df-text-muted)] font-medium">
@@ -527,14 +576,15 @@ export default function LandingPage() {
                   Book a demo
                 </button>
               ) : (
-                <Link
-                  href="/signup"
-                  className={`w-full py-2.5 text-xs text-center block ${
+                <button
+                  type="button"
+                  onClick={() => setSignupModalOpen(true)}
+                  className={`w-full py-2.5 text-xs text-center block cursor-pointer font-semibold ${
                     plan.highlighted ? "df-btn-primary" : "df-btn-secondary"
                   }`}
                 >
                   Start free trial
-                </Link>
+                </button>
               )}
             </div>
           ))}
@@ -594,12 +644,13 @@ export default function LandingPage() {
               <LayoutDashboard className="h-3.5 w-3.5" />
               <span>Open dashboard</span>
             </Link>
-            <Link
-              href="/signup"
-              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs font-semibold"
+            <button
+              type="button"
+              onClick={() => setSignupModalOpen(true)}
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs font-semibold cursor-pointer"
             >
-              Create clinic account
-            </Link>
+              Start 14-day free trial
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -628,9 +679,13 @@ export default function LandingPage() {
             <Link href="/login" className="hover:text-[var(--df-teal)]">
               Clinic & staff login
             </Link>
-            <Link href="/signup" className="hover:text-[var(--df-teal)]">
+            <button
+              type="button"
+              onClick={() => setSignupModalOpen(true)}
+              className="hover:text-[var(--df-teal)] cursor-pointer text-left"
+            >
               Clinic owner sign up
-            </Link>
+            </button>
             <Link href="/patient/login" className="hover:text-[var(--df-teal)]">
               Patient OTP login
             </Link>
@@ -785,6 +840,139 @@ export default function LandingPage() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 14-Day Free Trial Signup Card Modal */}
+      {signupModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="df-card w-full max-w-lg p-6 sm:p-7 space-y-4 shadow-2xl bg-[var(--df-surface)] border border-[var(--df-border)] my-auto">
+            <div className="flex items-center justify-between border-b border-[var(--df-border)] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-[var(--df-teal)] flex items-center justify-center text-white font-bold text-base">
+                  W
+                </div>
+                <div>
+                  <h3 className="df-serif text-lg font-semibold text-[var(--df-text)]">
+                    Start your 14-day free trial
+                  </h3>
+                  <p className="text-xs text-[var(--df-text-muted)]">
+                    Full Growth plan access across all chairs · No credit card required
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSignupModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-[var(--df-surface-hover)] text-[var(--df-text-muted)] cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSignupSubmit} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Owner full name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Dr. Kavita Sharma"
+                    value={signupForm.name}
+                    onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Clinic / group name</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Nova Smile Dental"
+                    value={signupForm.clinicGroupName}
+                    onChange={(e) => setSignupForm({ ...signupForm, clinicGroupName: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Work email</label>
+                  <input
+                    required
+                    type="email"
+                    placeholder="dr@novasmile.in"
+                    value={signupForm.email}
+                    onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Mobile number</label>
+                  <input
+                    required
+                    type="tel"
+                    placeholder="+91 98220 44100"
+                    value={signupForm.phone}
+                    onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">City</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Pune / Mumbai"
+                    value={signupForm.city}
+                    onChange={(e) => setSignupForm({ ...signupForm, city: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1 text-[var(--df-text)]">Create password</label>
+                  <input
+                    required
+                    type="password"
+                    placeholder="••••••••••••"
+                    value={signupForm.password}
+                    onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                    className="w-full rounded-xl border border-[var(--df-border)] bg-[var(--df-surface)] px-3 py-2 text-[var(--df-text)]"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[var(--df-surface-muted)] border border-[var(--df-border)] space-y-1.5 text-[11px] text-[var(--df-text-secondary)]">
+                <p className="flex items-center gap-1.5 font-medium">
+                  <Check className="h-3.5 w-3.5 text-[var(--df-teal)] shrink-0" />
+                  <span>Instant 14-day free trial on Growth plan with all multi-chair features</span>
+                </p>
+                <p className="flex items-center gap-1.5 font-medium">
+                  <Check className="h-3.5 w-3.5 text-[var(--df-teal)] shrink-0" />
+                  <span>No credit card required · Set up chairs & WhatsApp reminders in 5 minutes</span>
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={signupSubmitting}
+                className="w-full df-btn-primary py-2.5 text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                {signupSubmitting ? "Activating 14-day trial..." : "Start 14-day free trial →"}
+              </button>
+
+              <p className="text-center text-[11px] text-[var(--df-text-muted)]">
+                Already have an account?{" "}
+                <Link href="/login" className="text-[var(--df-teal)] font-semibold hover:underline">
+                  Log in here
+                </Link>
+              </p>
+            </form>
           </div>
         </div>
       )}
